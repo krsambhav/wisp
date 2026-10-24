@@ -83,7 +83,7 @@ struct WGroupLabel: View {
     init(_ text: String) { self.text = text }
     var body: some View {
         Text(text)
-            .font(.system(size: 13, weight: .semibold))
+            .font(WispUI.font(13, .semibold))
             .foregroundStyle(WispUI.foreground)
             .padding(.top, 12)
             .padding(.bottom, 2)
@@ -106,7 +106,7 @@ struct WButton: View {
         Button(action: action) {
             HStack(spacing: 6) {
                 if let icon { WIcon(icon, size: small ? 13 : 14) }
-                Text(title).font(.system(size: small ? 12.5 : 13.5, weight: .medium))
+                Text(title).font(WispUI.font(small ? 12.5 : 13.5, .medium))
             }
             .padding(.horizontal, small ? 10 : 14)
             .frame(height: small ? 28 : 34)
@@ -216,7 +216,7 @@ struct WSegmented<T: Hashable & Identifiable>: View {
                 let selected = opt == selection
                 Button { selection = opt } label: {
                     Text(label(opt))
-                        .font(.system(size: 12.5, weight: .medium))
+                        .font(WispUI.font(12.5, .medium))
                         .padding(.horizontal, 12).frame(height: 26)
                         .foregroundStyle(selected ? WispUI.foreground : WispUI.mutedForeground)
                         .background(selected ? WispUI.background : .clear)
@@ -240,7 +240,7 @@ struct WBadge: View {
     var color: Color = WispUI.mutedForeground
     var body: some View {
         Text(text)
-            .font(.system(size: 11, weight: .semibold))
+            .font(WispUI.font(11, .semibold))
             .padding(.horizontal, 8).padding(.vertical, 2)
             .foregroundStyle(color)
             .background(color.opacity(0.12))
@@ -275,7 +275,7 @@ struct UnreadPill: View {
     let textColor: Color
     var body: some View {
         Text(count > 99 ? "99+" : String(count))
-            .font(.system(size: 9.5, weight: .bold))
+            .font(WispUI.font(9.5, .bold))
             .padding(.horizontal, 4).frame(minWidth: 16, minHeight: 16)
             .foregroundStyle(textColor)
             .background(color)

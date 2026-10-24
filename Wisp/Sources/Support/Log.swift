@@ -6,7 +6,8 @@ nonisolated enum LogCategory: String, CaseIterable, Sendable {
     case app, window, web, injection, scripts, notifications, accounts, downloads, performance, settings
 }
 
-nonisolated enum LogLevel: Int, Codable, Sendable, Comparable, CaseIterable {
+nonisolated enum LogLevel: Int, Codable, Sendable, Comparable, CaseIterable, Identifiable {
+    var id: Int { rawValue }
     case debug = 0, info, warning, error
     static func < (lhs: LogLevel, rhs: LogLevel) -> Bool { lhs.rawValue < rhs.rawValue }
     var label: String {

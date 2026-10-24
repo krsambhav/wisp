@@ -210,7 +210,9 @@ final class AppEnvironment {
     func shellPalette(systemIsDark: Bool) -> ThemePalette {
         let theme = currentTheme
         let mode = theme.preferredMode ?? settings.appearance.mode
-        let dark = switch mode { case .system: systemIsDark; case .light: false; case .dark: true }
+        var dark = switch mode { case .system: systemIsDark; case .light: false; case .dark: true }
+        // Follow what WhatsApp is actually rendering when we know it.
+        if let scheme = sessions?.activeSession?.webScheme { dark = scheme == "dark" }
         return CSSGenerator.resolved(theme.palette(for: dark), appearance: settings.appearance)
     }
 }

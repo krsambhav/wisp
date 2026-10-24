@@ -38,6 +38,8 @@ final class AccountSession {
     private(set) var isWebViewCreated = false
     /// Human-readable summary of what WebKit holds for this account ("12 records for web.whatsapp.com").
     private(set) var storedDataSummary: String = "Checking…"
+    /// Color scheme WhatsApp is actually rendering ("light"/"dark"), reported by the core script.
+    private(set) var webScheme: String?
 
     @ObservationIgnored private unowned let env: AppEnvironment
     @ObservationIgnored private var _webView: WKWebView?
@@ -162,8 +164,15 @@ final class AccountSession {
             }
             if ProcessInfo.processInfo.environment["WISP_DEBUG_DOM_OUTLINE"] != nil {
                 // Wait until a conversation is open (#main) so chat-panel hooks are visible, then dump once.
-                for _ in 0..<720 {
-                    let hasMain = (try? await w.evaluateJavaScript("!!document.querySelector('#main')", in: nil, in: ContentWorlds.core)) as? Bool ?? false
+                var polls = 0
+                while polls < 720 {
+                    polls += 1
+                    var hasMain = false
+                    do {
+                        let r = try await w.eval("document.querySelector('#main') ? 1 : 0", world: ContentWorlds.core)
+                        hasMain = r == "1"
+                        if polls == 1 || polls % 12 == 0 { Log.debug("outline poll \(polls): main=\(hasMain) raw=\(String(describing: r))", .web) }
+                    } catch { Log.debug("outline poll failed: \(error.localizedDescription)", .web) }
                     if hasMain { break }
                     try? await Task.sleep(for: .seconds(5))
                 }
@@ -173,8 +182,12 @@ final class AccountSession {
                   function desc(el){ var s=el.tagName.toLowerCase(); if(el.id) s+='#'+el.id; var r=el.getAttribute('role'); if(r) s+='[role='+r+']';
                     var a=el.getAttribute('aria-label'); if(a) s+='[aria-label='+a.slice(0,24)+']'; var d=el.getAttribute('data-icon'); if(d) s+='[data-icon='+d+']';
                     var t=el.getAttribute('data-tab'); if(t) s+='[data-tab='+t+']'; if(el.className && typeof el.className==='string') s+='.'+el.className.split(' ').slice(0,2).join('.').slice(0,40); return s; }
-                  var out=[]; function walk(el,depth,max){ if(depth>max||out.length>420) return; var r=el.getBoundingClientRect(); if(r.width<2&&r.height<2) return; out.push('  '.repeat(depth)+desc(el)+' '+Math.round(r.width)+'x'+Math.round(r.height)+(el.children.length>8?' ('+el.children.length+' children)':'')); var kids=Array.from(el.children); if(el.id==='pane-side'||el.getAttribute('role')==='grid') kids=kids.slice(0,1); kids=kids.slice(0,8); for(var k of kids) walk(k,depth+1,max); }
-                  var app=document.querySelector('#app'); if(app) walk(app,0,9);
+                  var out=[]; function walk(el,depth,max){ if(depth>max||out.length>520) return; var r=el.getBoundingClientRect(); if(r.height<2||r.width<2) return; out.push('  '.repeat(depth)+desc(el)+' '+Math.round(r.width)+'x'+Math.round(r.height)+(el.children.length>12?' ('+el.children.length+' children)':'')); var kids=Array.from(el.children); if(el.id==='pane-side'||el.getAttribute('role')==='grid') kids=kids.slice(0,1); kids=kids.slice(0,12); for(var k of kids) walk(k,depth+1,max); }
+                  var app=document.querySelector('#app'); if(app) walk(app,0,8);
+                  out.push('HTML class='+document.documentElement.className.slice(0,80)+' BODY class='+document.body.className.slice(0,80)+' dark='+matchMedia('(prefers-color-scheme: dark)').matches);
+                  ['tail-in','tail-out'].forEach(function(t){ var e=document.querySelector('[data-icon="'+t+'"]'); var chain=[]; var n=e; for(var i=0;n&&i<7;i++){ chain.push(desc(n)+' '+Math.round(n.getBoundingClientRect().width)+'x'+Math.round(n.getBoundingClientRect().height)); n=n.parentElement; } out.push('TAIL '+t+' ancestry: '+chain.join('  <  ')); });
+                  var side=document.querySelector('#side'); if(side){ out.push('SIDE children: '+Array.from(side.children).map(function(c){return desc(c)+' '+Math.round(c.getBoundingClientRect().height)+'h';}).join(' | ')); }
+                  var f=document.querySelector('#main footer'); if(f){ var fo=[]; (function w2(el,d){ if(d>5) return; fo.push('  '.repeat(d)+desc(el)+' '+Math.round(el.getBoundingClientRect().width)+'x'+Math.round(el.getBoundingClientRect().height)); Array.from(el.children).slice(0,6).forEach(function(k){ w2(k,d+1); }); })(f,0); out.push('FOOTER\\n'+fo.join('\\n')); }
                   var ids=Array.from(document.querySelectorAll('#app [id]')).map(function(e){return e.tagName.toLowerCase()+'#'+e.id;}).slice(0,60);
                   out.push('IDS '+ids.join(' '));
                   var hooks=['#side','#pane-side','#main','#main header','#main footer','#side header','#pane-side [role=row]','[role=listitem]','.message-in','.message-out','.message-in > div:first-child','.copyable-text','.selectable-text','#side [contenteditable]','#main footer [contenteditable]','[data-icon=tail-in]','[data-icon=tail-out]','a[href*="download"]','#app a[href*="whatsapp.com/download"]','nav','[data-navbar-item]','header','footer','[role=button][aria-label*="Search"]','[aria-label="Chat list"]','[data-tab]'];
@@ -183,9 +196,12 @@ final class AccountSession {
                   return 'HOOKS\\n'+h.join('\\n')+'\\nVARS '+vars.join(' ')+'\\nOUTLINE\\n'+out.join('\\n');
                 })();
                 """
-                if let text = (try? await w.evaluateJavaScript(js, in: nil, in: ContentWorlds.core)) as? String {
-                    for line in text.split(separator: "\n") { FileHandle.standardError.write(Data(("[DOM] " + line + "\n").utf8)) }
-                }
+                do {
+                    let r = try await w.eval(js, world: ContentWorlds.core)
+                    if let text = r {
+                        for line in text.split(separator: "\n") { FileHandle.standardError.write(Data(("[DOM] " + line + "\n").utf8)) }
+                    } else { Log.debug("outline returned \(String(describing: r))", .web) }
+                } catch { Log.debug("outline failed: \(error)", .web) }
             }
             if let path = ProcessInfo.processInfo.environment["WISP_DEBUG_SNAPSHOT"] {
                 let cfg = WKSnapshotConfiguration()
@@ -263,6 +279,12 @@ final class AccountSession {
             pageState = new
             Log.info("Page state → \(new.label)", .web)
         }
+    }
+
+    func handleScheme(_ scheme: String) {
+        guard scheme == "light" || scheme == "dark", scheme != webScheme else { return }
+        webScheme = scheme
+        env.window.refreshChrome()
     }
 
     func handleSelectorHealth(total: Int, missing: [String]) {

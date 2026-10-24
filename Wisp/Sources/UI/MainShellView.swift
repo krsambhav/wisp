@@ -7,6 +7,7 @@ struct MainShellView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
+        _ = env.sessions.activeSession?.webScheme
         let palette = env.shellPalette(systemIsDark: colorScheme == .dark)
         VStack(spacing: 0) {
             HeaderBar(palette: palette)
@@ -52,7 +53,7 @@ private struct LoadingOverlay: View {
             VStack(spacing: 14) {
                 ProgressView().controlSize(.small)
                 Text("Connecting to WhatsApp…")
-                    .font(.system(size: 12.5, weight: .medium))
+                    .font(WispUI.font(12.5, .medium))
                     .foregroundStyle(palette.shellForeground.color.opacity(0.6))
             }
         }
@@ -70,7 +71,7 @@ private struct OfflineOverlay: View {
             VStack(spacing: 10) {
                 WIcon("triangle-alert", size: 28).foregroundStyle(WispUI.warning)
                 Text(isOnline ? "Couldn't reach WhatsApp" : "You're offline")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(WispUI.font(16, .semibold))
                 Text(isOnline ? message : "Wisp will reconnect automatically when the network is back.")
                     .font(WispUI.body).foregroundStyle(WispUI.mutedForeground)
                     .multilineTextAlignment(.center).frame(maxWidth: 360)
@@ -85,7 +86,7 @@ private struct NoAccountsView: View {
     @Environment(AppEnvironment.self) private var env
     var body: some View {
         VStack(spacing: 12) {
-            Text("No accounts").font(.system(size: 16, weight: .semibold))
+            Text("No accounts").font(WispUI.font(16, .semibold))
             WButton(title: "Add Account", icon: "plus", style: .primary) { env.openSettings(.accounts) }
         }
     }

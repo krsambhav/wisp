@@ -7,11 +7,11 @@ struct ToastStack: View {
         VStack(spacing: 8) {
             ForEach(env.toasts.toasts) { toast in
                 HStack(spacing: 12) {
-                    Text(toast.title).font(.system(size: 12.5, weight: .medium)).lineLimit(2)
+                    Text(toast.title).font(WispUI.font(12.5, .medium)).lineLimit(2)
                     if let actionTitle = toast.actionTitle {
                         Button(actionTitle) { toast.action?(); env.toasts.dismiss(toast.id) }
                             .buttonStyle(.plain)
-                            .font(.system(size: 12.5, weight: .semibold))
+                            .font(WispUI.font(12.5, .semibold))
                             .foregroundStyle(Color.accentColor)
                     }
                     Button { env.toasts.dismiss(toast.id) } label: { WIcon("x", size: 12).foregroundStyle(WispUI.mutedForeground) }

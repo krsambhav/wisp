@@ -60,7 +60,7 @@ nonisolated struct Theme: Codable, Equatable, Identifiable, Sendable {
     /// Name of the bundled stylesheet in Resources/Web/themes (without extension).
     var stylesheet: String
     /// Selectors the theme's stylesheet relies on; checked once after login.
-    var healthSelectors: [String] = ["#app", "#side", "#main", "#pane-side", ".message-in", ".message-out"]
+    var healthSelectors: [String] = ["#app", "#side", "#main", "#pane-side", "#main header", "#main footer", "[data-icon=\"tail-in\"]", ".copyable-text"]
 
     func palette(for dark: Bool) -> ThemePalette { dark ? self.dark : light }
 }

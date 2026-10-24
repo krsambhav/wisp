@@ -45,28 +45,28 @@ nonisolated enum ThemeCatalog {
     nonisolated static let minimal = Theme(
         id: "minimal",
         name: "Minimal",
-        summary: "A clean, monochromatic interface. Neutral surfaces, 1px borders, accent used only where it matters.",
+        summary: "Monochrome and tonal: a soft wash, a floating chat card, high-contrast bubbles. No borders.",
         light: ThemePalette(
-            accent: HexColor("#18181B"), accentEmphasized: HexColor("#09090B"), accentDeemphasized: HexColor("#F4F4F5"), onAccent: HexColor("#FAFAFA"),
-            background: HexColor("#FFFFFF"), backgroundInset: HexColor("#FAFAFA"),
-            surface: HexColor("#FFFFFF"), surfaceEmphasized: HexColor("#F4F4F5"), surfaceElevated: HexColor("#FFFFFF"), surfaceHighlight: HexColor("#09090B0A"),
+            accent: HexColor("#18181B"), accentEmphasized: HexColor("#09090B"), accentDeemphasized: HexColor("#E4E4E7"), onAccent: HexColor("#FAFAFA"),
+            background: HexColor("#F4F4F5"), backgroundInset: HexColor("#E4E4E7"),
+            surface: HexColor("#F4F4F5"), surfaceEmphasized: HexColor("#FFFFFF"), surfaceElevated: HexColor("#FFFFFF"), surfaceHighlight: HexColor("#FFFFFFB3"),
             textPrimary: HexColor("#09090B"), textSecondary: HexColor("#71717A"), textDisabled: HexColor("#A1A1AA"), link: HexColor("#2563EB"), readReceipt: HexColor("#2563EB"),
-            divider: HexColor("#E4E4E7"), outline: HexColor("#D4D4D8"), outlineDeemphasized: HexColor("#E4E4E7"),
-            bubbleIncoming: HexColor("#FFFFFF"), bubbleOutgoing: HexColor("#F4F4F5"), bubbleSystem: HexColor("#FAFAFAE6"), bubbleMeta: HexColor("#71717A"),
-            chatBackground: HexColor("#FAFAFA"), chatPattern: HexColor("#FAFAFA"), composer: HexColor("#FFFFFF"), tray: HexColor("#FAFAFA"),
+            divider: HexColor("#00000000"), outline: HexColor("#D4D4D8"), outlineDeemphasized: HexColor("#00000000"),
+            bubbleIncoming: HexColor("#F4F4F5"), bubbleOutgoing: HexColor("#18181B"), bubbleSystem: HexColor("#F4F4F5"), bubbleMeta: HexColor("#71717A"),
+            chatBackground: HexColor("#FFFFFF"), chatPattern: HexColor("#FFFFFF"), composer: HexColor("#F4F4F5"), tray: HexColor("#FFFFFF"),
             unreadBadge: HexColor("#18181B"), unreadBadgeText: HexColor("#FAFAFA"), scrollbar: HexColor("#09090B1F"), scrollbarHover: HexColor("#09090B38"),
-            shellBackground: HexColor("#FFFFFF"), shellForeground: HexColor("#09090B"), shellDivider: HexColor("#E4E4E7")
+            shellBackground: HexColor("#F4F4F5"), shellForeground: HexColor("#09090B"), shellDivider: HexColor("#00000000")
         ),
         dark: ThemePalette(
             accent: HexColor("#FAFAFA"), accentEmphasized: HexColor("#E4E4E7"), accentDeemphasized: HexColor("#27272A"), onAccent: HexColor("#09090B"),
-            background: HexColor("#09090B"), backgroundInset: HexColor("#09090B"),
-            surface: HexColor("#09090B"), surfaceEmphasized: HexColor("#18181B"), surfaceElevated: HexColor("#18181B"), surfaceHighlight: HexColor("#FAFAFA0F"),
-            textPrimary: HexColor("#FAFAFA"), textSecondary: HexColor("#A1A1AA"), textDisabled: HexColor("#52525B"), link: HexColor("#60A5FA"), readReceipt: HexColor("#60A5FA"),
-            divider: HexColor("#27272A"), outline: HexColor("#3F3F46"), outlineDeemphasized: HexColor("#27272A"),
-            bubbleIncoming: HexColor("#18181B"), bubbleOutgoing: HexColor("#27272A"), bubbleSystem: HexColor("#18181BE6"), bubbleMeta: HexColor("#A1A1AA"),
-            chatBackground: HexColor("#0C0C0E"), chatPattern: HexColor("#0C0C0E"), composer: HexColor("#18181B"), tray: HexColor("#09090B"),
+            background: HexColor("#09090B"), backgroundInset: HexColor("#000000"),
+            surface: HexColor("#09090B"), surfaceEmphasized: HexColor("#1C1C1F"), surfaceElevated: HexColor("#1C1C1F"), surfaceHighlight: HexColor("#FAFAFA0F"),
+            textPrimary: HexColor("#FAFAFA"), textSecondary: HexColor("#A1A1AA"), textDisabled: HexColor("#52525B"), link: HexColor("#93C5FD"), readReceipt: HexColor("#93C5FD"),
+            divider: HexColor("#FFFFFF00"), outline: HexColor("#3F3F46"), outlineDeemphasized: HexColor("#FFFFFF00"),
+            bubbleIncoming: HexColor("#27272A"), bubbleOutgoing: HexColor("#FAFAFA"), bubbleSystem: HexColor("#1C1C1F"), bubbleMeta: HexColor("#A1A1AA"),
+            chatBackground: HexColor("#141416"), chatPattern: HexColor("#141416"), composer: HexColor("#232326"), tray: HexColor("#141416"),
             unreadBadge: HexColor("#FAFAFA"), unreadBadgeText: HexColor("#09090B"), scrollbar: HexColor("#FAFAFA1F"), scrollbarHover: HexColor("#FAFAFA38"),
-            shellBackground: HexColor("#09090B"), shellForeground: HexColor("#FAFAFA"), shellDivider: HexColor("#27272A")
+            shellBackground: HexColor("#09090B"), shellForeground: HexColor("#FAFAFA"), shellDivider: HexColor("#FFFFFF00")
         ),
         stylesheet: "minimal"
     )

@@ -42,6 +42,7 @@ final class ScriptMessageRouter: NSObject, WKScriptMessageHandler {
             }
         case .state:
             if let s = body["state"] as? String { session.handlePageState(s) }
+            if let scheme = body["scheme"] as? String { session.handleScheme(scheme) }
         case .diag:
             let missing = (body["missing"] as? [String] ?? []).map { String($0.prefix(120)) }
             let total = (body["total"] as? NSNumber)?.intValue ?? 0

@@ -38,13 +38,16 @@ nonisolated enum Density: String, Codable, CaseIterable, Sendable, Identifiable 
 }
 
 nonisolated enum FontChoice: String, Codable, CaseIterable, Sendable, Identifiable {
-    case system, rounded, serif, mono
+    case jakarta, system, rounded, serif, mono
     var id: String { rawValue }
     var label: String {
-        switch self { case .system: "System (SF Pro)"; case .rounded: "Rounded (SF Rounded)"; case .serif: "Serif (New York)"; case .mono: "Monospace (SF Mono)" }
+        switch self { case .jakarta: "Plus Jakarta Sans"; case .system: "System (SF Pro)"; case .rounded: "Rounded (SF Rounded)"; case .serif: "Serif (New York)"; case .mono: "Monospace (SF Mono)" }
     }
+    /// Bundled web font needs an @font-face injection.
+    var isBundledWebFont: Bool { self == .jakarta }
     var cssFamily: String {
         switch self {
+        case .jakarta: "\"Plus Jakarta Sans\", -apple-system, BlinkMacSystemFont, \"SF Pro Text\", sans-serif"
         case .system: "-apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"Helvetica Neue\", Helvetica, Arial, sans-serif"
         case .rounded: "ui-rounded, \"SF Pro Rounded\", -apple-system, BlinkMacSystemFont, sans-serif"
         case .serif: "ui-serif, \"New York\", Georgia, serif"
@@ -75,7 +78,7 @@ nonisolated struct AppearanceSettings: Codable, Equatable, Sendable {
     var mode: AppearanceMode = .system
     /// nil → theme's own accent. Otherwise overrides the accent for the theme.
     var accentOverride: HexColor? = nil
-    var font: FontChoice = .system
+    var font: FontChoice = .jakarta
     /// WebKit page zoom; 1.0 = 100%.
     var interfaceScale: Double = 1.0
     /// Multiplier for message text only.

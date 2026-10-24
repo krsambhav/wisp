@@ -55,7 +55,7 @@ private struct AccountChip: View {
                     }
                 if isActive {
                     Text(account.name)
-                        .font(.system(size: 12.5, weight: .semibold))
+                        .font(WispUI.font(12.5, .semibold))
                         .foregroundStyle(palette.shellForeground.color)
                         .lineLimit(1)
                     if account.muted { WIcon("bell-off", size: 11).foregroundStyle(palette.shellForeground.color.opacity(0.5)) }

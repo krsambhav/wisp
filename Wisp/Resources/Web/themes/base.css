@@ -48,19 +48,16 @@ html[data-wisp-sidebar] #side {
 }
 
 /* ---- 4. Message bubbles ----------------------------------------------- */
-html[data-wisp-bubbles="rounded"] .message-in > div:first-child,
-html[data-wisp-bubbles="rounded"] .message-out > div:first-child {
+/* WhatsApp (2026) no longer marks .message-in/.message-out; the bubble is the
+   element that owns the tail icon. `:has()` is supported by WebKit ≥ 15.4. */
+html[data-wisp-bubbles="rounded"] #main div:has(> span[data-icon="tail-in"]),
+html[data-wisp-bubbles="rounded"] #main div:has(> span[data-icon="tail-out"]) {
   border-radius: var(--wisp-bubble-radius) !important;
 }
-html[data-wisp-bubbles="rounded"] .message-in > div:first-child { border-top-left-radius: 4px !important; }
-html[data-wisp-bubbles="rounded"] .message-out > div:first-child { border-top-right-radius: 4px !important; }
-/* Hide the bubble "tail" when bubbles are rounded (safe no-op if absent). */
-html[data-wisp-bubbles="rounded"] .message-in [data-icon="tail-in"],
-html[data-wisp-bubbles="rounded"] .message-out [data-icon="tail-out"] { display: none !important; }
+html[data-wisp-bubbles="rounded"] #main span[data-icon="tail-in"],
+html[data-wisp-bubbles="rounded"] #main span[data-icon="tail-out"] { display: none !important; }
 
 /* ---- 5. Density ------------------------------------------------------- */
-html[data-wisp-density="compact"] .message-in,
-html[data-wisp-density="compact"] .message-out { margin-bottom: 2px !important; }
 html[data-wisp-density="compact"] #main footer { padding-top: 4px !important; padding-bottom: 4px !important; }
 html[data-wisp-density="compact"] #main header,
 html[data-wisp-density="compact"] #side header { min-height: 52px !important; }

@@ -19,7 +19,12 @@ nonisolated enum CSSGenerator {
         var out = "/* Wisp tokens — generated; theme \(theme.id) */\n"
         out += "html { color-scheme: light dark; }\n"
         out += "html {\n" + wispVariables(light) + waOverrides(light, isDark: false) + "}\n"
-        out += "html.dark, body.dark, html[data-theme=\"dark\"] {\n" + wispVariables(dark) + waOverrides(dark, isDark: true) + "}\n"
+        out += "html[data-wisp-scheme=\"dark\"], html.dark, body.dark, html[data-theme=\"dark\"] {\n" + wispVariables(dark) + waOverrides(dark, isDark: true) + "}\n"
+
+        // Fonts: bundled web font (data: URIs are allowed by WhatsApp's font-src CSP)
+        if appearance.font.isBundledWebFont { out += fontFaceCSS }
+        out += "html { --font-family-default: var(--wisp-font-family) !important; --font-family-apple: var(--wisp-font-family) !important; --font-family-segoe: var(--wisp-font-family) !important; }\n"
+        out += "#app, #app *:not(code):not(pre):not([class*=\"emoji\"]) { font-family: var(--wisp-font-family) !important; }\n"
 
         // Non-color knobs
         out += "html {\n"
@@ -30,6 +35,16 @@ nonisolated enum CSSGenerator {
         out += "}\n"
         return out
     }
+
+    /// @font-face rules for the bundled Plus Jakarta Sans (OFL) as data URIs. Cached.
+    nonisolated static let fontFaceCSS: String = {
+        func face(_ file: String, style: String) -> String {
+            guard let url = Bundle.main.url(forResource: file, withExtension: "ttf", subdirectory: "Fonts") ?? Bundle.main.url(forResource: file, withExtension: "ttf"),
+                  let data = try? Data(contentsOf: url) else { Log.warning("Font \(file).ttf missing from bundle", .injection); return "" }
+            return "@font-face { font-family: \"Plus Jakarta Sans\"; font-style: \(style); font-weight: 200 800; font-display: swap; src: url(data:font/ttf;base64,\(data.base64EncodedString())) format(\"truetype\"); }\n"
+        }
+        return face("PlusJakartaSans-Variable", style: "normal") + face("PlusJakartaSans-Italic-Variable", style: "italic")
+    }()
 
     /// Applies the user's accent override to a palette by re-deriving accent variants.
     nonisolated static func resolved(_ p: ThemePalette, appearance: AppearanceSettings) -> ThemePalette {

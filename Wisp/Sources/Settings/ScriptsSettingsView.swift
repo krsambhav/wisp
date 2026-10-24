@@ -60,11 +60,11 @@ struct ScriptsSettingsView: View {
                             Toggle("", isOn: Binding(get: { script.enabled }, set: { env.scripts.setEnabled(script.id, $0) }))
                                 .toggleStyle(.switch).labelsHidden().controlSize(.mini)
                             VStack(alignment: .leading, spacing: 1) {
-                                Text(script.name).font(.system(size: 12.5, weight: .medium)).lineLimit(1)
+                                Text(script.name).font(WispUI.font(12.5, .medium)).lineLimit(1)
                                 HStack(spacing: 4) {
-                                    Text(script.world == .page ? "page" : "isolated").font(.system(size: 10.5)).foregroundStyle(WispUI.mutedForeground)
+                                    Text(script.world == .page ? "page" : "isolated").font(WispUI.font(10.5)).foregroundStyle(WispUI.mutedForeground)
                                     Text("·").foregroundStyle(WispUI.mutedForeground)
-                                    Text(script.injectionTime == .documentStart ? "start" : "end").font(.system(size: 10.5)).foregroundStyle(WispUI.mutedForeground)
+                                    Text(script.injectionTime == .documentStart ? "start" : "end").font(WispUI.font(10.5)).foregroundStyle(WispUI.mutedForeground)
                                 }
                             }
                             Spacer()
@@ -114,8 +114,8 @@ struct ScriptsSettingsView: View {
         return VStack(spacing: 0) {
             HStack(spacing: 10) {
                 WTextField(placeholder: "Script name", text: binding.name).frame(width: 220)
-                Picker("", selection: binding.injectionTime) { ForEach(ScriptInjectionTime.allCases) { Text($0.label).tag($0) } }.labelsHidden().frame(width: 150)
-                Picker("", selection: binding.world) { ForEach(ScriptWorld.allCases) { Text($0.label).tag($0) } }.labelsHidden().frame(width: 190)
+                WSelect(selection: binding.injectionTime, options: ScriptInjectionTime.allCases, width: 150, small: true, label: { $0.label })
+                WSelect(selection: binding.world, options: ScriptWorld.allCases, width: 190, small: true, label: { $0.label })
                 Spacer()
                 if isDirty { WButton(title: "Revert", small: true) { syncDraft() } }
                 WButton(title: "Save", icon: "check", style: .primary, small: true) { if let d = draft { env.scripts.update(d); syncDraft() } }

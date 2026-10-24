@@ -14,6 +14,7 @@ struct WispApp: App {
                 .frame(minWidth: 880, idealWidth: 940, minHeight: 600, idealHeight: 680)
         }
         .windowResizability(.contentSize)
+        .windowStyle(.hiddenTitleBar)
         .commands { WispCommands(environment: delegate.environment) }
     }
 }

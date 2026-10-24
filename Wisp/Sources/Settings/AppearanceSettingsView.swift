@@ -61,8 +61,7 @@ struct AppearanceSettingsView: View {
             WGroupLabel("Typography & layout")
             WCard {
                 WRow(title: "Font") {
-                    Picker("", selection: $settings.appearance.font) { ForEach(FontChoice.allCases) { Text($0.label).tag($0) } }
-                        .labelsHidden().frame(width: 220)
+                    WSelect(selection: $settings.appearance.font, options: FontChoice.allCases, width: 220, label: { $0.label })
                 }
                 WDivider()
                 WRow(title: "Interface scale", description: "\(Int(settings.appearance.interfaceScale * 100))% — also ⌘+ / ⌘−") {
@@ -199,7 +198,7 @@ private struct ThemeCard: View {
                 .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous).stroke(p.divider.color, lineWidth: 1))
 
                 HStack {
-                    Text(theme.name).font(.system(size: 13, weight: .semibold)).foregroundStyle(WispUI.foreground)
+                    Text(theme.name).font(WispUI.font(13, .semibold)).foregroundStyle(WispUI.foreground)
                     Spacer()
                     if selected { WIcon("circle-check", size: 14).foregroundStyle(WispUI.foreground) }
                 }

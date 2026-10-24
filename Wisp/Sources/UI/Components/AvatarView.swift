@@ -12,7 +12,7 @@ struct AvatarView: View {
             } else {
                 account.avatarColor.color
                 Text(account.initials)
-                    .font(.system(size: size * 0.4, weight: .semibold, design: .rounded))
+                    .font(WispUI.font(size * 0.4, .semibold))
                     .foregroundStyle(.white)
             }
         }

@@ -26,7 +26,7 @@ struct NotificationsSettingsView: View {
                 WRow(title: "Show message previews", description: "Off shows “New message” with the sender only.") { WToggle(isOn: $settings.notifications.showPreviews) }
                 WDivider()
                 WRow(title: "Sound", description: "WhatsApp also plays its own sound inside the page; turn that off in WhatsApp › Settings › Notifications to avoid a double chime.") {
-                    Picker("", selection: $settings.notifications.sound) { ForEach(NotificationSoundChoice.allCases) { Text($0.label).tag($0) } }.labelsHidden().frame(width: 260)
+                    WSelect(selection: $settings.notifications.sound, options: NotificationSoundChoice.allCases, width: 280, label: { $0.label })
                 }
                 WDivider()
                 WRow(title: "Don't notify while Wisp is in front", description: "Suppress banners for the account you're already looking at.") { WToggle(isOn: $settings.notifications.suppressWhenWindowFocused) }

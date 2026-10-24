@@ -13,7 +13,7 @@ struct HotKeyRecorderView: View {
         } label: {
             HStack(spacing: 6) {
                 Text(recording ? "Press keys…" : hotKey.displayString)
-                    .font(.system(size: 12.5, weight: .medium, design: .rounded))
+                    .font(WispUI.font(12.5, .medium))
                     .foregroundStyle(recording ? WispUI.mutedForeground : WispUI.foreground)
                 if !recording { WIcon("keyboard", size: 12).foregroundStyle(WispUI.mutedForeground) }
             }

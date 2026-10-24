@@ -76,7 +76,7 @@ private struct AccountRow: View {
                             .onSubmit { commitName() }
                     } else {
                         HStack(spacing: 6) {
-                            Text(account.name).font(.system(size: 13, weight: .semibold))
+                            Text(account.name).font(WispUI.font(13, .semibold))
                             if isActive { WBadge(text: "Active", color: WispUI.success) }
                             if let s = session, s.isWebViewCreated { WBadge(text: s.pageState.label, color: s.pageState.isFailed ? WispUI.destructive : WispUI.mutedForeground) }
                             else { WBadge(text: "Not loaded", color: WispUI.mutedForeground) }
@@ -99,14 +99,13 @@ private struct AccountRow: View {
                     WButton(title: "Rename", small: true) { editingName = account.name; isEditing = true }
                     if !isActive { WButton(title: "Switch", icon: "arrow-left-right", small: true, action: onSwitch) }
                 }
-                Menu {
-                    Button("Reload") { env.sessions.session(for: account.id)?.reload() }
-                    Button("Clear cache (keep login)") { Task { await env.sessions.session(for: account.id)?.clearCache(); env.toasts.show(title: "Cache cleared") } }
-                    Button("Log out…", action: onClear)
-                    Divider()
-                    Button("Remove account…", role: .destructive, action: onRemove).disabled(env.accounts.accounts.count < 2)
-                } label: { WIcon("ellipsis", size: 15) }
-                .menuStyle(.borderlessButton).menuIndicator(.hidden).frame(width: 28)
+                WMenuButton(items: [
+                    .item("Reload", icon: "refresh-cw") { env.sessions.session(for: account.id)?.reload() },
+                    .item("Clear cache (keep login)", icon: "trash-2") { Task { await env.sessions.session(for: account.id)?.clearCache(); env.toasts.show(title: "Cache cleared") } },
+                    .item("Log out…", icon: "log-out") { onClear() },
+                    .separator,
+                    .item("Remove account…", icon: "circle-x", destructive: true, disabled: env.accounts.accounts.count < 2) { onRemove() }
+                ])
             }
             .padding(.horizontal, 14).padding(.vertical, 10)
             WDivider().opacity(0.5)

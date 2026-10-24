@@ -41,11 +41,15 @@ enum WispUI {
     static var borderStrong: Color { adaptive("#D4D4D8", "#3F3F46") }
     static var muted_: Color { mutedForeground }
 
-    // Typography (shadcn: text-sm 14/20 for body, text-xs 12/16 for descriptions)
-    static let title = Font.system(size: 22, weight: .semibold)
-    static let heading = Font.system(size: 14, weight: .semibold)
-    static let body = Font.system(size: 13.5)
-    static let bodyMedium = Font.system(size: 13.5, weight: .medium)
-    static let caption = Font.system(size: 12)
+    // Typography — Plus Jakarta Sans (bundled, OFL), falling back to the system font.
+    static let fontFamily = "Plus Jakarta Sans"
+    static func font(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
+        Font.custom(fontFamily, size: size).weight(weight)
+    }
+    static let title = font(22, .semibold)
+    static let heading = font(14, .semibold)
+    static let body = font(13.5)
+    static let bodyMedium = font(13.5, .medium)
+    static let caption = font(12)
     static let mono = Font.system(size: 12, design: .monospaced)
 }

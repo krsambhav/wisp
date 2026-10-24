@@ -78,7 +78,7 @@ struct AdvancedSettingsView: View {
             WGroupLabel("Diagnostics")
             WCard {
                 HStack {
-                    Picker("", selection: $filter) { ForEach(LogLevel.allCases, id: \.self) { Text($0.label.capitalized).tag($0) } }.labelsHidden().frame(width: 110)
+                    WSelect(selection: $filter, options: LogLevel.allCases, width: 110, small: true, label: { $0.label.capitalized })
                     WCheckbox(label: "Verbose", isOn: Binding(get: { log.minimumLevel == .debug }, set: { log.minimumLevel = $0 ? .debug : .info; settings.advanced.verboseLogging = $0 }))
                     Spacer()
                     Text("\(uptime) uptime · \(memoryMB) MB app process").font(WispUI.caption).foregroundStyle(WispUI.mutedForeground)

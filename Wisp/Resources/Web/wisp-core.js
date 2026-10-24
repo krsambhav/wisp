@@ -83,15 +83,73 @@
     return 'loading';
   }
 
+  // ------------------------------------------------------------ scheme
+  // WhatsApp switches dark mode with a hashed class on <html>, so we read a
+  // token Wisp never overrides (--WDS-app-wash: warm-gray-200 light / -800 dark).
+  let lastScheme = '';
+  function detectScheme() {
+    const root = document.documentElement;
+    if (!root) { return ''; }
+    const wash = getComputedStyle(root).getPropertyValue('--WDS-app-wash').trim();
+    const m = wash.match(/#([0-9a-f]{6})/i);
+    let scheme = '';
+    if (m) {
+      const v = parseInt(m[1], 16);
+      const lum = ((v >> 16) & 255) * 0.299 + ((v >> 8) & 255) * 0.587 + (v & 255) * 0.114;
+      scheme = lum < 128 ? 'dark' : 'light';
+    } else if (document.body && document.body.classList.contains('dark')) { scheme = 'dark'; }
+    if (scheme && scheme !== lastScheme) {
+      lastScheme = scheme;
+      root.setAttribute('data-wisp-scheme', scheme);
+      post('wispState', { state: lastState || computeState(), scheme });
+    }
+    return scheme;
+  }
+
+  // ------------------------------------------------------------ bubbles
+  // WhatsApp no longer marks .message-in/.message-out. The bubble is the parent
+  // of the tail icon, and all bubbles share its (hashed) class list — learned at
+  // runtime, never hard-coded. Direction comes from horizontal placement.
+  let bubbleSelector = '';
+  function markBubbles() {
+    const main = document.querySelector('#main');
+    if (!main) { return; }
+    if (!bubbleSelector) {
+      const tail = main.querySelector('span[data-icon="tail-in"], span[data-icon="tail-out"]');
+      const bubble = tail && tail.parentElement;
+      if (!bubble || !bubble.className || typeof bubble.className !== 'string') { return; }
+      const cls = bubble.className.trim().split(/\s+/).filter(Boolean);
+      if (cls.length === 0) { return; }
+      bubbleSelector = '#main .' + cls.map((c) => CSS.escape(c)).join('.');
+    }
+    let nodes;
+    try { nodes = main.querySelectorAll(bubbleSelector + ':not([data-wisp-bubble])'); } catch (_) { bubbleSelector = ''; return; }
+    if (nodes.length === 0) { return; }
+    const mid = main.getBoundingClientRect().left + main.getBoundingClientRect().width / 2;
+    for (const el of nodes) {
+      let dir = '';
+      if (el.querySelector(':scope > span[data-icon="tail-out"]')) { dir = 'out'; }
+      else if (el.querySelector(':scope > span[data-icon="tail-in"]')) { dir = 'in'; }
+      else {
+        const r = el.getBoundingClientRect();
+        if (r.width === 0) { continue; }
+        dir = (r.left + r.width / 2) > mid ? 'out' : 'in';
+      }
+      el.setAttribute('data-wisp-bubble', dir);
+    }
+  }
+
   let stateTimer = 0;
   function scheduleState() {
     if (stateTimer) { return; }
     stateTimer = setTimeout(() => {
       stateTimer = 0;
       const s = computeState();
+      detectScheme();
+      if (s === 'chats') { markBubbles(); }
       if (s !== lastState) {
         lastState = s;
-        post('wispState', { state: s });
+        post('wispState', { state: s, scheme: lastScheme });
       }
       // Chat-panel hooks (#main, bubbles) only exist once a chat is open; run the
       // one-shot check the first time both the list and a conversation are present.
@@ -108,7 +166,7 @@
     if (!root || appObserved) { return; }
     appObserved = true;
     const mo = new MutationObserver(scheduleState);
-    mo.observe(root, { childList: true, subtree: true });
+    mo.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
     scheduleState();
   }
 

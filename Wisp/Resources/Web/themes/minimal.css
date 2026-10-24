@@ -1,68 +1,84 @@
 /* ==========================================================================
-   Wisp theme: Minimal — monochrome, shadcn/ui-inspired.
-   Version: 1 (2026-10)
-   Neutral surfaces, 1px borders, no colored chrome. Accent is used sparingly
-   (unread badges, primary actions, focus rings).
+   Wisp theme: Minimal — tonal shadcn/ui.  Version: 2 (2026-10)
+   Layering instead of lines: a soft wash, a floating white chat card,
+   tail-less bubbles with a high-contrast outgoing side, borderless controls.
+   Hooks verified against WhatsApp Web's live DOM on 2026-10-25:
+     #side · #pane-side · [role=grid][aria-label="Chat list"] > [role=row]
+     header[data-tab="2"] (nav rail) · #main · #main header · #main footer
+     [role=textbox][data-tab="10"] (composer) · span[data-icon="tail-in|tail-out"]
+     #all-filter · button[id^="label_item_"] · #new-filter
    ========================================================================== */
-html { --radius-app: 10px !important; }
+html { --radius-app: 14px !important; }
 
-/* Flatten the chat wallpaper: doodle color == background color hides the pattern. */
-html { --WDS-systems-chat-foreground-wallpaper: var(--wisp-chat-background) !important; }
-#main > div[style*="background-image"], #main [data-asset-chat-background] { background-image: none !important; }
+/* ---- Wash & panes ----------------------------------------------------- */
+#app, #app > div, .app-wrapper-web, .two, div:has(> #main), div:has(> #side) { background: var(--wisp-background) !important; }
+#side { background: transparent !important; border-right: 0 !important; }
+div:has(> #side) > header, div:has(> #side) > header > header { background: transparent !important; border: 0 !important; }
+header[data-tab="2"] { background: transparent !important; border-right: 0 !important; border-left: 0 !important; }
+header[data-tab="2"] [data-navbar-item] { border-radius: 12px !important; }
+header[data-tab="2"] [data-navbar-item]:hover { background: var(--wisp-surface-emphasized) !important; }
 
-/* Hairline borders on headers and footers. */
-#side header, #main header { border-bottom: 1px solid var(--wisp-divider) !important; box-shadow: none !important; }
-#main footer { border-top: 1px solid var(--wisp-divider) !important; }
-
-/* Bubbles: both sides neutral; outgoing gets a subtle outline. */
-.message-out > div:first-child { box-shadow: inset 0 0 0 1px var(--wisp-divider) !important; }
-.message-in > div:first-child,
-.message-out > div:first-child { box-shadow: 0 1px 1px rgba(var(--shadow-rgb), 0.04) !important; }
-
-/* Rows: calmer hover, clearer selected state. */
-#pane-side [role="row"]:hover > div,
-#pane-side [role="listitem"]:hover > div { background: var(--wisp-surface-highlight) !important; }
-#pane-side [aria-selected="true"] > div { background: var(--wisp-surface-emphasized) !important; }
-
-/* Remove colored link underline noise. */
-#app a { text-decoration-color: color-mix(in srgb, currentColor 40%, transparent); }
-
-/* ---- Real-DOM hooks (captured 2026-10-25; see docs/LIMITATIONS.md) -------
-   Nav rail: header[data-tab="2"] (64px column with [data-navbar-item] buttons)
-   Chat list: #pane-side > [role="grid"][aria-label="Chat list"] > [role="row"]
-   ------------------------------------------------------------------------- */
-
-/* Nav rail: flat, same surface as the list, hairline on the right. */
-header[data-tab="2"] {
-  background: var(--wisp-surface) !important;
-  border-right: 1px solid var(--wisp-divider) !important;
+/* The conversation is a card floating on the wash. */
+#main {
+  background: var(--wisp-chat-background) !important;
+  border-radius: 18px !important;
+  margin: 0 12px 12px 4px !important;
+  inset: 0 12px 12px 4px !important; width: auto !important; height: auto !important;
+  overflow: hidden !important;
+  box-shadow: 0 1px 2px rgba(var(--shadow-rgb), .05), 0 8px 24px -16px rgba(var(--shadow-rgb), .18) !important;
 }
-header[data-tab="2"] [data-navbar-item] { border-radius: 8px !important; }
-header[data-tab="2"] [data-navbar-item]:hover { background: var(--wisp-surface-highlight) !important; }
+#main > div { background: transparent !important; background-image: none !important; }
+#main header { background: transparent !important; border-bottom: 0 !important; box-shadow: none !important; height: 68px !important; }
+#main footer { background: transparent !important; border-top: 0 !important; padding: 6px 14px 14px !important; }
+#main footer div { border-color: transparent !important; box-shadow: none !important; }
+#main footer [role="textbox"][data-tab="10"] { font-size: 15px !important; }
 
-/* Chat list rows: calmer separators, rounded hover/selected surface. */
-#pane-side [role="row"] > div { border-bottom: 1px solid transparent !important; }
-#pane-side [role="row"] > div > div:first-child,
-#pane-side [role="row"] > div { border-radius: 10px; }
-#pane-side { padding: 0 6px !important; box-sizing: border-box; }
+/* ---- Sidebar ---------------------------------------------------------- */
+#side header, #side > header { background: transparent !important; border: 0 !important; }
+/* Search field: white pill on the wash, no outline. */
+#side [role="textbox"], #side input { background: transparent !important; }
+#side div:has(> input), #side div:has(> [role="textbox"]) { border: 0 !important; box-shadow: none !important; }
+/* Filter chips: tonal, selected = primary. */
+#side #all-filter, #side button[id^="label_item_"], #side #new-filter {
+  border: 0 !important; box-shadow: none !important;
+  background: var(--wisp-surface-emphasized) !important; color: var(--wisp-text-secondary) !important;
+  border-radius: 999px !important;
+}
+#side #all-filter[aria-pressed="true"], #side button[id^="label_item_"][aria-pressed="true"],
+#side #all-filter[aria-selected="true"], #side button[id^="label_item_"][aria-selected="true"] {
+  background: var(--wisp-accent) !important; color: var(--wisp-on-accent) !important;
+}
+/* Rows: no hairlines; rounded white surface on hover/selection. */
+#pane-side { padding: 0 8px !important; }
+#pane-side [role="row"] div { border-bottom-color: transparent !important; }
+#pane-side [role="row"] > div { border-radius: 14px !important; transition: background-color .12s ease; }
 #pane-side [role="row"]:hover > div { background: var(--wisp-surface-highlight) !important; }
 #pane-side [role="row"][aria-selected="true"] > div,
-#pane-side [role="row"] > div[aria-selected="true"] { background: var(--wisp-surface-emphasized) !important; }
+#pane-side [role="row"] > div[aria-selected="true"],
+#pane-side [role="row"] > div:has([aria-selected="true"]) { background: var(--wisp-surface-emphasized) !important; box-shadow: 0 1px 2px rgba(var(--shadow-rgb), .05) !important; }
 
-/* Filter chips and the search field: neutral surfaces with 1px outlines. */
-#side [role="tablist"] [role="tab"],
-#side button[aria-pressed] {
-  border: 1px solid var(--wisp-divider) !important;
-  background: transparent !important;
-  color: var(--wisp-text-secondary) !important;
-}
-#side [role="tablist"] [role="tab"][aria-selected="true"],
-#side button[aria-pressed="true"] {
-  background: var(--wisp-accent) !important;
+/* ---- Bubbles ----------------------------------------------------------- */
+/* wisp-core.js marks every bubble with data-wisp-bubble="in|out" (learned from the tail element). */
+#main [data-wisp-bubble],
+#main div:has(> span[data-icon="tail-in"]),
+#main div:has(> span[data-icon="tail-out"]) { border-radius: 18px !important; box-shadow: none !important; }
+#main span[data-icon="tail-in"], #main span[data-icon="tail-out"] { display: none !important; }
+#main [data-wisp-bubble="in"] { background: var(--wisp-bubble-incoming) !important; }
+#main [data-wisp-bubble="out"] { background: var(--wisp-bubble-outgoing) !important; }
+/* Outgoing: inverted surface, so every token-driven color inside flips with it. */
+#main [data-wisp-bubble="out"],
+#main div:has(> span[data-icon="tail-out"]) {
+  --WDS-content-default: var(--wisp-on-accent);
+  --WDS-content-deemphasized: color-mix(in srgb, var(--wisp-on-accent) 65%, transparent);
+  --WDS-systems-bubble-content-deemphasized: color-mix(in srgb, var(--wisp-on-accent) 65%, transparent);
+  --WDS-content-read: var(--wisp-link);
+  --WDS-content-action-emphasized: var(--wisp-on-accent);
+  --primary-strong: var(--wisp-on-accent); --message-primary: var(--wisp-on-accent); --bubble-meta: color-mix(in srgb, var(--wisp-on-accent) 65%, transparent);
   color: var(--wisp-on-accent) !important;
-  border-color: var(--wisp-accent) !important;
 }
-#side [contenteditable="true"][role="textbox"] { caret-color: var(--wisp-accent); }
+/* Date / system pills: tonal. */
+#main div:has(> span[data-icon="tail-in"]) ~ * { }
+#app ::selection { background: color-mix(in srgb, var(--wisp-accent) 18%, transparent); }
 
-/* Primary action (new chat) uses the neutral primary, like a shadcn default button. */
-#side button[aria-label="New chat"] { background: var(--wisp-accent) !important; color: var(--wisp-on-accent) !important; }
+/* ---- Misc chrome -------------------------------------------------------- */
+#app a { text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); }
