@@ -9,7 +9,9 @@ import WebKit
 ///   WISP_MOCK=1                      load the bundled mock page instead of WhatsApp
 ///   WISP_MOCK_QUERY=auto=1           query string for the mock page (auto scenario)
 ///   WISP_DEBUG_DUMP=1                log geometry + DOM summary 8s after load
-///   WISP_DEBUG_SNAPSHOT=/path.png    write a WebKit snapshot of the page 8s after load
+///   WISP_DEBUG_DOM_OUTLINE=1         with DUMP: log a structural outline (tags/ids/roles only, never text)
+///   WISP_DEBUG_SNAPSHOT=/path.png    write a WebKit snapshot of the page after load
+///   WISP_DEBUG_SNAPSHOT_DELAY=<s>    seconds after load for the dump/snapshot (default 8)
 ///   WISP_DEBUG_OPEN_SETTINGS=<sec>   open Settings at a section after 3s
 ///   WISP_DEBUG_WINDOW_DIR=/dir       write PNGs of every app window (native content) after 6s
 ///   WISP_DEBUG_QUIT_AFTER=<seconds>  terminate after N seconds

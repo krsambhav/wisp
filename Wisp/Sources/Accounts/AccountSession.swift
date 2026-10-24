@@ -139,7 +139,8 @@ final class AccountSession {
     /// summary of the login page. Never enabled in release builds.
     private func scheduleDebugDump() {
         Task { [weak self] in
-            try? await Task.sleep(for: .seconds(8))
+            let delay = ProcessInfo.processInfo.environment["WISP_DEBUG_SNAPSHOT_DELAY"].flatMap(Double.init) ?? 8
+            try? await Task.sleep(for: .seconds(delay))
             guard let self, let w = self._webView else { return }
             Log.debug("webView frame=\(w.frame) superview=\(String(describing: w.superview.map { type(of: $0) })) window=\(w.window != nil) hidden=\(w.isHidden) url=\(w.url?.absoluteString ?? "nil") title=\(w.title ?? "nil") loading=\(w.isLoading)", .web)
             let js = """
@@ -156,6 +157,27 @@ final class AccountSession {
             }
             w.evaluateJavaScript("JSON.stringify({ wisp: typeof globalThis.wisp, attr: document.documentElement.getAttribute('data-wisp-script') })", in: nil, in: ContentWorlds.user) { result in
                 Log.debug("user world: \((try? result.get()) ?? "error")", .web)
+            }
+            if ProcessInfo.processInfo.environment["WISP_DEBUG_DOM_OUTLINE"] != nil {
+                // Structural outline only: tags, ids, roles, aria-labels, truncated class names. Never text content.
+                let js = """
+                (function(){
+                  function desc(el){ var s=el.tagName.toLowerCase(); if(el.id) s+='#'+el.id; var r=el.getAttribute('role'); if(r) s+='[role='+r+']';
+                    var a=el.getAttribute('aria-label'); if(a) s+='[aria-label='+a.slice(0,24)+']'; var d=el.getAttribute('data-icon'); if(d) s+='[data-icon='+d+']';
+                    var t=el.getAttribute('data-tab'); if(t) s+='[data-tab='+t+']'; if(el.className && typeof el.className==='string') s+='.'+el.className.split(' ').slice(0,2).join('.').slice(0,40); return s; }
+                  var out=[]; function walk(el,depth,max){ if(depth>max||out.length>260) return; out.push('  '.repeat(depth)+desc(el)+(el.children.length>6?' ('+el.children.length+' children)':'')); var kids=Array.from(el.children).slice(0,6); for(var k of kids) walk(k,depth+1,max); }
+                  var app=document.querySelector('#app'); if(app) walk(app,0,5);
+                  var hooks=['#side','#pane-side','#main','#main header','#main footer','#side header','#pane-side [role=row]','[role=listitem]','.message-in','.message-out','.message-in > div:first-child','.copyable-text','.selectable-text','#side [contenteditable]','#main footer [contenteditable]','[data-icon=tail-in]','[data-icon=tail-out]','a[href*="download"]','#app a[href*="whatsapp.com/download"]','nav','[data-navbar-item]','header','footer','[role=button][aria-label*="Search"]','[aria-label="Chat list"]','[data-tab]'];
+                  var h=hooks.map(function(q){ try{ var n=document.querySelectorAll(q).length; var e=document.querySelector(q); return q+' => '+n+(e?' e.g. '+desc(e)+' size='+Math.round(e.getBoundingClientRect().width)+'x'+Math.round(e.getBoundingClientRect().height):''); }catch(x){ return q+' => invalid'; } });
+                  var cs=getComputedStyle(document.body); var vars=['--WDS-surface-default','--WDS-background-wash-plain','--WDS-systems-chat-background-wallpaper','--radius-app','--navbar-width'].map(function(v){ return v+'='+cs.getPropertyValue(v).trim(); });
+                  return 'HOOKS\\n'+h.join('\\n')+'\\nVARS '+vars.join(' ')+'\\nOUTLINE\\n'+out.join('\\n');
+                })();
+                """
+                w.evaluateJavaScript(js, in: nil, in: ContentWorlds.core) { result in
+                    if case .success(let v) = result, let text = v as? String {
+                        for line in text.split(separator: "\n") { FileHandle.standardError.write(Data(("[DOM] " + line + "\n").utf8)) }
+                    }
+                }
             }
             if let path = ProcessInfo.processInfo.environment["WISP_DEBUG_SNAPSHOT"] {
                 let cfg = WKSnapshotConfiguration()

@@ -1,4 +1,5 @@
 import Foundation
+import WebKit
 
 /// Persists the list of accounts. Pure data; sessions are managed elsewhere.
 @MainActor
@@ -11,23 +12,44 @@ final class AccountStore {
         self.url = url
         load()
         if accounts.isEmpty {
-            // Zero-friction first launch: one account, no dialog.
-            accounts = [Account(name: "Personal", colorIndex: 3)]
+            // accounts.json missing or unreadable. If WebKit still has per-account data
+            // stores on disk (e.g. after a bad update), adopt them so nobody is logged out.
+            let orphans = WKWebsiteDataStore.allDataStoreIdentifiers
+            if !orphans.isEmpty {
+                accounts = orphans.enumerated().map { i, id in Account(name: i == 0 ? "Personal" : "Account \(i + 1)", dataStoreID: id, colorIndex: 3 + i) }
+                Log.warning("accounts.json was missing; adopted \(orphans.count) existing session store(s)", .accounts)
+            } else {
+                // Zero-friction first launch: one account, no dialog.
+                accounts = [Account(name: "Personal", colorIndex: 3)]
+            }
             save()
         }
     }
 
     private struct File: Codable { var version = 1; var accounts: [Account] }
 
+    private var backupURL: URL { url.appendingPathExtension("bak") }
+
     private func load() {
-        guard let data = try? Data(contentsOf: url) else { return }
-        do { accounts = try JSONDecoder.standard.decode(File.self, from: data).accounts }
-        catch { Log.error("accounts.json unreadable: \(error.localizedDescription)", .accounts) }
+        for candidate in [url, backupURL] {
+            guard let data = try? Data(contentsOf: candidate) else { continue }
+            do {
+                accounts = try JSONDecoder.standard.decode(File.self, from: data).accounts
+                if candidate == backupURL { Log.warning("accounts.json unreadable; restored from backup", .accounts) }
+                return
+            } catch { Log.error("\(candidate.lastPathComponent) unreadable: \(error.localizedDescription)", .accounts) }
+        }
     }
 
     private func save() {
-        do { try JSONEncoder.pretty.encode(File(accounts: accounts)).write(to: url, options: .atomic) }
-        catch { Log.error("Failed to save accounts: \(error.localizedDescription)", .accounts) }
+        do {
+            let data = try JSONEncoder.pretty.encode(File(accounts: accounts))
+            if FileManager.default.fileExists(atPath: url.path) {
+                try? FileManager.default.removeItem(at: backupURL)
+                try? FileManager.default.copyItem(at: url, to: backupURL)
+            }
+            try data.write(to: url, options: .atomic)
+        } catch { Log.error("Failed to save accounts: \(error.localizedDescription)", .accounts) }
     }
 
     func account(id: UUID) -> Account? { accounts.first { $0.id == id } }

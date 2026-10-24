@@ -65,8 +65,8 @@ html[data-wisp-density="compact"] #main footer { padding-top: 4px !important; pa
 html[data-wisp-density="compact"] #main header,
 html[data-wisp-density="compact"] #side header { min-height: 52px !important; }
 
-/* ---- 6. Focus & motion ------------------------------------------------ */
-#app :focus-visible { outline: 2px solid var(--wisp-accent); outline-offset: 1px; }
+/* ---- 6. Motion -------------------------------------------------------- */
+/* (Focus rings are left to WhatsApp; a custom outline doubled up on the search and composer fields.) */
 @media (prefers-reduced-motion: reduce) {
   #app *, #app *::before, #app *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }

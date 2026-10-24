@@ -92,7 +92,12 @@
       if (s !== lastState) {
         lastState = s;
         post('wispState', { state: s });
-        if (s === 'chats') { setTimeout(runHealthCheck, 1500); }
+      }
+      // Chat-panel hooks (#main, bubbles) only exist once a chat is open; run the
+      // one-shot check the first time both the list and a conversation are present.
+      if (s === 'chats' && !healthChecked && document.querySelector('#main')) {
+        healthChecked = true;
+        setTimeout(runHealthCheck, 1500);
       }
     }, 350);
   }
@@ -108,6 +113,7 @@
   // --------------------------------------------------------- health check
   // The native side passes the list of selectors each theme relies on.
   let healthSelectors = [];
+  let healthChecked = false;
   function setHealthSelectors(list) { healthSelectors = Array.isArray(list) ? list.slice(0, 64) : []; }
   function runHealthCheck() {
     if (healthSelectors.length === 0) { return; }
