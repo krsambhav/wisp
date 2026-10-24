@@ -16,8 +16,8 @@ nonisolated struct Account: Identifiable, Codable, Equatable, Sendable {
     var notificationsEnabled: Bool
     var showPreviews: Bool?        // nil → inherit global
     var muted: Bool
-    /// Keep this account's session loaded while another account is in front,
-    /// so it keeps receiving notifications. Off by default for extra accounts.
+    /// Connect this account at launch (before it is first opened) so it receives
+    /// notifications immediately. Sessions are always kept alive once opened.
     var keepLoadedInBackground: Bool
 
     init(id: UUID = UUID(), name: String, dataStoreID: UUID = UUID(), colorIndex: Int = 0, avatarFileName: String? = nil,

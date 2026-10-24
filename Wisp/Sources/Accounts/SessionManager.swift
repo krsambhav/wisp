@@ -52,7 +52,7 @@ final class SessionManager {
         activeAccountID = id
         env.settings.window.lastActiveAccountID = id
         session(for: id)?.loadIfNeeded()
-        unloadSessionsNotNeeded()
+        // Sessions stay alive once created: switching back must be instant, never a reload.
         Log.info("Activated account \(id.uuidString.prefix(8))", .accounts)
     }
 
@@ -61,25 +61,19 @@ final class SessionManager {
         activate(accounts[index].id)
     }
 
-    /// Sessions for accounts marked "keep loaded" are created and loaded eagerly
-    /// so they receive messages; others are created on first activation.
+    /// Sessions for accounts marked "keep loaded" are created and loaded at launch
+    /// so they receive messages before being opened; others are created on first
+    /// activation and then kept alive for the rest of the run.
     func ensureSessionsForBackgroundAccounts() {
         for a in accounts where a.keepLoadedInBackground || a.id == activeAccountID {
             session(for: a.id)?.loadIfNeeded()
         }
     }
 
-    /// Tears down web views of accounts that are neither active nor pinned.
-    private func unloadSessionsNotNeeded() {
-        for (id, s) in sessions where id != activeAccountID {
-            guard let a = env.accounts.account(id: id) else {
-                s.tearDown(); sessions[id] = nil   // account no longer exists
-                continue
-            }
-            if !a.keepLoadedInBackground, s.isWebViewCreated {
-                s.tearDown()
-                Log.info("Unloaded background session \(id.uuidString.prefix(8)) (not pinned)", .accounts)
-            }
+    /// Drops sessions whose account no longer exists.
+    private func dropSessionsForDeletedAccounts() {
+        for (id, s) in sessions where env.accounts.account(id: id) == nil {
+            s.tearDown(); sessions[id] = nil
         }
     }
 
@@ -96,7 +90,7 @@ final class SessionManager {
         env.accounts.update(a)
         sessions[a.id]?.updateAccount(a)
         ensureSessionsForBackgroundAccounts()
-        unloadSessionsNotNeeded()
+        dropSessionsForDeletedAccounts()
     }
 
     func removeAccount(id: UUID) async {

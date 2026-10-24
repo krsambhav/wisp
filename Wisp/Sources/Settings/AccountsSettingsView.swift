@@ -110,7 +110,7 @@ private struct AccountRow: View {
             .padding(.horizontal, 14).padding(.vertical, 10)
             WDivider().opacity(0.5)
             HStack {
-                Toggle("Keep loaded in background (receive notifications while another account is in front)", isOn: Binding(get: { account.keepLoadedInBackground }, set: { var a = account; a.keepLoadedInBackground = $0; env.sessions.updateAccount(a) }))
+                Toggle("Connect at launch (receive notifications before you first switch to this account)", isOn: Binding(get: { account.keepLoadedInBackground }, set: { var a = account; a.keepLoadedInBackground = $0; env.sessions.updateAccount(a) }))
                     .toggleStyle(.checkbox).font(WispUI.caption).disabled(isActive && env.accounts.accounts.count == 1)
                 Spacer()
             }
