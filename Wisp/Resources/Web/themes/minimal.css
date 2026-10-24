@@ -26,3 +26,43 @@ html { --WDS-systems-chat-foreground-wallpaper: var(--wisp-chat-background) !imp
 
 /* Remove colored link underline noise. */
 #app a { text-decoration-color: color-mix(in srgb, currentColor 40%, transparent); }
+
+/* ---- Real-DOM hooks (captured 2026-10-25; see docs/LIMITATIONS.md) -------
+   Nav rail: header[data-tab="2"] (64px column with [data-navbar-item] buttons)
+   Chat list: #pane-side > [role="grid"][aria-label="Chat list"] > [role="row"]
+   ------------------------------------------------------------------------- */
+
+/* Nav rail: flat, same surface as the list, hairline on the right. */
+header[data-tab="2"] {
+  background: var(--wisp-surface) !important;
+  border-right: 1px solid var(--wisp-divider) !important;
+}
+header[data-tab="2"] [data-navbar-item] { border-radius: 8px !important; }
+header[data-tab="2"] [data-navbar-item]:hover { background: var(--wisp-surface-highlight) !important; }
+
+/* Chat list rows: calmer separators, rounded hover/selected surface. */
+#pane-side [role="row"] > div { border-bottom: 1px solid transparent !important; }
+#pane-side [role="row"] > div > div:first-child,
+#pane-side [role="row"] > div { border-radius: 10px; }
+#pane-side { padding: 0 6px !important; box-sizing: border-box; }
+#pane-side [role="row"]:hover > div { background: var(--wisp-surface-highlight) !important; }
+#pane-side [role="row"][aria-selected="true"] > div,
+#pane-side [role="row"] > div[aria-selected="true"] { background: var(--wisp-surface-emphasized) !important; }
+
+/* Filter chips and the search field: neutral surfaces with 1px outlines. */
+#side [role="tablist"] [role="tab"],
+#side button[aria-pressed] {
+  border: 1px solid var(--wisp-divider) !important;
+  background: transparent !important;
+  color: var(--wisp-text-secondary) !important;
+}
+#side [role="tablist"] [role="tab"][aria-selected="true"],
+#side button[aria-pressed="true"] {
+  background: var(--wisp-accent) !important;
+  color: var(--wisp-on-accent) !important;
+  border-color: var(--wisp-accent) !important;
+}
+#side [contenteditable="true"][role="textbox"] { caret-color: var(--wisp-accent); }
+
+/* Primary action (new chat) uses the neutral primary, like a shadcn default button. */
+#side button[aria-label="New chat"] { background: var(--wisp-accent) !important; color: var(--wisp-on-accent) !important; }

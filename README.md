@@ -30,7 +30,7 @@ Wisp loads the official `https://web.whatsapp.com` and leaves WhatsApp's end-to-
 - Focus / Do Not Disturb are honored by the system.
 
 **Appearance Studio**
-- Three built-in themes: **Default** (refined WhatsApp), **Minimal** (monochrome, shadcn-inspired), **Midnight** (deep dark, indigo accent).
+- Three built-in themes: **Minimal** (monochrome, shadcn/ui — the default), **Default** (refined WhatsApp green), **Midnight** (deep dark, indigo accent).
 - Light / dark / system mode, accent presets or any custom color, font family, interface scale, message text size, comfortable / compact density, rounded bubbles with adjustable radius, optional fixed sidebar width.
 - Custom CSS editor with syntax highlighting, brace validation and live preview. Preset import / export as JSON.
 - All changes apply live. No reload.

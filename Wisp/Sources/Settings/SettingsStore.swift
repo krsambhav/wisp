@@ -71,7 +71,7 @@ nonisolated struct GeneralSettings: Codable, Equatable, Sendable {
 }
 
 nonisolated struct AppearanceSettings: Codable, Equatable, Sendable {
-    var themeID: String = "default"
+    var themeID: String = "minimal"
     var mode: AppearanceMode = .system
     /// nil → theme's own accent. Otherwise overrides the accent for the theme.
     var accentOverride: HexColor? = nil
