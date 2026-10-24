@@ -62,8 +62,9 @@ header[data-tab="2"] [data-navbar-item]:hover { background: var(--wisp-surface-e
 #main div:has(> span[data-icon="tail-in"]),
 #main div:has(> span[data-icon="tail-out"]) { border-radius: 18px !important; box-shadow: none !important; }
 #main span[data-icon="tail-in"], #main span[data-icon="tail-out"] { display: none !important; }
-#main [data-wisp-bubble="in"] { background: var(--wisp-bubble-incoming) !important; }
-#main [data-wisp-bubble="out"] { background: var(--wisp-bubble-outgoing) !important; }
+#main [data-wisp-bubble="in"] { background: var(--wisp-bubble-incoming) !important; margin-left: 20px !important; }
+#main [data-wisp-bubble="out"] { background: var(--wisp-bubble-outgoing) !important; margin-right: 20px !important; }
+#main [data-wisp-bubble] { padding-left: 2px; padding-right: 2px; }
 /* Outgoing: inverted surface, so every token-driven color inside flips with it. */
 #main [data-wisp-bubble="out"],
 #main div:has(> span[data-icon="tail-out"]) {

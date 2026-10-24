@@ -220,6 +220,7 @@
     state: () => lastState || computeState(),
     setHealthSelectors, runHealthCheck,
     focusSearch,
+    bubbleInfo: () => ({ selector: bubbleSelector, marked: document.querySelectorAll('#main [data-wisp-bubble]').length, out: document.querySelectorAll('#main [data-wisp-bubble="out"]').length, tails: document.querySelectorAll('#main span[data-icon^="tail-"]').length, scheme: lastScheme }),
     log: (...a) => log('info', a), warn: (...a) => log('warning', a), error: (...a) => log('error', a)
   });
   Object.defineProperty(globalThis, '__wispCore', { value: api, enumerable: false, configurable: false, writable: false });

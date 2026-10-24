@@ -186,6 +186,7 @@ final class AccountSession {
                   var app=document.querySelector('#app'); if(app) walk(app,0,8);
                   out.push('HTML class='+document.documentElement.className.slice(0,80)+' BODY class='+document.body.className.slice(0,80)+' dark='+matchMedia('(prefers-color-scheme: dark)').matches);
                   ['tail-in','tail-out'].forEach(function(t){ var e=document.querySelector('[data-icon="'+t+'"]'); var chain=[]; var n=e; for(var i=0;n&&i<7;i++){ chain.push(desc(n)+' '+Math.round(n.getBoundingClientRect().width)+'x'+Math.round(n.getBoundingClientRect().height)); n=n.parentElement; } out.push('TAIL '+t+' ancestry: '+chain.join('  <  ')); });
+                  try { out.push('BUBBLES '+JSON.stringify(globalThis.__wispCore.bubbleInfo())); } catch (e) { out.push('BUBBLES err '+e); }
                   var side=document.querySelector('#side'); if(side){ out.push('SIDE children: '+Array.from(side.children).map(function(c){return desc(c)+' '+Math.round(c.getBoundingClientRect().height)+'h';}).join(' | ')); }
                   var f=document.querySelector('#main footer'); if(f){ var fo=[]; (function w2(el,d){ if(d>5) return; fo.push('  '.repeat(d)+desc(el)+' '+Math.round(el.getBoundingClientRect().width)+'x'+Math.round(el.getBoundingClientRect().height)); Array.from(el.children).slice(0,6).forEach(function(k){ w2(k,d+1); }); })(f,0); out.push('FOOTER\\n'+fo.join('\\n')); }
                   var ids=Array.from(document.querySelectorAll('#app [id]')).map(function(e){return e.tagName.toLowerCase()+'#'+e.id;}).slice(0,60);

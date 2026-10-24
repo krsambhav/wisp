@@ -10,15 +10,17 @@ html { --radius-app: 12px !important; }
 html { --WDS-systems-chat-foreground-wallpaper: var(--wisp-chat-background) !important; }
 #main > div[style*="background-image"], #main [data-asset-chat-background] { background-image: none !important; }
 
-/* Surfaces separated by hairlines rather than tone jumps. */
-#side header, #main header { border-bottom: 1px solid var(--wisp-divider) !important; box-shadow: none !important; }
-#main footer { border-top: 1px solid var(--wisp-divider) !important; }
-
 /* Bubbles: soft elevation, no harsh green. */
-.message-in > div:first-child,
-.message-out > div:first-child {
+#main [data-wisp-bubble] {
+  border-radius: 16px !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.04) !important;
 }
+#main [data-wisp-bubble="in"] { background: var(--wisp-bubble-incoming) !important; }
+#main [data-wisp-bubble="out"] { background: var(--wisp-bubble-outgoing) !important; }
+#main span[data-icon="tail-in"], #main span[data-icon="tail-out"] { display: none !important; }
+/* Surfaces separated by hairlines rather than tone jumps. */
+#main header { border-bottom: 1px solid var(--wisp-divider) !important; box-shadow: none !important; }
+#main footer { border-top: 1px solid var(--wisp-divider) !important; }
 
 /* Rows */
 #pane-side [role="row"]:hover > div,
