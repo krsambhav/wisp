@@ -23,7 +23,6 @@ header[data-tab="2"] [data-navbar-item]:hover { background: var(--wisp-surface-e
   background: var(--wisp-chat-background) !important;
   border-radius: 18px !important;
   margin: 0 12px 12px 4px !important;
-  inset: 0 12px 12px 4px !important; width: auto !important; height: auto !important;
   overflow: hidden !important;
   box-shadow: 0 1px 2px rgba(var(--shadow-rgb), .05), 0 8px 24px -16px rgba(var(--shadow-rgb), .18) !important;
 }
