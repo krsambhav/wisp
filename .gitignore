@@ -1,6 +1,7 @@
 # Xcode / build
 Wisp/build/
 Wisp/build-tests/
+Wisp/build-release/
 Wisp/DerivedData/
 *.xcuserstate
 xcuserdata/
