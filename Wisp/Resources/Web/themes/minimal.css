@@ -13,6 +13,8 @@ html { --radius-app: 14px !important; }
 
 /* ---- Palette (overrides the generated tokens; same on both sides) ------ */
 html {
+  --wisp-bubble-out-fg: #FAFAFA;
+  --outgoing-background-deeper: #27272A !important; --incoming-background-deeper: #E4E4E7 !important;
   --wisp-background: #FFFFFF; --wisp-surface: #FFFFFF; --wisp-surface-emphasized: #F4F4F5;
   --wisp-surface-highlight: #FAFAFA; --wisp-chat-background: #FFFFFF; --wisp-composer: #F4F4F5;
   --wisp-line: #E4E4E7;
@@ -22,7 +24,10 @@ html {
   --WDS-systems-chat-surface-composer: #F4F4F5 !important;
   --app-background: #FFFFFF !important; --panel-background: #FFFFFF !important; --navbar-background: #FFFFFF !important;
 }
-html[data-wisp-scheme="dark"] {
+html[data-wisp-scheme="dark"], html[data-wisp-scheme="dark"] body, body.dark {
+  --wisp-bubble-outgoing: #3F3F46; --wisp-bubble-incoming: #1C1C1F; --wisp-bubble-out-fg: #FAFAFA;
+  --WDS-systems-bubble-surface-incoming: #1C1C1F !important;
+  --outgoing-background-deeper: #4B4B52 !important; --incoming-background-deeper: #27272A !important;
   --wisp-background: #09090B; --wisp-surface: #09090B; --wisp-surface-emphasized: #1C1C1F;
   --wisp-surface-highlight: #141416; --wisp-chat-background: #09090B; --wisp-composer: #1C1C1F;
   --wisp-line: #3F3F46;
@@ -114,43 +119,43 @@ html, html[data-wisp-scheme="dark"] { --WDS-systems-bubble-surface-outgoing: var
    bubble token (so stickers and media stay transparent); every content token is
    flipped inside, which covers replies, captions, mentions, links and receipts. */
 #main [data-wisp-bubble="out"] {
-  --WDS-content-default: var(--wisp-on-accent);
-  --WDS-content-deemphasized: color-mix(in srgb, var(--wisp-on-accent) 68%, transparent);
-  --WDS-content-disabled: color-mix(in srgb, var(--wisp-on-accent) 40%, transparent);
-  --WDS-content-action-default: var(--wisp-on-accent);
-  --WDS-content-action-emphasized: var(--wisp-on-accent);
+  --WDS-content-default: var(--wisp-bubble-out-fg);
+  --WDS-content-deemphasized: color-mix(in srgb, var(--wisp-bubble-out-fg) 68%, transparent);
+  --WDS-content-disabled: color-mix(in srgb, var(--wisp-bubble-out-fg) 40%, transparent);
+  --WDS-content-action-default: var(--wisp-bubble-out-fg);
+  --WDS-content-action-emphasized: var(--wisp-bubble-out-fg);
   --WDS-content-read: var(--wisp-link);
-  --WDS-systems-bubble-content-deemphasized: color-mix(in srgb, var(--wisp-on-accent) 68%, transparent);
-  --WDS-systems-bubble-content-business: color-mix(in srgb, var(--wisp-on-accent) 68%, transparent);
-  --WDS-systems-bubble-surface-overlay: color-mix(in srgb, var(--wisp-on-accent) 12%, transparent);
-  --WDS-systems-bubble-surface-incoming: color-mix(in srgb, var(--wisp-on-accent) 12%, transparent);
+  --WDS-systems-bubble-content-deemphasized: color-mix(in srgb, var(--wisp-bubble-out-fg) 68%, transparent);
+  --WDS-systems-bubble-content-business: color-mix(in srgb, var(--wisp-bubble-out-fg) 68%, transparent);
+  --WDS-systems-bubble-surface-overlay: color-mix(in srgb, var(--wisp-bubble-out-fg) 12%, transparent);
+  --WDS-systems-bubble-surface-incoming: color-mix(in srgb, var(--wisp-bubble-out-fg) 12%, transparent);
   --WDS-systems-bubble-surface-outgoing: var(--wisp-bubble-outgoing);
-  --WDS-systems-bubble-surface-system: color-mix(in srgb, var(--wisp-on-accent) 12%, transparent);
-  --WDS-surface-default: color-mix(in srgb, var(--wisp-on-accent) 10%, transparent);
-  --WDS-surface-emphasized: color-mix(in srgb, var(--wisp-on-accent) 16%, transparent);
-  --WDS-surface-highlight: color-mix(in srgb, var(--wisp-on-accent) 12%, transparent);
-  --WDS-lines-divider: color-mix(in srgb, var(--wisp-on-accent) 18%, transparent);
-  --WDS-accent: var(--wisp-on-accent); --WDS-accent-deemphasized: color-mix(in srgb, var(--wisp-on-accent) 14%, transparent);
-  --primary: var(--wisp-on-accent); --primary-strong: var(--wisp-on-accent); --primary-stronger: var(--wisp-on-accent);
-  --secondary: color-mix(in srgb, var(--wisp-on-accent) 68%, transparent); --secondary-stronger: color-mix(in srgb, var(--wisp-on-accent) 68%, transparent);
-  --message-primary: var(--wisp-on-accent); --bubble-meta: color-mix(in srgb, var(--wisp-on-accent) 68%, transparent);
-  --bubble-meta-icon: color-mix(in srgb, var(--wisp-on-accent) 68%, transparent); --icon: color-mix(in srgb, var(--wisp-on-accent) 75%, transparent);
-  --icon-ack: var(--wisp-link); --link-rgb: 147, 197, 253; --text-action: var(--wisp-on-accent);
-  --incoming-background: color-mix(in srgb, var(--wisp-on-accent) 12%, transparent); --outgoing-background: var(--wisp-bubble-outgoing);
-  --quote-background: color-mix(in srgb, var(--wisp-on-accent) 12%, transparent); --block-quote-text: color-mix(in srgb, var(--wisp-on-accent) 80%, transparent);
-  --text-muted: color-mix(in srgb, var(--wisp-on-accent) 65%, transparent); --document-meta: color-mix(in srgb, var(--wisp-on-accent) 65%, transparent);
-  color: var(--wisp-on-accent) !important;
+  --WDS-systems-bubble-surface-system: color-mix(in srgb, var(--wisp-bubble-out-fg) 12%, transparent);
+  --WDS-surface-default: color-mix(in srgb, var(--wisp-bubble-out-fg) 10%, transparent);
+  --WDS-surface-emphasized: color-mix(in srgb, var(--wisp-bubble-out-fg) 16%, transparent);
+  --WDS-surface-highlight: color-mix(in srgb, var(--wisp-bubble-out-fg) 12%, transparent);
+  --WDS-lines-divider: color-mix(in srgb, var(--wisp-bubble-out-fg) 18%, transparent);
+  --WDS-accent: var(--wisp-bubble-out-fg); --WDS-accent-deemphasized: color-mix(in srgb, var(--wisp-bubble-out-fg) 14%, transparent);
+  --primary: var(--wisp-bubble-out-fg); --primary-strong: var(--wisp-bubble-out-fg); --primary-stronger: var(--wisp-bubble-out-fg);
+  --secondary: color-mix(in srgb, var(--wisp-bubble-out-fg) 68%, transparent); --secondary-stronger: color-mix(in srgb, var(--wisp-bubble-out-fg) 68%, transparent);
+  --message-primary: var(--wisp-bubble-out-fg); --bubble-meta: color-mix(in srgb, var(--wisp-bubble-out-fg) 68%, transparent);
+  --bubble-meta-icon: color-mix(in srgb, var(--wisp-bubble-out-fg) 68%, transparent); --icon: color-mix(in srgb, var(--wisp-bubble-out-fg) 75%, transparent);
+  --icon-ack: var(--wisp-link); --link-rgb: 147, 197, 253; --text-action: var(--wisp-bubble-out-fg);
+  --incoming-background: color-mix(in srgb, var(--wisp-bubble-out-fg) 12%, transparent); --outgoing-background: var(--wisp-bubble-outgoing);
+  --quote-background: color-mix(in srgb, var(--wisp-bubble-out-fg) 12%, transparent); --block-quote-text: color-mix(in srgb, var(--wisp-bubble-out-fg) 80%, transparent);
+  --text-muted: color-mix(in srgb, var(--wisp-bubble-out-fg) 65%, transparent); --document-meta: color-mix(in srgb, var(--wisp-bubble-out-fg) 65%, transparent);
+  color: var(--wisp-bubble-out-fg) !important;
 }
 html[data-wisp-scheme="dark"] #main [data-wisp-bubble="out"] { --WDS-content-read: #2563EB; --icon-ack: #2563EB; --link-rgb: 37, 99, 235; }
 /* Anything WhatsApp colors directly (document cards, captions, link previews) becomes legible on the inverted surface. */
 #main [data-wisp-bubble="out"]:not([data-wisp-plain]) *:not(svg):not(path):not(img):not(video):not(canvas):not([data-icon]),
-#main div:has(> span[data-icon="tail-out"]):not([data-wisp-plain]) *:not(svg):not(path):not(img):not(video):not(canvas):not([data-icon]) { color: var(--wisp-on-accent) !important; -webkit-text-fill-color: var(--wisp-on-accent) !important; opacity: 1; }
-#main [data-wisp-bubble="out"]:not([data-wisp-plain]) [data-icon] { color: color-mix(in srgb, var(--wisp-on-accent) 80%, transparent) !important; }
-#main [data-wisp-bubble="out"] svg:not([data-icon*="check"]) { color: var(--wisp-on-accent) !important; }
+#main div:has(> span[data-icon="tail-out"]):not([data-wisp-plain]) *:not(svg):not(path):not(img):not(video):not(canvas):not([data-icon]) { color: var(--wisp-bubble-out-fg) !important; -webkit-text-fill-color: var(--wisp-bubble-out-fg) !important; opacity: 1; }
+#main [data-wisp-bubble="out"]:not([data-wisp-plain]) [data-icon] { color: color-mix(in srgb, var(--wisp-bubble-out-fg) 80%, transparent) !important; }
+#main [data-wisp-bubble="out"] svg:not([data-icon*="check"]) { color: var(--wisp-bubble-out-fg) !important; }
 #main [data-wisp-bubble="out"] [data-icon="msg-dblcheck"], #main [data-wisp-bubble="out"] [data-icon="msg-check"] { color: var(--wisp-link) !important; }
 /* Inverted bubble: swatches that WhatsApp hard-codes as light surfaces. */
 #main [data-wisp-bubble="out"] [style*="background-color: rgb(255, 255, 255)"],
-#main [data-wisp-bubble="out"] [style*="background: rgb(255, 255, 255)"] { background-color: color-mix(in srgb, var(--wisp-on-accent) 12%, transparent) !important; }
+#main [data-wisp-bubble="out"] [style*="background: rgb(255, 255, 255)"] { background-color: color-mix(in srgb, var(--wisp-bubble-out-fg) 12%, transparent) !important; }
 
 /* ---- Misc ---------------------------------------------------------------- */
 #app ::selection { background: color-mix(in srgb, var(--wisp-accent) 18%, transparent); }

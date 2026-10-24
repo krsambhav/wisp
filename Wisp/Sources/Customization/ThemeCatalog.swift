@@ -59,11 +59,11 @@ nonisolated enum ThemeCatalog {
         ),
         dark: ThemePalette(
             accent: HexColor("#FAFAFA"), accentEmphasized: HexColor("#E4E4E7"), accentDeemphasized: HexColor("#27272A"), onAccent: HexColor("#09090B"),
-            background: HexColor("#09090B"), backgroundInset: HexColor("#000000"),
+            background: HexColor("#09090B"), backgroundInset: HexColor("#09090B"),
             surface: HexColor("#09090B"), surfaceEmphasized: HexColor("#1C1C1F"), surfaceElevated: HexColor("#1C1C1F"), surfaceHighlight: HexColor("#FAFAFA0F"),
             textPrimary: HexColor("#FAFAFA"), textSecondary: HexColor("#A1A1AA"), textDisabled: HexColor("#52525B"), link: HexColor("#93C5FD"), readReceipt: HexColor("#93C5FD"),
             divider: HexColor("#FFFFFF00"), outline: HexColor("#3F3F46"), outlineDeemphasized: HexColor("#FFFFFF00"),
-            bubbleIncoming: HexColor("#27272A"), bubbleOutgoing: HexColor("#FAFAFA"), bubbleSystem: HexColor("#1C1C1F"), bubbleMeta: HexColor("#A1A1AA"),
+            bubbleIncoming: HexColor("#1C1C1F"), bubbleOutgoing: HexColor("#3F3F46"), bubbleSystem: HexColor("#1C1C1F"), bubbleMeta: HexColor("#A1A1AA"),
             chatBackground: HexColor("#141416"), chatPattern: HexColor("#141416"), composer: HexColor("#232326"), tray: HexColor("#141416"),
             unreadBadge: HexColor("#FAFAFA"), unreadBadgeText: HexColor("#09090B"), scrollbar: HexColor("#FAFAFA1F"), scrollbarHover: HexColor("#FAFAFA38"),
             shellBackground: HexColor("#09090B"), shellForeground: HexColor("#FAFAFA"), shellDivider: HexColor("#FFFFFF00")
