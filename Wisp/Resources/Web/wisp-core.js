@@ -147,8 +147,9 @@
       else if (b.querySelector('span[data-icon="tail-in"]')) { dir = 'in'; }
       else { const r = b.getBoundingClientRect(); dir = (r.left + r.width / 2) > mid ? 'out' : 'in'; }
       // Stickers and bare media have no bubble surface; themes must not paint one.
-      const bg = getComputedStyle(b).backgroundColor;
-      if (!bg || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)') { b.setAttribute('data-wisp-plain', '1'); }
+      // The surface may sit on the wrapper or on its first inner element.
+      const isClear = (el) => { const bg = el && getComputedStyle(el).backgroundColor; return !bg || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)'; };
+      if (isClear(b) && isClear(b.querySelector(':scope > div'))) { b.setAttribute('data-wisp-plain', '1'); }
       b.setAttribute('data-wisp-bubble', dir);
     }
   }
