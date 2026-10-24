@@ -110,34 +110,39 @@
   // WhatsApp no longer marks .message-in/.message-out. The bubble is the parent
   // of the tail icon, and all bubbles share its (hashed) class list — learned at
   // runtime, never hard-coded. Direction comes from horizontal placement.
-  let bubbleSelector = '';
+  // Every message has at least one of these leaves. The bubble is the ancestor
+  // just below the full-width row: climb while the parent is narrower than ~90%
+  // of the conversation. Direction: receipts (only on outgoing) or placement.
+  const LEAF_SELECTOR = '.copyable-text, [data-icon^="msg-"], span[data-icon^="tail-"], img[src^="blob:"], video, audio, [role="img"]';
+  function bubbleFor(leaf, mainWidth) {
+    let el = leaf;
+    for (let i = 0; i < 12 && el && el.parentElement; i++) {
+      const parent = el.parentElement;
+      if (parent.id === 'main' || parent.tagName === 'BODY') { return null; }
+      if (parent.getBoundingClientRect().width >= mainWidth * 0.9 && el.getBoundingClientRect().width < mainWidth * 0.9) { return el; }
+      el = parent;
+    }
+    return null;
+  }
   function markBubbles() {
     const main = document.querySelector('#main');
     if (!main) { return; }
-    if (!bubbleSelector) {
-      const tail = main.querySelector('span[data-icon="tail-in"], span[data-icon="tail-out"]');
-      const bubble = tail && tail.parentElement;
-      if (!bubble || !bubble.className || typeof bubble.className !== 'string') { return; }
-      const cls = bubble.className.trim().split(/\s+/).filter(Boolean);
-      if (cls.length === 0) { return; }
-      bubbleSelector = '#main .' + cls.map((c) => CSS.escape(c)).join('.');
-    }
-    let nodes;
-    try { nodes = main.querySelectorAll(bubbleSelector + ':not([data-wisp-bubble])'); } catch (_) { bubbleSelector = ''; return; }
-    if (nodes.length === 0) { return; }
-    const mid = main.getBoundingClientRect().left + main.getBoundingClientRect().width / 2;
-    for (const el of nodes) {
+    const rect = main.getBoundingClientRect();
+    if (rect.width === 0) { return; }
+    const mid = rect.left + rect.width / 2;
+    const leaves = main.querySelectorAll(LEAF_SELECTOR);
+    for (const leaf of leaves) {
+      if (leaf.closest('[data-wisp-bubble]') || leaf.closest('header, footer')) { continue; }
+      const b = bubbleFor(leaf, rect.width);
+      if (!b || b.hasAttribute('data-wisp-bubble')) { continue; }
       let dir = '';
-      if (el.querySelector(':scope > span[data-icon="tail-out"]')) { dir = 'out'; }
-      else if (el.querySelector(':scope > span[data-icon="tail-in"]')) { dir = 'in'; }
-      else {
-        const r = el.getBoundingClientRect();
-        if (r.width === 0) { continue; }
-        dir = (r.left + r.width / 2) > mid ? 'out' : 'in';
-      }
-      el.setAttribute('data-wisp-bubble', dir);
+      if (b.querySelector('span[data-icon="tail-out"], [data-icon="msg-dblcheck"], [data-icon="msg-check"], [data-icon="msg-time"]')) { dir = 'out'; }
+      else if (b.querySelector('span[data-icon="tail-in"]')) { dir = 'in'; }
+      else { const r = b.getBoundingClientRect(); dir = (r.left + r.width / 2) > mid ? 'out' : 'in'; }
+      b.setAttribute('data-wisp-bubble', dir);
     }
   }
+  const bubbleSelector = '(leaf-climb)';
 
   let stateTimer = 0;
   function scheduleState() {

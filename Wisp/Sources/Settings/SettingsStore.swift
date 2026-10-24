@@ -130,7 +130,7 @@ nonisolated struct AllSettings: Codable, Equatable, Sendable {
     var notifications = NotificationSettings()
     var advanced = AdvancedSettings()
     var window = WindowSettings()
-    var schemaVersion = 1
+    var schemaVersion = 2
 }
 
 // MARK: - Store
@@ -161,7 +161,14 @@ final class SettingsStore {
 
     private static func load(from url: URL) -> AllSettings {
         guard let data = try? Data(contentsOf: url) else { return AllSettings() }
-        do { return try JSONDecoder.standard.decode(AllSettings.self, from: data) }
+        do {
+            var s = try JSONDecoder.standard.decode(AllSettings.self, from: data)
+            if s.schemaVersion < 2 {   // 2026-10: Plus Jakarta Sans became the default typeface
+                if s.appearance.font == .system { s.appearance.font = .jakarta }
+                s.schemaVersion = 2
+            }
+            return s
+        }
         catch {
             Log.error("Settings file unreadable, using defaults: \(error.localizedDescription)", .settings)
             return AllSettings()

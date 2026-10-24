@@ -18,7 +18,8 @@ import WebKit
 ///   WISP_DEBUG_THEME=<id>            select a theme at launch (default|minimal|midnight)
 ///   WISP_DEBUG_MODE=<mode>           appearance mode (system|light|dark)
 ///   WISP_DEBUG_THEME_DIR=<dir>       load theme CSS from this directory and hot-reload it on change
-///   WISP_DEBUG_SNAPSHOT_DIR=<dir>    touch <dir>/snap.request to write <dir>/snap.png (page) + window PNGs
+///   WISP_DEBUG_SNAPSHOT_DIR=<dir>    touch <dir>/snap.request to write <dir>/snap.png (page) + window PNGs;
+///                                    touch <dir>/outline.request to run <dir>/outline.js (core world) → outline.txt
 ///   WISP_DEBUG_IMPORT_SCRIPT=<path>  import a .js file as an enabled user script
 ///   WISP_DEBUG_CSS=<path>            load custom CSS from a file
 ///   WISP_DEBUG_RESET_SCRIPTS=1       delete all user scripts first
@@ -80,6 +81,20 @@ enum DebugHooks {
 
     private static func handleSnapshotRequest(_ app: AppEnvironment, dir: String) {
         let url = URL(fileURLWithPath: dir)
+        let outlineReq = url.appendingPathComponent("outline.request")
+        if FileManager.default.fileExists(atPath: outlineReq.path), let s = app.sessions.activeSession, s.isWebViewCreated {
+            try? FileManager.default.removeItem(at: outlineReq)
+            let js = (try? String(contentsOf: outlineReq.deletingLastPathComponent().appendingPathComponent("outline.js"), encoding: .utf8)) ?? "'no outline.js'"
+            s.webView.evaluateJavaScript(js, in: nil, in: ContentWorlds.core) { result in
+                let text: String
+                switch result {
+                case .success(let v): text = (v as? String) ?? String(describing: v)
+                case .failure(let e): text = "error: \(e)"
+                }
+                try? text.write(to: url.appendingPathComponent("outline.txt"), atomically: true, encoding: .utf8)
+                Log.info("Outline written to \(dir)/outline.txt", .web)
+            }
+        }
         let req = url.appendingPathComponent("snap.request")
         guard FileManager.default.fileExists(atPath: req.path) else { return }
         try? FileManager.default.removeItem(at: req)
