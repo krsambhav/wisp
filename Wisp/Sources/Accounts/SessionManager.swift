@@ -111,6 +111,19 @@ final class SessionManager {
         catch { Log.warning("Could not remove data store: \(error.localizedDescription)", .accounts) }
     }
 
+    /// Navigates every live web view to a blank page and waits (bounded) so the
+    /// site's unload handlers run before the process exits.
+    func unloadAllForTermination() async {
+        let live = loadedSessions
+        guard !live.isEmpty else { return }
+        for s in live { s.beginUnloadForTermination() }
+        let deadline = Date().addingTimeInterval(2.0)
+        while Date() < deadline, live.contains(where: { !$0.isUnloadedForTermination }) {
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+        Log.info("Sessions unloaded for termination (\(live.filter(\.isUnloadedForTermination).count)/\(live.count))", .web)
+    }
+
     // MARK: Fan-out
 
     func applyLiveStylesEverywhere() { for s in loadedSessions { s.applyLiveStyles() } }

@@ -13,7 +13,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // SIGTERM (e.g. `kill`, logout) → orderly quit so WebKit flushes storage.
         signal(SIGTERM, SIG_IGN)
         let src = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
-        src.setEventHandler { NSApp.terminate(nil) }
+        src.setEventHandler { AppEnvironment.shared.isQuitForced = true; NSApp.terminate(nil) }
         src.resume()
         sigtermSource = src
         Log.info("Launch → environment in \(Int(Date().timeIntervalSince(t0) * 1000)) ms", .performance)
@@ -67,7 +67,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             alert.addButton(withTitle: "Quit Anyway")
             if alert.runModal() == .alertFirstButtonReturn { return .terminateCancel }
         }
-        if environment.settings.general.confirmBeforeQuit {
+        if environment.settings.general.confirmBeforeQuit && !environment.isQuitForced {
             let alert = NSAlert()
             alert.messageText = "Quit Wisp?"
             alert.informativeText = "You will stop receiving message notifications until Wisp is opened again."
@@ -75,8 +75,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             alert.addButton(withTitle: "Cancel")
             if alert.runModal() != .alertFirstButtonReturn { return .terminateCancel }
         }
+        // Unload every page first so WhatsApp's pagehide handlers close IndexedDB
+        // cleanly; an abrupt exit mid-transaction can corrupt its database.
+        if !environment.sessions.loadedSessions.isEmpty && !isUnloadingForQuit {
+            isUnloadingForQuit = true
+            Task { @MainActor in
+                await environment.sessions.unloadAllForTermination()
+                NSApp.reply(toApplicationShouldTerminate: true)
+            }
+            return .terminateLater
+        }
         return .terminateNow
     }
+
+    private var isUnloadingForQuit = false
 
     func applicationWillTerminate(_ notification: Notification) {
         // Never clear website data here — sessions must survive restarts.

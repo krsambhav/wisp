@@ -118,6 +118,18 @@ final class AccountSession {
         hasFinishedFirstLoad = false
     }
 
+    // MARK: Termination
+
+    private(set) var isUnloadedForTermination = false
+    private var isUnloadingForTermination = false
+
+    func beginUnloadForTermination() {
+        guard let w = _webView, w.url != nil else { isUnloadedForTermination = true; return }
+        isUnloadingForTermination = true
+        cancelRetry()
+        w.loadHTMLString("<!doctype html><title>Wisp</title>", baseURL: nil)
+    }
+
     // MARK: Navigation callbacks (from coordinator)
 
     func navigationDidStart() {
@@ -130,6 +142,7 @@ final class AccountSession {
     }
 
     func navigationDidFinish() {
+        if isUnloadingForTermination { isUnloadedForTermination = true; return }
         if pageState == .loading { pageState = .unknown }
         env.injection.applyLiveStyles(to: webView)
         Log.info("WhatsApp Web loaded (account \(account.id.uuidString.prefix(8)))", .web)
@@ -220,6 +233,7 @@ final class AccountSession {
     #endif
 
     func navigationDidFail(_ error: Error) {
+        if isUnloadingForTermination { isUnloadedForTermination = true; return }
         let ns = error as NSError
         if ns.domain == NSURLErrorDomain && ns.code == NSURLErrorCancelled { return }
         if ns.domain == "WebKitErrorDomain" && ns.code == 102 { return } // frame load interrupted (downloads / policy cancel)

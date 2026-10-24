@@ -17,6 +17,8 @@ import WebKit
 ///   WISP_DEBUG_QUIT_AFTER=<seconds>  terminate after N seconds (bypasses the sync-guard alert)
 ///   WISP_DEBUG_THEME=<id>            select a theme at launch (default|minimal|midnight)
 ///   WISP_DEBUG_MODE=<mode>           appearance mode (system|light|dark)
+///   WISP_DEBUG_THEME_DIR=<dir>       load theme CSS from this directory and hot-reload it on change
+///   WISP_DEBUG_SNAPSHOT_DIR=<dir>    touch <dir>/snap.request to write <dir>/snap.png (page) + window PNGs
 ///   WISP_DEBUG_IMPORT_SCRIPT=<path>  import a .js file as an enabled user script
 ///   WISP_DEBUG_CSS=<path>            load custom CSS from a file
 ///   WISP_DEBUG_RESET_SCRIPTS=1       delete all user scripts first
@@ -25,7 +27,44 @@ import WebKit
 enum DebugHooks {
     static var env: [String: String] { ProcessInfo.processInfo.environment }
 
+    nonisolated(unsafe) private static var watchers: [DispatchSourceFileSystemObject] = []
+
+    private static func watch(directory: URL, _ onChange: @escaping @MainActor () -> Void) {
+        let fd = open(directory.path, O_EVTONLY)
+        guard fd >= 0 else { Log.warning("Cannot watch \(directory.path)", .app); return }
+        let src = DispatchSource.makeFileSystemObjectSource(fileDescriptor: fd, eventMask: [.write, .rename, .extend, .attrib], queue: .main)
+        let debouncer = Debouncer(delay: .milliseconds(250))
+        src.setEventHandler { debouncer.call { onChange() } }
+        src.setCancelHandler { close(fd) }
+        src.resume()
+        watchers.append(src)
+    }
+
     static func installAfterLaunch(_ app: AppEnvironment) {
+        // Hot-reload theme stylesheets from a directory (edit minimal.css → applied live, no reload).
+        if let dir = env["WISP_DEBUG_THEME_DIR"] {
+            let url = URL(fileURLWithPath: dir)
+            CSSGenerator.themeDirectoryOverride = url
+            watch(directory: url) { app.sessions.applyLiveStylesEverywhere(); Log.info("Theme CSS reloaded from \(dir)", .injection) }
+        }
+        // Snapshot on demand: touch "<dir>/snap.request" → "<dir>/snap.png" (web view) + "<dir>/window.png".
+        if let dir = env["WISP_DEBUG_SNAPSHOT_DIR"] {
+            let url = URL(fileURLWithPath: dir)
+            watch(directory: url) {
+                let req = url.appendingPathComponent("snap.request")
+                guard FileManager.default.fileExists(atPath: req.path) else { return }
+                try? FileManager.default.removeItem(at: req)
+                guard let s = app.sessions.activeSession, s.isWebViewCreated else { return }
+                let cfg = WKSnapshotConfiguration(); cfg.afterScreenUpdates = true
+                s.webView.takeSnapshot(with: cfg) { image, _ in
+                    if let image, let tiff = image.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff), let png = rep.representation(using: .png, properties: [:]) {
+                        try? png.write(to: url.appendingPathComponent("snap.png"))
+                        Log.info("Snapshot written to \(dir)/snap.png", .web)
+                    }
+                }
+                snapshotWindows(to: dir)
+            }
+        }
         if let theme = env["WISP_DEBUG_THEME"] { app.settings.appearance.themeID = theme }
         if let mode = env["WISP_DEBUG_MODE"].flatMap(AppearanceMode.init(rawValue:)) { app.settings.appearance.mode = mode }
         if env["WISP_DEBUG_RESET_SCRIPTS"] == "1" { app.scripts.deleteAll() }

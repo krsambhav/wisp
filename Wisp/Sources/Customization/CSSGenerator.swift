@@ -181,8 +181,12 @@ nonisolated enum CSSGenerator {
     }
 
     /// Loads base.css + the theme's stylesheet from the bundle.
+    /// Debug-only override: load theme stylesheets from a directory on disk (hot reload).
+    nonisolated(unsafe) static var themeDirectoryOverride: URL?
+
     nonisolated static func themeCSS(theme: Theme, bundle: Bundle = .main) -> String {
         func load(_ name: String) -> String {
+            if let dir = themeDirectoryOverride, let s = try? String(contentsOf: dir.appendingPathComponent("\(name).css"), encoding: .utf8) { return s }
             guard let url = bundle.url(forResource: name, withExtension: "css") ?? bundle.url(forResource: name, withExtension: "css", subdirectory: "themes"),
                   let s = try? String(contentsOf: url, encoding: .utf8) else {
                 Log.warning("Stylesheet \(name).css not found in bundle", .injection)
