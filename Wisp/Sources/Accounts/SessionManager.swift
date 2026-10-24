@@ -68,6 +68,7 @@ final class SessionManager {
         for a in accounts where a.keepLoadedInBackground || a.id == activeAccountID {
             session(for: a.id)?.loadIfNeeded()
         }
+        for a in accounts { Task { await session(for: a.id)?.inspectStoredData() } }
     }
 
     /// Drops sessions whose account no longer exists.

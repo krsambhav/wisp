@@ -48,8 +48,8 @@ struct ScriptsSettingsView: View {
             WDivider()
             if env.scripts.scripts.isEmpty {
                 VStack(spacing: 8) {
-                    WIcon("file-code", size: 24).foregroundStyle(WispUI.muted)
-                    Text("No scripts yet").font(WispUI.body).foregroundStyle(WispUI.muted)
+                    WIcon("file-code", size: 24).foregroundStyle(WispUI.mutedForeground)
+                    Text("No scripts yet").font(WispUI.body).foregroundStyle(WispUI.mutedForeground)
                     WButton(title: "New Script", icon: "plus", style: .primary, small: true) { let s = env.scripts.create(); selectedID = s.id }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -62,9 +62,9 @@ struct ScriptsSettingsView: View {
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(script.name).font(.system(size: 12.5, weight: .medium)).lineLimit(1)
                                 HStack(spacing: 4) {
-                                    Text(script.world == .page ? "page" : "isolated").font(.system(size: 10.5)).foregroundStyle(WispUI.muted)
-                                    Text("·").foregroundStyle(WispUI.muted)
-                                    Text(script.injectionTime == .documentStart ? "start" : "end").font(.system(size: 10.5)).foregroundStyle(WispUI.muted)
+                                    Text(script.world == .page ? "page" : "isolated").font(.system(size: 10.5)).foregroundStyle(WispUI.mutedForeground)
+                                    Text("·").foregroundStyle(WispUI.mutedForeground)
+                                    Text(script.injectionTime == .documentStart ? "start" : "end").font(.system(size: 10.5)).foregroundStyle(WispUI.mutedForeground)
                                 }
                             }
                             Spacer()
@@ -83,8 +83,8 @@ struct ScriptsSettingsView: View {
             }
             WDivider()
             VStack(alignment: .leading, spacing: 6) {
-                Toggle("Hot reload from disk", isOn: Bindable(env.settings).advanced.hotReloadScripts).toggleStyle(.checkbox).font(WispUI.caption)
-                Toggle("Show logs", isOn: $showLogs).toggleStyle(.checkbox).font(WispUI.caption)
+                WCheckbox(label: "Hot reload from disk", isOn: Bindable(env.settings).advanced.hotReloadScripts)
+                WCheckbox(label: "Show logs", isOn: $showLogs)
                 HStack {
                     WButton(title: "Open Folder", icon: "folder-open", small: true) { NSWorkspace.shared.open(env.scripts.directoryURL) }
                     WButton(title: "Disable All", icon: "power", small: true) { env.scripts.disableAll() }
@@ -100,10 +100,10 @@ struct ScriptsSettingsView: View {
 
     private var emptyEditor: some View {
         VStack(spacing: 8) {
-            WIcon("code", size: 28).foregroundStyle(WispUI.muted)
-            Text("Select a script to edit it").font(WispUI.body).foregroundStyle(WispUI.muted)
+            WIcon("code", size: 28).foregroundStyle(WispUI.mutedForeground)
+            Text("Select a script to edit it").font(WispUI.body).foregroundStyle(WispUI.mutedForeground)
             Text("Scripts run inside WhatsApp Web. Isolated scripts see the DOM only; page-context scripts share WhatsApp's JavaScript world.")
-                .font(WispUI.caption).foregroundStyle(WispUI.muted).multilineTextAlignment(.center).frame(maxWidth: 360)
+                .font(WispUI.caption).foregroundStyle(WispUI.mutedForeground).multilineTextAlignment(.center).frame(maxWidth: 360)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -135,7 +135,7 @@ struct ScriptsSettingsView: View {
                     Label("Syntax OK", systemImage: "checkmark.circle").font(WispUI.caption).foregroundStyle(WispUI.success)
                 }
                 Spacer()
-                Text(script.world == .page ? "Page-context scripts can break WhatsApp. Prefer isolated." : "Scripts are re-injected on every reload (⌘R).").font(WispUI.caption).foregroundStyle(WispUI.muted)
+                Text(script.world == .page ? "Page-context scripts can break WhatsApp. Prefer isolated." : "Scripts are re-injected on every reload (⌘R).").font(WispUI.caption).foregroundStyle(WispUI.mutedForeground)
                 WButton(title: "Save & Reload", icon: "refresh-cw", small: true) {
                     if let d = draft { env.scripts.update(d); syncDraft() }
                     env.sessions.reloadAll()
@@ -183,9 +183,9 @@ struct ScriptLogView: View {
                     LazyVStack(alignment: .leading, spacing: 2) {
                         ForEach(entries) { e in
                             HStack(alignment: .top, spacing: 8) {
-                                Text(formatter.string(from: e.date)).foregroundStyle(WispUI.muted)
+                                Text(formatter.string(from: e.date)).foregroundStyle(WispUI.mutedForeground)
                                 Text(e.level.label).foregroundStyle(color(for: e.level)).frame(width: 44, alignment: .leading)
-                                Text(e.category.replacingOccurrences(of: "script:", with: "")).foregroundStyle(WispUI.muted).frame(width: 110, alignment: .leading).lineLimit(1)
+                                Text(e.category.replacingOccurrences(of: "script:", with: "")).foregroundStyle(WispUI.mutedForeground).frame(width: 110, alignment: .leading).lineLimit(1)
                                 Text(e.message).textSelection(.enabled)
                             }
                             .font(WispUI.mono)
@@ -201,6 +201,6 @@ struct ScriptLogView: View {
     }
 
     private func color(for level: LogLevel) -> Color {
-        switch level { case .debug: WispUI.muted; case .info: WispUI.foreground; case .warning: WispUI.warning; case .error: WispUI.destructive }
+        switch level { case .debug: WispUI.mutedForeground; case .info: WispUI.foreground; case .warning: WispUI.warning; case .error: WispUI.destructive }
     }
 }

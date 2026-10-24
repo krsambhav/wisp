@@ -49,7 +49,7 @@ struct AppearanceSettingsView: View {
                             set: { settings.appearance.accentOverride = HexColor(nsColor: NSColor($0)) }), supportsOpacity: false)
                         .labelsHidden()
                     }
-                    Text("Accent drives buttons, unread badges, read receipts and focus rings.").font(WispUI.caption).foregroundStyle(WispUI.muted)
+                    Text("Accent drives buttons, unread badges, read receipts and focus rings.").font(WispUI.caption).foregroundStyle(WispUI.mutedForeground)
                 }
                 .padding(14)
                 WDivider()
@@ -97,7 +97,7 @@ struct AppearanceSettingsView: View {
             WCard {
                 WRow(title: "Enable custom CSS", description: "Injected after the theme. Use --wisp-* variables to stay in sync with the theme.") {
                     HStack(spacing: 10) {
-                        Toggle("Live preview", isOn: $settings.appearance.livePreview).toggleStyle(.checkbox).font(WispUI.caption)
+                        WCheckbox(label: "Live preview", isOn: $settings.appearance.livePreview)
                         WToggle(isOn: $settings.appearance.customCSSEnabled)
                     }
                 }
@@ -109,7 +109,7 @@ struct AppearanceSettingsView: View {
                     if let err = customCSS.validationError {
                         Label(err, systemImage: "exclamationmark.triangle.fill").font(WispUI.caption).foregroundStyle(WispUI.warning)
                     } else {
-                        Text("\(customCSS.css.count) characters").font(WispUI.caption).foregroundStyle(WispUI.muted)
+                        Text("\(customCSS.css.count) characters").font(WispUI.caption).foregroundStyle(WispUI.mutedForeground)
                     }
                     Spacer()
                     if !settings.appearance.livePreview {
@@ -124,7 +124,7 @@ struct AppearanceSettingsView: View {
             WCard {
                 WRow(title: "Export preset", description: "Saves theme, accent, layout and custom CSS to a JSON file.") {
                     HStack(spacing: 8) {
-                        Toggle("Include scripts", isOn: $includeScriptsInPreset).toggleStyle(.checkbox).font(WispUI.caption)
+                        WCheckbox(label: "Include scripts", isOn: $includeScriptsInPreset)
                         WButton(title: "Export…", icon: "upload", small: true) { exportPreset() }
                     }
                 }
@@ -203,7 +203,7 @@ private struct ThemeCard: View {
                     Spacer()
                     if selected { WIcon("circle-check", size: 14).foregroundStyle(WispUI.foreground) }
                 }
-                Text(theme.summary).font(WispUI.caption).foregroundStyle(WispUI.muted).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                Text(theme.summary).font(WispUI.caption).foregroundStyle(WispUI.mutedForeground).lineLimit(2).fixedSize(horizontal: false, vertical: true)
             }
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .leading)

@@ -5,9 +5,17 @@ import SwiftUI
 final class AppDelegate: NSObject, NSApplicationDelegate {
     var environment: AppEnvironment { AppEnvironment.shared }
 
+    private var sigtermSource: DispatchSourceSignal?
+
     func applicationWillFinishLaunching(_ notification: Notification) {
         let t0 = Date()
         _ = AppEnvironment.shared
+        // SIGTERM (e.g. `kill`, logout) → orderly quit so WebKit flushes storage.
+        signal(SIGTERM, SIG_IGN)
+        let src = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
+        src.setEventHandler { NSApp.terminate(nil) }
+        src.resume()
+        sigtermSource = src
         Log.info("Launch → environment in \(Int(Date().timeIntervalSince(t0) * 1000)) ms", .performance)
     }
 
@@ -49,6 +57,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        // Interrupting WhatsApp's history download can invalidate the link. Warn.
+        let syncing = environment.sessions.loadedSessions.filter { $0.hasFinishedFirstLoad && $0.pageState == .loading }
+        if !syncing.isEmpty && !environment.isQuitForced {
+            let alert = NSAlert()
+            alert.messageText = "WhatsApp is still downloading your messages"
+            alert.informativeText = "Quitting now can interrupt the sync and WhatsApp may ask you to link the device again. Wait for the chat list to appear before quitting."
+            alert.addButton(withTitle: "Keep Running")
+            alert.addButton(withTitle: "Quit Anyway")
+            if alert.runModal() == .alertFirstButtonReturn { return .terminateCancel }
+        }
         if environment.settings.general.confirmBeforeQuit {
             let alert = NSAlert()
             alert.messageText = "Quit Wisp?"

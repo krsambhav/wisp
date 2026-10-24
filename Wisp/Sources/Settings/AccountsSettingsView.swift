@@ -35,7 +35,7 @@ struct AccountsSettingsView: View {
                 .padding(12)
                 WDivider()
                 Text("The new account opens WhatsApp Web with a fresh QR code. Link it from your phone under Linked Devices.")
-                    .font(WispUI.caption).foregroundStyle(WispUI.muted).padding(12)
+                    .font(WispUI.caption).foregroundStyle(WispUI.mutedForeground).padding(12)
             }
         }
         .alert("Remove “\(confirmRemove?.name ?? "")”?", isPresented: Binding(get: { confirmRemove != nil }, set: { if !$0 { confirmRemove = nil } })) {
@@ -68,7 +68,7 @@ private struct AccountRow: View {
         let session = env.sessions.sessions[account.id]
         VStack(spacing: 0) {
             HStack(spacing: 12) {
-                Button { pickAvatar() } label: { AvatarView(account: account, size: 36).overlay(alignment: .bottomTrailing) { Circle().fill(WispUI.card).frame(width: 14, height: 14).overlay(WIcon("pencil", size: 8).foregroundStyle(WispUI.muted)) } }
+                Button { pickAvatar() } label: { AvatarView(account: account, size: 36).overlay(alignment: .bottomTrailing) { Circle().fill(WispUI.card).frame(width: 14, height: 14).overlay(WIcon("pencil", size: 8).foregroundStyle(WispUI.mutedForeground)) } }
                     .buttonStyle(.plain).help("Change avatar")
                 VStack(alignment: .leading, spacing: 3) {
                     if isEditing {
@@ -78,11 +78,12 @@ private struct AccountRow: View {
                         HStack(spacing: 6) {
                             Text(account.name).font(.system(size: 13, weight: .semibold))
                             if isActive { WBadge(text: "Active", color: WispUI.success) }
-                            if let s = session, s.isWebViewCreated { WBadge(text: s.pageState.label, color: s.pageState.isFailed ? WispUI.destructive : WispUI.muted) }
-                            else { WBadge(text: "Not loaded", color: WispUI.muted) }
+                            if let s = session, s.isWebViewCreated { WBadge(text: s.pageState.label, color: s.pageState.isFailed ? WispUI.destructive : WispUI.mutedForeground) }
+                            else { WBadge(text: "Not loaded", color: WispUI.mutedForeground) }
                         }
                     }
                     HStack(spacing: 6) {
+                        Text(session?.storedDataSummary ?? "").font(WispUI.caption).foregroundStyle(WispUI.mutedForeground).padding(.trailing, 6)
                         ForEach(Array(Account.avatarPalette.enumerated()), id: \.offset) { i, c in
                             Circle().fill(c.color).frame(width: 12, height: 12)
                                 .overlay(Circle().stroke(WispUI.foreground, lineWidth: account.colorIndex % Account.avatarPalette.count == i ? 1.5 : 0))
@@ -110,8 +111,8 @@ private struct AccountRow: View {
             .padding(.horizontal, 14).padding(.vertical, 10)
             WDivider().opacity(0.5)
             HStack {
-                Toggle("Connect at launch (receive notifications before you first switch to this account)", isOn: Binding(get: { account.keepLoadedInBackground }, set: { var a = account; a.keepLoadedInBackground = $0; env.sessions.updateAccount(a) }))
-                    .toggleStyle(.checkbox).font(WispUI.caption).disabled(isActive && env.accounts.accounts.count == 1)
+                WCheckbox(label: "Connect at launch (receive notifications before you first switch to this account)", isOn: Binding(get: { account.keepLoadedInBackground }, set: { var a = account; a.keepLoadedInBackground = $0; env.sessions.updateAccount(a) }))
+                    .disabled(isActive && env.accounts.accounts.count == 1)
                 Spacer()
             }
             .padding(.horizontal, 14).padding(.vertical, 8)

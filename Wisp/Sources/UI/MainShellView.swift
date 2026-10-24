@@ -72,7 +72,7 @@ private struct OfflineOverlay: View {
                 Text(isOnline ? "Couldn't reach WhatsApp" : "You're offline")
                     .font(.system(size: 16, weight: .semibold))
                 Text(isOnline ? message : "Wisp will reconnect automatically when the network is back.")
-                    .font(WispUI.body).foregroundStyle(WispUI.muted)
+                    .font(WispUI.body).foregroundStyle(WispUI.mutedForeground)
                     .multilineTextAlignment(.center).frame(maxWidth: 360)
                 WButton(title: "Try Again", icon: "refresh-cw", style: .primary, action: retry).padding(.top, 6)
             }

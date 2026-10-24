@@ -33,7 +33,7 @@ struct HeaderBar: View {
             case .failed:
                 WBadge(text: env.network.isOnline ? "Disconnected" : "Offline", color: WispUI.destructive)
             case .loading where !s.hasFinishedFirstLoad:
-                WBadge(text: "Connecting", color: WispUI.muted)
+                WBadge(text: "Connecting", color: WispUI.mutedForeground)
             default:
                 EmptyView()
             }

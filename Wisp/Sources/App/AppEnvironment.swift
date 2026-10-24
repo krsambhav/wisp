@@ -22,6 +22,8 @@ final class AppEnvironment {
     let toasts = ToastCenter()
     let settingsNavigation = SettingsNavigation()
     let launchedAt = Date()
+    /// Set by debug hooks (timed quit) to bypass the sync guard.
+    var isQuitForced = false
 
     /// Debug-only: load the bundled mock page instead of web.whatsapp.com
     /// (WISP_MOCK=1). Lets the theme engine, bridge and notifications be

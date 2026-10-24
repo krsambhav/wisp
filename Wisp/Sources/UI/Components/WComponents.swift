@@ -15,15 +15,28 @@ struct WIcon: View {
     }
 }
 
-// MARK: - Card & rows
+// MARK: - Card (shadcn Card: border, rounded-lg, bg-card)
 
 struct WCard<Content: View>: View {
+    var title: String? = nil
+    var description: String? = nil
     @ViewBuilder var content: Content
+
     var body: some View {
-        VStack(spacing: 0) { content }
-            .background(WispUI.card)
-            .clipShape(RoundedRectangle(cornerRadius: WispUI.radiusLG, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: WispUI.radiusLG, style: .continuous).stroke(WispUI.border, lineWidth: 1))
+        VStack(alignment: .leading, spacing: 0) {
+            if title != nil || description != nil {
+                VStack(alignment: .leading, spacing: 4) {
+                    if let title { Text(title).font(WispUI.heading).foregroundStyle(WispUI.foreground) }
+                    if let description { Text(description).font(WispUI.caption).foregroundStyle(WispUI.mutedForeground) }
+                }
+                .padding(.horizontal, 16).padding(.top, 16).padding(.bottom, 12)
+                WDivider()
+            }
+            content
+        }
+        .background(WispUI.card)
+        .clipShape(RoundedRectangle(cornerRadius: WispUI.radiusLG, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: WispUI.radiusLG, style: .continuous).stroke(WispUI.border, lineWidth: 1))
     }
 }
 
@@ -31,7 +44,7 @@ struct WDivider: View {
     var body: some View { Rectangle().fill(WispUI.border).frame(height: 1) }
 }
 
-/// Label + optional description on the left, control on the right.
+/// Label + optional description on the left, control on the right (shadcn "form row").
 struct WRow<Control: View>: View {
     let title: String
     var description: String? = nil
@@ -39,17 +52,17 @@ struct WRow<Control: View>: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 16) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(WispUI.body).foregroundStyle(WispUI.foreground)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title).font(WispUI.bodyMedium).foregroundStyle(WispUI.foreground)
                 if let description {
-                    Text(description).font(WispUI.caption).foregroundStyle(WispUI.muted).fixedSize(horizontal: false, vertical: true)
+                    Text(description).font(WispUI.caption).foregroundStyle(WispUI.mutedForeground).fixedSize(horizontal: false, vertical: true)
                 }
             }
             Spacer(minLength: 8)
             control
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 11)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
     }
 }
 
@@ -57,11 +70,11 @@ struct WSectionHeader: View {
     let title: String
     var subtitle: String? = nil
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
             Text(title).font(WispUI.title).foregroundStyle(WispUI.foreground)
-            if let subtitle { Text(subtitle).font(WispUI.body).foregroundStyle(WispUI.muted) }
+            if let subtitle { Text(subtitle).font(WispUI.body).foregroundStyle(WispUI.mutedForeground) }
         }
-        .padding(.bottom, 6)
+        .padding(.bottom, 8)
     }
 }
 
@@ -69,23 +82,22 @@ struct WGroupLabel: View {
     let text: String
     init(_ text: String) { self.text = text }
     var body: some View {
-        Text(text.uppercased())
-            .font(.system(size: 11, weight: .semibold))
-            .tracking(0.4)
-            .foregroundStyle(WispUI.muted)
-            .padding(.top, 10)
+        Text(text)
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(WispUI.foreground)
+            .padding(.top, 12)
             .padding(.bottom, 2)
     }
 }
 
-// MARK: - Buttons
+// MARK: - Buttons (shadcn variants: default, secondary, outline, ghost, destructive)
 
-enum WButtonStyle { case primary, secondary, ghost, destructive }
+enum WButtonStyle { case primary, secondary, outline, ghost, destructive }
 
 struct WButton: View {
     let title: String
     var icon: String? = nil
-    var style: WButtonStyle = .secondary
+    var style: WButtonStyle = .outline
     var small: Bool = false
     let action: () -> Void
     @State private var hovering = false
@@ -94,14 +106,14 @@ struct WButton: View {
         Button(action: action) {
             HStack(spacing: 6) {
                 if let icon { WIcon(icon, size: small ? 13 : 14) }
-                Text(title).font(.system(size: small ? 12 : 13, weight: .medium))
+                Text(title).font(.system(size: small ? 12.5 : 13.5, weight: .medium))
             }
-            .padding(.horizontal, small ? 10 : 12)
-            .frame(height: small ? 26 : 30)
+            .padding(.horizontal, small ? 10 : 14)
+            .frame(height: small ? 28 : 34)
             .foregroundStyle(foreground)
             .background(background)
-            .clipShape(RoundedRectangle(cornerRadius: WispUI.radius, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: WispUI.radius, style: .continuous).stroke(border, lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: WispUI.radiusSM, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: WispUI.radiusSM, style: .continuous).stroke(border, lineWidth: 1))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -111,41 +123,38 @@ struct WButton: View {
     private var foreground: Color {
         switch style {
         case .primary: WispUI.primaryForeground
-        case .destructive: .white
-        case .secondary, .ghost: WispUI.foreground
+        case .destructive: WispUI.destructiveForeground
+        case .secondary: WispUI.secondaryForeground
+        case .outline, .ghost: WispUI.foreground
         }
     }
     private var background: Color {
         switch style {
-        case .primary: WispUI.primary.opacity(hovering ? 0.88 : 1)
-        case .destructive: WispUI.destructive.opacity(hovering ? 0.88 : 1)
-        case .secondary: hovering ? WispUI.hover : WispUI.card
-        case .ghost: hovering ? WispUI.hover : .clear
+        case .primary: WispUI.primary.opacity(hovering ? 0.9 : 1)
+        case .destructive: WispUI.destructive.opacity(hovering ? 0.9 : 1)
+        case .secondary: WispUI.secondary.opacity(hovering ? 0.8 : 1)
+        case .outline: hovering ? WispUI.accent : WispUI.background
+        case .ghost: hovering ? WispUI.accent : .clear
         }
     }
-    private var border: Color {
-        switch style {
-        case .secondary: WispUI.border
-        default: .clear
-        }
-    }
+    private var border: Color { style == .outline ? WispUI.input : .clear }
 }
 
-/// Square icon button used in the header bar.
+/// Square icon button (shadcn `variant="ghost" size="icon"`).
 struct WIconButton: View {
     let icon: String
     var help: String = ""
     var tint: Color? = nil
-    var size: CGFloat = 26
+    var size: CGFloat = 28
     let action: () -> Void
     @State private var hovering = false
 
     var body: some View {
         Button(action: action) {
             WIcon(icon, size: 15)
-                .foregroundStyle(tint ?? WispUI.foreground.opacity(hovering ? 1 : 0.78))
+                .foregroundStyle(tint ?? WispUI.foreground.opacity(hovering ? 1 : 0.8))
                 .frame(width: size, height: size)
-                .background(hovering ? WispUI.hover : .clear)
+                .background(hovering ? WispUI.accent.opacity(0.9) : .clear)
                 .clipShape(RoundedRectangle(cornerRadius: WispUI.radiusSM, style: .continuous))
                 .contentShape(Rectangle())
         }
@@ -155,14 +164,46 @@ struct WIconButton: View {
     }
 }
 
-// MARK: - Toggle / segmented
+// MARK: - Switch & Checkbox (shadcn)
 
 struct WToggle: View {
     @Binding var isOn: Bool
     var body: some View {
-        Toggle("", isOn: $isOn).toggleStyle(.switch).labelsHidden().controlSize(.small)
+        Button { withAnimation(.easeOut(duration: 0.15)) { isOn.toggle() } } label: {
+            ZStack(alignment: isOn ? .trailing : .leading) {
+                Capsule().fill(isOn ? WispUI.primary : WispUI.input).frame(width: 36, height: 20)
+                Circle().fill(isOn ? WispUI.primaryForeground : WispUI.background)
+                    .frame(width: 16, height: 16)
+                    .shadow(color: .black.opacity(0.15), radius: 1, y: 1)
+                    .padding(2)
+            }
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(.isToggle)
     }
 }
+
+struct WCheckbox: View {
+    let label: String
+    @Binding var isOn: Bool
+    var body: some View {
+        Button { isOn.toggle() } label: {
+            HStack(spacing: 8) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 4, style: .continuous).fill(isOn ? WispUI.primary : WispUI.background).frame(width: 16, height: 16)
+                        .overlay(RoundedRectangle(cornerRadius: 4, style: .continuous).stroke(isOn ? WispUI.primary : WispUI.ring.opacity(0.5), lineWidth: 1))
+                    if isOn { WIcon("check", size: 11).foregroundStyle(WispUI.primaryForeground) }
+                }
+                Text(label).font(WispUI.caption).foregroundStyle(WispUI.foreground)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Tabs (shadcn Tabs list)
 
 struct WSegmented<T: Hashable & Identifiable>: View {
     @Binding var selection: T
@@ -175,52 +216,54 @@ struct WSegmented<T: Hashable & Identifiable>: View {
                 let selected = opt == selection
                 Button { selection = opt } label: {
                     Text(label(opt))
-                        .font(.system(size: 12, weight: selected ? .semibold : .medium))
-                        .padding(.horizontal, 10).frame(height: 24)
-                        .foregroundStyle(selected ? WispUI.foreground : WispUI.muted)
-                        .background(selected ? WispUI.card : .clear)
+                        .font(.system(size: 12.5, weight: .medium))
+                        .padding(.horizontal, 12).frame(height: 26)
+                        .foregroundStyle(selected ? WispUI.foreground : WispUI.mutedForeground)
+                        .background(selected ? WispUI.background : .clear)
                         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-                        .shadow(color: selected ? .black.opacity(0.08) : .clear, radius: 1, y: 1)
+                        .shadow(color: selected ? .black.opacity(0.06) : .clear, radius: 1, y: 1)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
         }
-        .padding(2)
-        .background(WispUI.hover)
+        .padding(3)
+        .background(WispUI.mutedForeground)
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 }
 
-// MARK: - Badge
+// MARK: - Badge (shadcn Badge: secondary / outline)
 
 struct WBadge: View {
     let text: String
-    var color: Color = WispUI.muted
+    var color: Color = WispUI.mutedForeground
     var body: some View {
         Text(text)
-            .font(.system(size: 10.5, weight: .semibold))
-            .padding(.horizontal, 7).padding(.vertical, 2)
+            .font(.system(size: 11, weight: .semibold))
+            .padding(.horizontal, 8).padding(.vertical, 2)
             .foregroundStyle(color)
             .background(color.opacity(0.12))
             .clipShape(Capsule())
     }
 }
 
-// MARK: - Text field
+// MARK: - Input (shadcn Input)
 
 struct WTextField: View {
     let placeholder: String
     @Binding var text: String
+    @FocusState private var focused: Bool
     var body: some View {
         TextField(placeholder, text: $text)
             .textFieldStyle(.plain)
             .font(WispUI.body)
-            .padding(.horizontal, 10)
-            .frame(height: 30)
-            .background(WispUI.card)
-            .clipShape(RoundedRectangle(cornerRadius: WispUI.radius, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: WispUI.radius, style: .continuous).stroke(WispUI.borderStrong, lineWidth: 1))
+            .focused($focused)
+            .padding(.horizontal, 12)
+            .frame(height: 34)
+            .background(WispUI.background)
+            .clipShape(RoundedRectangle(cornerRadius: WispUI.radiusSM, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: WispUI.radiusSM, style: .continuous).stroke(focused ? WispUI.ring : WispUI.input, lineWidth: focused ? 1.5 : 1))
     }
 }
 

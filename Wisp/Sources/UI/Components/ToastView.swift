@@ -14,7 +14,7 @@ struct ToastStack: View {
                             .font(.system(size: 12.5, weight: .semibold))
                             .foregroundStyle(Color.accentColor)
                     }
-                    Button { env.toasts.dismiss(toast.id) } label: { WIcon("x", size: 12).foregroundStyle(WispUI.muted) }
+                    Button { env.toasts.dismiss(toast.id) } label: { WIcon("x", size: 12).foregroundStyle(WispUI.mutedForeground) }
                         .buttonStyle(.plain)
                 }
                 .padding(.horizontal, 14).padding(.vertical, 10)

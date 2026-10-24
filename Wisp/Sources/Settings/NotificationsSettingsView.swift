@@ -60,16 +60,16 @@ struct NotificationsSettingsView: View {
                         AvatarView(account: account, size: 26)
                         Text(account.name).font(WispUI.body)
                         Spacer()
-                        Toggle("Previews", isOn: Binding(get: { account.showPreviews ?? settings.notifications.showPreviews }, set: { var a = account; a.showPreviews = $0; env.sessions.updateAccount(a) })).toggleStyle(.checkbox).font(WispUI.caption)
-                        Toggle("Muted", isOn: Binding(get: { account.muted }, set: { var a = account; a.muted = $0; env.sessions.updateAccount(a) })).toggleStyle(.checkbox).font(WispUI.caption)
-                        Toggle("Enabled", isOn: Binding(get: { account.notificationsEnabled }, set: { var a = account; a.notificationsEnabled = $0; env.sessions.updateAccount(a) })).toggleStyle(.checkbox).font(WispUI.caption)
+                        WCheckbox(label: "Previews", isOn: Binding(get: { account.showPreviews ?? settings.notifications.showPreviews }, set: { var a = account; a.showPreviews = $0; env.sessions.updateAccount(a) }))
+                        WCheckbox(label: "Muted", isOn: Binding(get: { account.muted }, set: { var a = account; a.muted = $0; env.sessions.updateAccount(a) }))
+                        WCheckbox(label: "Enabled", isOn: Binding(get: { account.notificationsEnabled }, set: { var a = account; a.notificationsEnabled = $0; env.sessions.updateAccount(a) }))
                     }
                     .padding(.horizontal, 14).padding(.vertical, 10)
                 }
             }
 
             Text("Notifications are delivered only while the account's session is loaded and connected. WhatsApp Web must be linked and the Mac awake; there is no server-side push.")
-                .font(WispUI.caption).foregroundStyle(WispUI.muted)
+                .font(WispUI.caption).foregroundStyle(WispUI.mutedForeground)
         }
     }
 }

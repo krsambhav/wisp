@@ -1,36 +1,51 @@
 import AppKit
 import SwiftUI
 
-/// Native design tokens for Wisp's own chrome (header, settings, overlays).
-/// shadcn/ui-inspired: neutral surfaces, 1px borders, 8–12pt radii, restrained shadows.
+/// shadcn/ui design tokens (zinc palette) for Wisp's native chrome.
+/// Light/dark values mirror shadcn's default theme CSS variables.
 enum WispUI {
-    static let radiusSM: CGFloat = 6
-    static let radius: CGFloat = 8
+    static let radiusSM: CGFloat = 6     // --radius - 2px
+    static let radius: CGFloat = 8       // --radius (0.5rem)
     static let radiusLG: CGFloat = 12
 
-    static func adaptive(light: NSColor, dark: NSColor) -> Color {
-        Color(nsColor: NSColor(name: nil) { $0.isDark ? dark : light })
+    static func adaptive(_ light: String, _ dark: String) -> Color {
+        Color(nsColor: NSColor(name: nil) { $0.isDark ? HexColor(dark).nsColor : HexColor(light).nsColor })
     }
 
-    static let background = adaptive(light: NSColor(white: 0.985, alpha: 1), dark: NSColor(red: 0.075, green: 0.078, blue: 0.086, alpha: 1))
-    static let sidebar = adaptive(light: NSColor(white: 0.965, alpha: 1), dark: NSColor(red: 0.06, green: 0.063, blue: 0.07, alpha: 1))
-    static let card = adaptive(light: .white, dark: NSColor(red: 0.105, green: 0.11, blue: 0.12, alpha: 1))
-    static let cardElevated = adaptive(light: .white, dark: NSColor(red: 0.13, green: 0.135, blue: 0.145, alpha: 1))
-    static let border = adaptive(light: NSColor(white: 0, alpha: 0.09), dark: NSColor(white: 1, alpha: 0.09))
-    static let borderStrong = adaptive(light: NSColor(white: 0, alpha: 0.16), dark: NSColor(white: 1, alpha: 0.16))
-    static let hover = adaptive(light: NSColor(white: 0, alpha: 0.045), dark: NSColor(white: 1, alpha: 0.06))
-    static let pressed = adaptive(light: NSColor(white: 0, alpha: 0.08), dark: NSColor(white: 1, alpha: 0.1))
-    static let foreground = adaptive(light: NSColor(white: 0.05, alpha: 1), dark: NSColor(white: 0.97, alpha: 1))
-    static let muted = adaptive(light: NSColor(white: 0.42, alpha: 1), dark: NSColor(white: 0.62, alpha: 1))
-    static let primary = adaptive(light: NSColor(white: 0.09, alpha: 1), dark: NSColor(white: 0.98, alpha: 1))
-    static let primaryForeground = adaptive(light: .white, dark: NSColor(white: 0.05, alpha: 1))
-    static let destructive = Color(nsColor: NSColor(red: 0.86, green: 0.2, blue: 0.22, alpha: 1))
-    static let success = Color(nsColor: NSColor(red: 0.13, green: 0.66, blue: 0.38, alpha: 1))
-    static let warning = Color(nsColor: NSColor(red: 0.88, green: 0.6, blue: 0.1, alpha: 1))
+    // shadcn semantic tokens
+    static let background        = adaptive("#FFFFFF", "#09090B")
+    static let foreground        = adaptive("#09090B", "#FAFAFA")
+    static let card              = adaptive("#FFFFFF", "#09090B")
+    static let cardElevated      = adaptive("#FFFFFF", "#18181B")   // popover / toast
+    static let popover           = adaptive("#FFFFFF", "#09090B")
+    static let primary           = adaptive("#18181B", "#FAFAFA")
+    static let primaryForeground = adaptive("#FAFAFA", "#18181B")
+    static let secondary         = adaptive("#F4F4F5", "#27272A")
+    static let secondaryForeground = adaptive("#18181B", "#FAFAFA")
+    static let muted             = adaptive("#F4F4F5", "#27272A")
+    static let mutedForeground   = adaptive("#71717A", "#A1A1AA")
+    static let accent            = adaptive("#F4F4F5", "#27272A")   // hover surface
+    static let accentForeground  = adaptive("#18181B", "#FAFAFA")
+    static let destructive       = adaptive("#EF4444", "#7F1D1D")
+    static let destructiveForeground = Color.white
+    static let border            = adaptive("#E4E4E7", "#27272A")
+    static let input             = adaptive("#E4E4E7", "#27272A")
+    static let ring              = adaptive("#18181B", "#D4D4D8")
+    static let sidebar           = adaptive("#FAFAFA", "#18181B")
+    static let success           = adaptive("#16A34A", "#22C55E")
+    static let warning           = adaptive("#D97706", "#F59E0B")
 
-    static let title = Font.system(size: 20, weight: .semibold)
-    static let heading = Font.system(size: 13, weight: .semibold)
-    static let body = Font.system(size: 13)
-    static let caption = Font.system(size: 11.5)
+    // Legacy aliases used across views
+    static var hover: Color { accent }
+    static var pressed: Color { adaptive("#E4E4E7", "#3F3F46") }
+    static var borderStrong: Color { adaptive("#D4D4D8", "#3F3F46") }
+    static var muted_: Color { mutedForeground }
+
+    // Typography (shadcn: text-sm 14/20 for body, text-xs 12/16 for descriptions)
+    static let title = Font.system(size: 22, weight: .semibold)
+    static let heading = Font.system(size: 14, weight: .semibold)
+    static let body = Font.system(size: 13.5)
+    static let bodyMedium = Font.system(size: 13.5, weight: .medium)
+    static let caption = Font.system(size: 12)
     static let mono = Font.system(size: 12, design: .monospaced)
 }

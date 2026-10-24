@@ -36,6 +36,8 @@ final class AccountSession {
     private(set) var hasFinishedFirstLoad = false
     private(set) var selectorHealth: SelectorHealth?
     private(set) var isWebViewCreated = false
+    /// Human-readable summary of what WebKit holds for this account ("12 records for web.whatsapp.com").
+    private(set) var storedDataSummary: String = "Checking…"
 
     @ObservationIgnored private unowned let env: AppEnvironment
     @ObservationIgnored private var _webView: WKWebView?
@@ -160,7 +162,7 @@ final class AccountSession {
             }
             if ProcessInfo.processInfo.environment["WISP_DEBUG_DOM_OUTLINE"] != nil {
                 // Wait until a conversation is open (#main) so chat-panel hooks are visible, then dump once.
-                for _ in 0..<120 {
+                for _ in 0..<720 {
                     let hasMain = (try? await w.evaluateJavaScript("!!document.querySelector('#main')", in: nil, in: ContentWorlds.core)) as? Bool ?? false
                     if hasMain { break }
                     try? await Task.sleep(for: .seconds(5))
@@ -327,6 +329,17 @@ final class AccountSession {
         guard let w = _webView else { return }
         w.window?.makeFirstResponder(w)
         w.evaluateJavaScript("globalThis.__wispCore && globalThis.__wispCore.focusSearch()", in: nil, in: ContentWorlds.core, completionHandler: nil)
+    }
+
+    /// Read-only inspection of the account's website data. Logged at launch so a
+    /// lost session can be told apart from lost *data*.
+    func inspectStoredData() async {
+        let store = WKWebsiteDataStore(forIdentifier: account.dataStoreID)
+        let records = await store.dataRecords(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes())
+        let wa = records.filter { $0.displayName.contains("whatsapp") }
+        let types = Set(wa.flatMap { $0.dataTypes }).sorted().map { $0.replacingOccurrences(of: "WKWebsiteDataType", with: "") }
+        storedDataSummary = wa.isEmpty ? "No session data on disk" : "Session data present: \(types.joined(separator: ", "))"
+        Log.info("Account \(account.id.uuidString.prefix(8)) store \(account.dataStoreID.uuidString.prefix(8)): \(storedDataSummary)", .accounts)
     }
 
     // MARK: Data management

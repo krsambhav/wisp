@@ -17,15 +17,15 @@ struct SettingsRootView: View {
 
     private func sidebar(selection: Binding<SettingsSection>) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text("Settings").font(.system(size: 11, weight: .semibold)).foregroundStyle(WispUI.muted)
+            Text("Settings").font(.system(size: 11, weight: .semibold)).foregroundStyle(WispUI.mutedForeground)
                 .padding(.horizontal, 12).padding(.top, 14).padding(.bottom, 6)
             ForEach(SettingsSection.allCases) { section in
                 SidebarItem(section: section, selected: selection.wrappedValue == section) { selection.wrappedValue = section }
             }
             Spacer()
             VStack(alignment: .leading, spacing: 2) {
-                Text("Wisp \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "")").font(WispUI.caption).foregroundStyle(WispUI.muted)
-                Text("WhatsApp Web in a native shell").font(WispUI.caption).foregroundStyle(WispUI.muted.opacity(0.7))
+                Text("Wisp \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "")").font(WispUI.caption).foregroundStyle(WispUI.mutedForeground)
+                Text("WhatsApp Web in a native shell").font(WispUI.caption).foregroundStyle(WispUI.mutedForeground.opacity(0.7))
             }.padding(12)
         }
         .padding(.horizontal, 8)
@@ -54,7 +54,7 @@ private struct SidebarItem: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 9) {
-                WIcon(section.icon, size: 15).foregroundStyle(selected ? WispUI.foreground : WispUI.muted)
+                WIcon(section.icon, size: 15).foregroundStyle(selected ? WispUI.foreground : WispUI.mutedForeground)
                 Text(section.title).font(.system(size: 13, weight: selected ? .semibold : .medium))
                 Spacer()
             }

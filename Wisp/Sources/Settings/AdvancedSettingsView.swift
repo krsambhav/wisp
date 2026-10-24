@@ -79,9 +79,9 @@ struct AdvancedSettingsView: View {
             WCard {
                 HStack {
                     Picker("", selection: $filter) { ForEach(LogLevel.allCases, id: \.self) { Text($0.label.capitalized).tag($0) } }.labelsHidden().frame(width: 110)
-                    Toggle("Verbose", isOn: Binding(get: { log.minimumLevel == .debug }, set: { log.minimumLevel = $0 ? .debug : .info; settings.advanced.verboseLogging = $0 })).toggleStyle(.checkbox).font(WispUI.caption)
+                    WCheckbox(label: "Verbose", isOn: Binding(get: { log.minimumLevel == .debug }, set: { log.minimumLevel = $0 ? .debug : .info; settings.advanced.verboseLogging = $0 }))
                     Spacer()
-                    Text("\(uptime) uptime · \(memoryMB) MB app process").font(WispUI.caption).foregroundStyle(WispUI.muted)
+                    Text("\(uptime) uptime · \(memoryMB) MB app process").font(WispUI.caption).foregroundStyle(WispUI.mutedForeground)
                     WButton(title: "Copy", icon: "copy", small: true) { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(log.export(), forType: .string) }
                     WButton(title: "Export…", icon: "upload", small: true) { exportLog() }
                     WButton(title: "Clear", small: true) { log.clear() }
@@ -92,9 +92,9 @@ struct AdvancedSettingsView: View {
                     LazyVStack(alignment: .leading, spacing: 2) {
                         ForEach(log.entries.filter { $0.level >= filter }.suffix(400)) { e in
                             HStack(alignment: .top, spacing: 8) {
-                                Text(formatter.string(from: e.date)).foregroundStyle(WispUI.muted)
-                                Text(e.level.label).frame(width: 44, alignment: .leading).foregroundStyle(e.level == .error ? WispUI.destructive : e.level == .warning ? WispUI.warning : WispUI.muted)
-                                Text(e.category).frame(width: 90, alignment: .leading).foregroundStyle(WispUI.muted).lineLimit(1)
+                                Text(formatter.string(from: e.date)).foregroundStyle(WispUI.mutedForeground)
+                                Text(e.level.label).frame(width: 44, alignment: .leading).foregroundStyle(e.level == .error ? WispUI.destructive : e.level == .warning ? WispUI.warning : WispUI.mutedForeground)
+                                Text(e.category).frame(width: 90, alignment: .leading).foregroundStyle(WispUI.mutedForeground).lineLimit(1)
                                 Text(e.message).textSelection(.enabled)
                             }
                             .font(WispUI.mono)
@@ -104,7 +104,7 @@ struct AdvancedSettingsView: View {
                 }
                 .frame(height: 260)
             }
-            Text("Logs never include message content, contact names or credentials.").font(WispUI.caption).foregroundStyle(WispUI.muted)
+            Text("Logs never include message content, contact names or credentials.").font(WispUI.caption).foregroundStyle(WispUI.mutedForeground)
         }
         .alert("Reset all customizations?", isPresented: $confirmReset) {
             Button("Reset", role: .destructive) { env.resetCustomizations() }

@@ -14,7 +14,7 @@ import WebKit
 ///   WISP_DEBUG_SNAPSHOT_DELAY=<s>    seconds after load for the dump/snapshot (default 8)
 ///   WISP_DEBUG_OPEN_SETTINGS=<sec>   open Settings at a section after 3s
 ///   WISP_DEBUG_WINDOW_DIR=/dir       write PNGs of every app window (native content) after 6s
-///   WISP_DEBUG_QUIT_AFTER=<seconds>  terminate after N seconds
+///   WISP_DEBUG_QUIT_AFTER=<seconds>  terminate after N seconds (bypasses the sync-guard alert)
 ///   WISP_DEBUG_THEME=<id>            select a theme at launch (default|minimal|midnight)
 ///   WISP_DEBUG_MODE=<mode>           appearance mode (system|light|dark)
 ///   WISP_DEBUG_IMPORT_SCRIPT=<path>  import a .js file as an enabled user script
@@ -45,7 +45,7 @@ enum DebugHooks {
             Task { try? await Task.sleep(for: .seconds(6)); snapshotWindows(to: dir) }
         }
         if let secs = env["WISP_DEBUG_QUIT_AFTER"].flatMap(Double.init) {
-            Task { try? await Task.sleep(for: .seconds(secs)); NSApp.terminate(nil) }
+            Task { try? await Task.sleep(for: .seconds(secs)); app.isQuitForced = true; NSApp.terminate(nil) }
         }
     }
 
