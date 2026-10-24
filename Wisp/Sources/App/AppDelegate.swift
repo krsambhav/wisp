@@ -76,19 +76,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if alert.runModal() != .alertFirstButtonReturn { return .terminateCancel }
         }
         // Unload every page first so WhatsApp's pagehide handlers close IndexedDB
-        // cleanly; an abrupt exit mid-transaction can corrupt its database.
-        if !environment.sessions.loadedSessions.isEmpty && !isUnloadingForQuit {
-            isUnloadingForQuit = true
-            Task { @MainActor in
-                await environment.sessions.unloadAllForTermination()
-                NSApp.reply(toApplicationShouldTerminate: true)
+        // cleanly; an abrupt exit mid-transaction can corrupt its database. This is
+        // done with a nested run loop: after `.terminateLater` AppKit stops draining
+        // the main dispatch queue, so Swift tasks would never run.
+        let live = environment.sessions.loadedSessions
+        if !live.isEmpty {
+            for s in live { s.beginUnloadForTermination() }
+            let deadline = Date().addingTimeInterval(2.0)
+            while Date() < deadline, live.contains(where: { !$0.isUnloadedForTermination }) {
+                RunLoop.main.run(mode: .default, before: Date().addingTimeInterval(0.05))
             }
-            return .terminateLater
+            Log.info("Sessions unloaded for termination (\(live.filter(\.isUnloadedForTermination).count)/\(live.count))", .web)
         }
         return .terminateNow
     }
-
-    private var isUnloadingForQuit = false
 
     func applicationWillTerminate(_ notification: Notification) {
         // Never clear website data here — sessions must survive restarts.

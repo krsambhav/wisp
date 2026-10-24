@@ -1,84 +1,137 @@
 /* ==========================================================================
-   Wisp theme: Minimal — tonal shadcn/ui.  Version: 2 (2026-10)
-   Layering instead of lines: a soft wash, a floating white chat card,
+   Wisp theme: Minimal — shadcn/ui.  Version: 3 (2026-10)
+   One white surface, a single hairline between the list and the chat,
    tail-less bubbles with a high-contrast outgoing side, borderless controls.
    Hooks verified against WhatsApp Web's live DOM on 2026-10-25:
      #side · #pane-side · [role=grid][aria-label="Chat list"] > [role=row]
      header[data-tab="2"] (nav rail) · #main · #main header · #main footer
      [role=textbox][data-tab="10"] (composer) · span[data-icon="tail-in|tail-out"]
      #all-filter · button[id^="label_item_"] · #new-filter
+   wisp-core.js tags every bubble with data-wisp-bubble="in|out".
    ========================================================================== */
 html { --radius-app: 14px !important; }
 
-/* ---- Wash & panes ----------------------------------------------------- */
+/* ---- Palette (overrides the generated tokens; same on both sides) ------ */
+html {
+  --wisp-background: #FFFFFF; --wisp-surface: #FFFFFF; --wisp-surface-emphasized: #F4F4F5;
+  --wisp-surface-highlight: #FAFAFA; --wisp-chat-background: #FFFFFF; --wisp-composer: #F4F4F5;
+  --wisp-line: #E4E4E7;
+  --WDS-background-wash-plain: #FFFFFF !important; --WDS-surface-default: #FFFFFF !important;
+  --WDS-surface-emphasized: #F4F4F5 !important; --WDS-surface-highlight: #FAFAFA !important;
+  --WDS-systems-chat-background-wallpaper: #FFFFFF !important; --WDS-systems-chat-foreground-wallpaper: #FFFFFF !important;
+  --WDS-systems-chat-surface-composer: #F4F4F5 !important;
+  --app-background: #FFFFFF !important; --panel-background: #FFFFFF !important; --navbar-background: #FFFFFF !important;
+}
+html[data-wisp-scheme="dark"] {
+  --wisp-background: #09090B; --wisp-surface: #09090B; --wisp-surface-emphasized: #1C1C1F;
+  --wisp-surface-highlight: #141416; --wisp-chat-background: #09090B; --wisp-composer: #1C1C1F;
+  --wisp-line: #27272A;
+  --WDS-background-wash-plain: #09090B !important; --WDS-surface-default: #09090B !important;
+  --WDS-surface-emphasized: #1C1C1F !important; --WDS-surface-highlight: #141416 !important;
+  --WDS-systems-chat-background-wallpaper: #09090B !important; --WDS-systems-chat-foreground-wallpaper: #09090B !important;
+  --WDS-systems-chat-surface-composer: #1C1C1F !important;
+  --app-background: #09090B !important; --panel-background: #09090B !important; --navbar-background: #09090B !important;
+}
+
+/* WhatsApp hard-codes its greens in places (mention badge, status ring, online dot);
+   in a monochrome theme they become the accent. Reds and participant colors are kept. */
+html, html[data-wisp-scheme="dark"] {
+  --WDS-green-400: var(--wisp-accent) !important; --WDS-green-450: var(--wisp-accent) !important;
+  --WDS-green-500: var(--wisp-accent) !important; --WDS-green-600: var(--wisp-accent-emphasized) !important;
+  --WDS-green-700: var(--wisp-accent-emphasized) !important; --WDS-green-750: var(--wisp-accent-emphasized) !important;
+  --WDS-green-75: var(--wisp-accent-deemphasized) !important; --WDS-green-100: var(--wisp-accent-deemphasized) !important;
+  --WDS-green-200: var(--wisp-accent-deemphasized) !important; --WDS-green-300: var(--wisp-accent) !important;
+  --WDS-emerald-400: var(--wisp-accent) !important; --WDS-teal-400: var(--wisp-accent) !important;
+}
+
+/* ---- Panes: one surface, one hairline --------------------------------- */
 #app, #app > div, .app-wrapper-web, .two, div:has(> #main), div:has(> #side) { background: var(--wisp-background) !important; }
 #side { background: transparent !important; border-right: 0 !important; }
+div:has(> #side) { border-right: 1px solid var(--wisp-line) !important; }
 div:has(> #side) > header, div:has(> #side) > header > header { background: transparent !important; border: 0 !important; }
-header[data-tab="2"] { background: transparent !important; border-right: 0 !important; border-left: 0 !important; }
+header[data-tab="2"] { background: transparent !important; border: 0 !important; }
 header[data-tab="2"] [data-navbar-item] { border-radius: 12px !important; }
 header[data-tab="2"] [data-navbar-item]:hover { background: var(--wisp-surface-emphasized) !important; }
 
-/* The conversation is a card floating on the wash. */
-#main {
-  background: var(--wisp-chat-background) !important;
-  border-radius: 18px !important;
-  margin: 0 12px 12px 4px !important;
-  overflow: hidden !important;
-  box-shadow: 0 1px 2px rgba(var(--shadow-rgb), .05), 0 8px 24px -16px rgba(var(--shadow-rgb), .18) !important;
-}
+#main { background: var(--wisp-chat-background) !important; border-radius: 0 !important; margin: 0 !important; box-shadow: none !important; }
 #main > div { background: transparent !important; background-image: none !important; }
 #main header { background: transparent !important; border-bottom: 0 !important; box-shadow: none !important; height: 68px !important; }
-#main footer { background: transparent !important; border-top: 0 !important; padding: 6px 14px 14px !important; }
+#main footer { background: transparent !important; border-top: 0 !important; padding: 6px 16px 14px !important; }
 #main footer div { border-color: transparent !important; box-shadow: none !important; }
 #main footer [role="textbox"][data-tab="10"] { font-size: 15px !important; }
 
-/* ---- Sidebar ---------------------------------------------------------- */
-#side header, #side > header { background: transparent !important; border: 0 !important; }
-/* Search field: white pill on the wash, no outline. */
-#side [role="textbox"], #side input { background: transparent !important; }
+/* ---- Sidebar ------------------------------------------------------------ */
 #side div:has(> input), #side div:has(> [role="textbox"]) { border: 0 !important; box-shadow: none !important; }
-/* Filter chips: tonal, selected = primary. */
 #side #all-filter, #side button[id^="label_item_"], #side #new-filter {
-  border: 0 !important; box-shadow: none !important;
+  border: 0 !important; box-shadow: none !important; border-radius: 999px !important;
   background: var(--wisp-surface-emphasized) !important; color: var(--wisp-text-secondary) !important;
-  border-radius: 999px !important;
 }
 #side #all-filter[aria-pressed="true"], #side button[id^="label_item_"][aria-pressed="true"],
-#side #all-filter[aria-selected="true"], #side button[id^="label_item_"][aria-selected="true"] {
+#side #all-filter[aria-selected="true"], #side button[id^="label_item_"][aria-selected="true"],
+#side [role="tablist"] [aria-selected="true"] {
   background: var(--wisp-accent) !important; color: var(--wisp-on-accent) !important;
+  --WDS-content-default: var(--wisp-on-accent); --WDS-content-deemphasized: color-mix(in srgb, var(--wisp-on-accent) 70%, transparent);
+  --WDS-content-action-default: var(--wisp-on-accent); --primary: var(--wisp-on-accent); --primary-strong: var(--wisp-on-accent);
 }
-/* Rows: no hairlines; rounded white surface on hover/selection. */
+#side #all-filter[aria-pressed="true"] *, #side button[id^="label_item_"][aria-pressed="true"] *,
+#side #all-filter[aria-selected="true"] *, #side button[id^="label_item_"][aria-selected="true"] *,
+#side [role="tablist"] [aria-selected="true"] * { color: var(--wisp-on-accent) !important; }
+/* Unselected chips: quiet. */
+#side #all-filter *, #side button[id^="label_item_"] *, #side #new-filter * { color: inherit; }
 #pane-side { padding: 0 8px !important; }
 #pane-side [role="row"] div { border-bottom-color: transparent !important; }
-#pane-side [role="row"] > div { border-radius: 14px !important; transition: background-color .12s ease; }
+#pane-side [role="row"] > div { border-radius: 12px !important; transition: background-color .12s ease; }
 #pane-side [role="row"]:hover > div { background: var(--wisp-surface-highlight) !important; }
 #pane-side [role="row"][aria-selected="true"] > div,
 #pane-side [role="row"] > div[aria-selected="true"],
-#pane-side [role="row"] > div:has([aria-selected="true"]) { background: var(--wisp-surface-emphasized) !important; box-shadow: 0 1px 2px rgba(var(--shadow-rgb), .05) !important; }
+#pane-side [role="row"] > div:has([aria-selected="true"]) { background: var(--wisp-surface-emphasized) !important; box-shadow: none !important; }
+#pane-side [role="row"] > div, #pane-side [role="row"] > div > div { outline: none !important; border-color: transparent !important; box-shadow: none !important; }
+/* Unread / mention badges follow the accent instead of WhatsApp green. */
+#pane-side [aria-label*="unread" i], #pane-side [aria-label*="mention" i],
+#side [aria-label*="unread" i] { background: var(--wisp-accent) !important; color: var(--wisp-on-accent) !important; }
+#pane-side [aria-label*="unread" i] *, #side [aria-label*="unread" i] * { color: var(--wisp-on-accent) !important; fill: var(--wisp-on-accent) !important; }
 
-/* ---- Bubbles ----------------------------------------------------------- */
-/* wisp-core.js marks every bubble with data-wisp-bubble="in|out" (learned from the tail element). */
-#main [data-wisp-bubble],
-#main div:has(> span[data-icon="tail-in"]),
-#main div:has(> span[data-icon="tail-out"]) { border-radius: 18px !important; box-shadow: none !important; }
+/* ---- Bubbles ------------------------------------------------------------ */
+#main [data-wisp-bubble], #main div:has(> span[data-icon^="tail-"]) { border-radius: 18px !important; box-shadow: none !important; }
 #main span[data-icon="tail-in"], #main span[data-icon="tail-out"] { display: none !important; }
-#main [data-wisp-bubble="in"] { background: var(--wisp-bubble-incoming) !important; margin-left: 20px !important; }
-#main [data-wisp-bubble="out"] { background: var(--wisp-bubble-outgoing) !important; margin-right: 20px !important; }
-#main [data-wisp-bubble] { padding-left: 2px; padding-right: 2px; }
-/* Outgoing: inverted surface, so every token-driven color inside flips with it. */
-#main [data-wisp-bubble="out"],
-#main div:has(> span[data-icon="tail-out"]) {
+#main [data-wisp-bubble="in"] { margin-left: 20px !important; }
+#main [data-wisp-bubble="out"] { margin-right: 20px !important; }
+/* Outgoing bubbles are the inverted surface. Backgrounds come from WhatsApp's own
+   bubble token (so stickers and media stay transparent); every content token is
+   flipped inside, which covers replies, captions, mentions, links and receipts. */
+#main [data-wisp-bubble="out"] {
   --WDS-content-default: var(--wisp-on-accent);
-  --WDS-content-deemphasized: color-mix(in srgb, var(--wisp-on-accent) 65%, transparent);
-  --WDS-systems-bubble-content-deemphasized: color-mix(in srgb, var(--wisp-on-accent) 65%, transparent);
-  --WDS-content-read: var(--wisp-link);
+  --WDS-content-deemphasized: color-mix(in srgb, var(--wisp-on-accent) 68%, transparent);
+  --WDS-content-disabled: color-mix(in srgb, var(--wisp-on-accent) 40%, transparent);
+  --WDS-content-action-default: var(--wisp-on-accent);
   --WDS-content-action-emphasized: var(--wisp-on-accent);
-  --primary-strong: var(--wisp-on-accent); --message-primary: var(--wisp-on-accent); --bubble-meta: color-mix(in srgb, var(--wisp-on-accent) 65%, transparent);
+  --WDS-content-read: var(--wisp-link);
+  --WDS-systems-bubble-content-deemphasized: color-mix(in srgb, var(--wisp-on-accent) 68%, transparent);
+  --WDS-systems-bubble-content-business: color-mix(in srgb, var(--wisp-on-accent) 68%, transparent);
+  --WDS-systems-bubble-surface-overlay: color-mix(in srgb, var(--wisp-on-accent) 12%, transparent);
+  --WDS-systems-bubble-surface-incoming: color-mix(in srgb, var(--wisp-on-accent) 12%, transparent);
+  --WDS-systems-bubble-surface-outgoing: var(--wisp-bubble-outgoing);
+  --WDS-systems-bubble-surface-system: color-mix(in srgb, var(--wisp-on-accent) 12%, transparent);
+  --WDS-surface-default: color-mix(in srgb, var(--wisp-on-accent) 10%, transparent);
+  --WDS-surface-emphasized: color-mix(in srgb, var(--wisp-on-accent) 16%, transparent);
+  --WDS-surface-highlight: color-mix(in srgb, var(--wisp-on-accent) 12%, transparent);
+  --WDS-lines-divider: color-mix(in srgb, var(--wisp-on-accent) 18%, transparent);
+  --WDS-accent: var(--wisp-on-accent); --WDS-accent-deemphasized: color-mix(in srgb, var(--wisp-on-accent) 14%, transparent);
+  --primary: var(--wisp-on-accent); --primary-strong: var(--wisp-on-accent); --primary-stronger: var(--wisp-on-accent);
+  --secondary: color-mix(in srgb, var(--wisp-on-accent) 68%, transparent); --secondary-stronger: color-mix(in srgb, var(--wisp-on-accent) 68%, transparent);
+  --message-primary: var(--wisp-on-accent); --bubble-meta: color-mix(in srgb, var(--wisp-on-accent) 68%, transparent);
+  --bubble-meta-icon: color-mix(in srgb, var(--wisp-on-accent) 68%, transparent); --icon: color-mix(in srgb, var(--wisp-on-accent) 75%, transparent);
+  --icon-ack: var(--wisp-link); --link-rgb: 147, 197, 253; --text-action: var(--wisp-on-accent);
+  --incoming-background: color-mix(in srgb, var(--wisp-on-accent) 12%, transparent); --outgoing-background: var(--wisp-bubble-outgoing);
+  --quote-background: color-mix(in srgb, var(--wisp-on-accent) 12%, transparent); --block-quote-text: color-mix(in srgb, var(--wisp-on-accent) 80%, transparent);
+  --text-muted: color-mix(in srgb, var(--wisp-on-accent) 65%, transparent); --document-meta: color-mix(in srgb, var(--wisp-on-accent) 65%, transparent);
   color: var(--wisp-on-accent) !important;
 }
-/* Date / system pills: tonal. */
-#main div:has(> span[data-icon="tail-in"]) ~ * { }
-#app ::selection { background: color-mix(in srgb, var(--wisp-accent) 18%, transparent); }
+html[data-wisp-scheme="dark"] #main [data-wisp-bubble="out"] { --WDS-content-read: #2563EB; --icon-ack: #2563EB; --link-rgb: 37, 99, 235; }
+/* Inverted bubble: swatches that WhatsApp hard-codes as light surfaces. */
+#main [data-wisp-bubble="out"] [style*="background-color: rgb(255, 255, 255)"],
+#main [data-wisp-bubble="out"] [style*="background: rgb(255, 255, 255)"] { background-color: color-mix(in srgb, var(--wisp-on-accent) 12%, transparent) !important; }
 
-/* ---- Misc chrome -------------------------------------------------------- */
+/* ---- Misc ---------------------------------------------------------------- */
+#app ::selection { background: color-mix(in srgb, var(--wisp-accent) 18%, transparent); }
 #app a { text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); }

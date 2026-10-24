@@ -34,7 +34,7 @@ enum DebugHooks {
         guard fd >= 0 else { Log.warning("Cannot watch \(directory.path)", .app); return }
         let src = DispatchSource.makeFileSystemObjectSource(fileDescriptor: fd, eventMask: [.write, .rename, .extend, .attrib], queue: .main)
         let debouncer = Debouncer(delay: .milliseconds(250))
-        src.setEventHandler { debouncer.call { onChange() } }
+        src.setEventHandler { debouncer.call { Log.debug("Watched directory changed: \(directory.lastPathComponent)", .app); onChange() } }
         src.setCancelHandler { close(fd) }
         src.resume()
         watchers.append(src)
@@ -45,25 +45,15 @@ enum DebugHooks {
         if let dir = env["WISP_DEBUG_THEME_DIR"] {
             let url = URL(fileURLWithPath: dir)
             CSSGenerator.themeDirectoryOverride = url
-            watch(directory: url) { app.sessions.applyLiveStylesEverywhere(); Log.info("Theme CSS reloaded from \(dir)", .injection) }
+            watch(directory: url) {
+                app.sessions.applyLiveStylesEverywhere(); Log.info("Theme CSS reloaded from \(dir)", .injection)
+                if let snapDir = env["WISP_DEBUG_SNAPSHOT_DIR"] { handleSnapshotRequest(app, dir: snapDir) }
+            }
         }
         // Snapshot on demand: touch "<dir>/snap.request" → "<dir>/snap.png" (web view) + "<dir>/window.png".
         if let dir = env["WISP_DEBUG_SNAPSHOT_DIR"] {
             let url = URL(fileURLWithPath: dir)
-            watch(directory: url) {
-                let req = url.appendingPathComponent("snap.request")
-                guard FileManager.default.fileExists(atPath: req.path) else { return }
-                try? FileManager.default.removeItem(at: req)
-                guard let s = app.sessions.activeSession, s.isWebViewCreated else { return }
-                let cfg = WKSnapshotConfiguration(); cfg.afterScreenUpdates = true
-                s.webView.takeSnapshot(with: cfg) { image, _ in
-                    if let image, let tiff = image.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff), let png = rep.representation(using: .png, properties: [:]) {
-                        try? png.write(to: url.appendingPathComponent("snap.png"))
-                        Log.info("Snapshot written to \(dir)/snap.png", .web)
-                    }
-                }
-                snapshotWindows(to: dir)
-            }
+            watch(directory: url) { handleSnapshotRequest(app, dir: dir) }
         }
         if let theme = env["WISP_DEBUG_THEME"] { app.settings.appearance.themeID = theme }
         if let mode = env["WISP_DEBUG_MODE"].flatMap(AppearanceMode.init(rawValue:)) { app.settings.appearance.mode = mode }
@@ -86,6 +76,22 @@ enum DebugHooks {
         if let secs = env["WISP_DEBUG_QUIT_AFTER"].flatMap(Double.init) {
             Task { try? await Task.sleep(for: .seconds(secs)); app.isQuitForced = true; NSApp.terminate(nil) }
         }
+    }
+
+    private static func handleSnapshotRequest(_ app: AppEnvironment, dir: String) {
+        let url = URL(fileURLWithPath: dir)
+        let req = url.appendingPathComponent("snap.request")
+        guard FileManager.default.fileExists(atPath: req.path) else { return }
+        try? FileManager.default.removeItem(at: req)
+        guard let s = app.sessions.activeSession, s.isWebViewCreated else { return }
+        let cfg = WKSnapshotConfiguration(); cfg.afterScreenUpdates = true
+        s.webView.takeSnapshot(with: cfg) { image, _ in
+            if let image, let tiff = image.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff), let png = rep.representation(using: .png, properties: [:]) {
+                try? png.write(to: url.appendingPathComponent("snap.png"))
+                Log.info("Snapshot written to \(dir)/snap.png", .web)
+            }
+        }
+        snapshotWindows(to: dir)
     }
 
     /// Renders each window's view hierarchy with `cacheDisplay` — works even when

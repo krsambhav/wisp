@@ -14,5 +14,6 @@ if pgrep -x Wisp >/dev/null; then
 fi
 rm -rf "$APP_DST" && cp -R "$APP_SRC" "$APP_DST"
 : > /tmp/wisp.err
-open --env WISP_DEBUG_THEME_DIR="$ROOT/Wisp/Resources/Web/themes" --env WISP_DEBUG_SNAPSHOT_DIR="$DBG" "$@" --stderr /tmp/wisp.err "$APP_DST"
+mkdir -p "$DBG/themes" && cp "$ROOT"/Wisp/Resources/Web/themes/*.css "$DBG/themes/"
+open --env WISP_DEBUG_THEME_DIR="$DBG/themes" --env WISP_DEBUG_SNAPSHOT_DIR="$DBG" "$@" --stderr /tmp/wisp.err "$APP_DST"
 echo "relaunched (theme hot-reload from repo, snapshots via touch $DBG/snap.request)"
