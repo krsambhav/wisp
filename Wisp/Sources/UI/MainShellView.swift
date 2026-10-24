@@ -7,7 +7,6 @@ struct MainShellView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        _ = env.sessions.activeSession?.webScheme
         let palette = env.shellPalette(systemIsDark: colorScheme == .dark)
         VStack(spacing: 0) {
             HeaderBar(palette: palette)
