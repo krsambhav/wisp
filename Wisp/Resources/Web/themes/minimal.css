@@ -86,15 +86,19 @@ header[data-tab="2"] [data-navbar-item]:hover { background: var(--wisp-surface-e
 #pane-side [role="row"] > div[aria-selected="true"],
 #pane-side [role="row"] > div:has([aria-selected="true"]) { background: var(--wisp-surface-emphasized) !important; box-shadow: none !important; }
 #pane-side [role="row"] > div, #pane-side [role="row"] > div > div { outline: none !important; border-color: transparent !important; box-shadow: none !important; }
-/* Row typography: names 15px, previews and timestamps 13px. */
-#pane-side [role="row"] > div > div:last-child > div:first-child span { font-size: 16.5px !important; font-weight: 500 !important; }
-#pane-side [role="row"] > div > div:last-child > div:last-child span,
-#pane-side [role="row"] > div > div:last-child > div:last-child div { font-size: 13.5px !important; line-height: 19px !important; }
-#pane-side [role="row"] > div > div:last-child > div:first-child > div:last-child,
-#pane-side [role="row"] > div > div:last-child > div:first-child > div:last-child span { font-size: 12.5px !important; }
+/* Row typography (structure: name = span[title][dir], preview = span[title]:not([dir])). */
+#pane-side [role="row"] span[title][dir] { font-size: 15px !important; font-weight: 600 !important; line-height: 20px !important; color: var(--wisp-text-primary) !important; }
+#pane-side [role="row"] span[title]:not([dir]), #pane-side [role="row"] span[title]:not([dir]) * { font-size: 13.5px !important; font-weight: 400 !important; line-height: 19px !important; }
+#pane-side [role="row"] [role="gridcell"] > div:last-child > span:not([title]) { font-size: 12.5px !important; font-weight: 400 !important; }
+#pane-side [role="row"] [role="gridcell"]:first-child > div:last-child > span { color: var(--wisp-text-secondary) !important; }
 /* Unread / mention badges follow the accent instead of WhatsApp green. */
 #pane-side [aria-label*="unread" i], #pane-side [aria-label*="mention" i],
-#side [aria-label*="unread" i] { background: var(--wisp-accent) !important; color: var(--wisp-on-accent) !important; }
+#side [aria-label*="unread" i] {
+  background: var(--wisp-accent) !important; color: var(--wisp-on-accent) !important;
+  display: inline-flex !important; align-items: center !important; justify-content: center !important;
+  min-width: 20px !important; height: 20px !important; padding: 0 6px !important; border-radius: 999px !important;
+  font-size: 11.5px !important; font-weight: 600 !important; line-height: 1 !important; box-sizing: border-box !important;
+}
 #pane-side [aria-label*="unread" i] *, #side [aria-label*="unread" i] * { color: var(--wisp-on-accent) !important; fill: var(--wisp-on-accent) !important; }
 
 /* ---- Bubbles ------------------------------------------------------------ */
