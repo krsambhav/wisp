@@ -102,6 +102,10 @@ header[data-tab="2"] [data-navbar-item]:hover { background: var(--wisp-surface-e
 #pane-side [aria-label*="unread" i] *, #side [aria-label*="unread" i] * { color: var(--wisp-on-accent) !important; fill: var(--wisp-on-accent) !important; }
 
 /* ---- Bubbles ------------------------------------------------------------ */
+/* Untagged outgoing bubbles render like incoming ones (readable) until the core
+   script tags them a frame later; stickers/media (data-wisp-plain) stay transparent. */
+html, html[data-wisp-scheme="dark"] { --WDS-systems-bubble-surface-outgoing: var(--wisp-bubble-incoming) !important; --outgoing-background: var(--wisp-bubble-incoming) !important; }
+#main [data-wisp-bubble="out"]:not([data-wisp-plain]) { background: var(--wisp-bubble-outgoing) !important; }
 #main [data-wisp-bubble], #main div:has(> span[data-icon^="tail-"]) { border-radius: 18px !important; box-shadow: none !important; }
 #main span[data-icon="tail-in"], #main span[data-icon="tail-out"] { display: none !important; }
 #main [data-wisp-bubble="in"] { margin-left: 20px !important; }
@@ -139,8 +143,9 @@ header[data-tab="2"] [data-navbar-item]:hover { background: var(--wisp-surface-e
 }
 html[data-wisp-scheme="dark"] #main [data-wisp-bubble="out"] { --WDS-content-read: #2563EB; --icon-ack: #2563EB; --link-rgb: 37, 99, 235; }
 /* Anything WhatsApp colors directly (document cards, captions, link previews) becomes legible on the inverted surface. */
-#main [data-wisp-bubble="out"] *:not(svg):not(path):not(img):not(video):not(canvas):not([data-icon]) { color: var(--wisp-on-accent) !important; -webkit-text-fill-color: var(--wisp-on-accent) !important; opacity: 1; }
-#main [data-wisp-bubble="out"] [data-icon] { color: color-mix(in srgb, var(--wisp-on-accent) 80%, transparent) !important; }
+#main [data-wisp-bubble="out"]:not([data-wisp-plain]) *:not(svg):not(path):not(img):not(video):not(canvas):not([data-icon]),
+#main div:has(> span[data-icon="tail-out"]):not([data-wisp-plain]) *:not(svg):not(path):not(img):not(video):not(canvas):not([data-icon]) { color: var(--wisp-on-accent) !important; -webkit-text-fill-color: var(--wisp-on-accent) !important; opacity: 1; }
+#main [data-wisp-bubble="out"]:not([data-wisp-plain]) [data-icon] { color: color-mix(in srgb, var(--wisp-on-accent) 80%, transparent) !important; }
 #main [data-wisp-bubble="out"] svg:not([data-icon*="check"]) { color: var(--wisp-on-accent) !important; }
 #main [data-wisp-bubble="out"] [data-icon="msg-dblcheck"], #main [data-wisp-bubble="out"] [data-icon="msg-check"] { color: var(--wisp-link) !important; }
 /* Inverted bubble: swatches that WhatsApp hard-codes as light surfaces. */

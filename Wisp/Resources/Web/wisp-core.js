@@ -139,6 +139,9 @@
       if (b.querySelector('span[data-icon="tail-out"], [data-icon="msg-dblcheck"], [data-icon="msg-check"], [data-icon="msg-time"]')) { dir = 'out'; }
       else if (b.querySelector('span[data-icon="tail-in"]')) { dir = 'in'; }
       else { const r = b.getBoundingClientRect(); dir = (r.left + r.width / 2) > mid ? 'out' : 'in'; }
+      // Stickers and bare media have no bubble surface; themes must not paint one.
+      const bg = getComputedStyle(b).backgroundColor;
+      if (!bg || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)') { b.setAttribute('data-wisp-plain', '1'); }
       b.setAttribute('data-wisp-bubble', dir);
     }
   }
@@ -170,7 +173,9 @@
     const root = document.documentElement;
     if (!root || appObserved) { return; }
     appObserved = true;
-    const mo = new MutationObserver(scheduleState);
+    // Mutation callbacks run before the next paint, so tagging bubbles here
+    // (cheap: only untagged leaves are visited) avoids any visible flash.
+    const mo = new MutationObserver(() => { scheduleState(); if (lastState === 'chats') { markBubbles(); } });
     mo.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
     scheduleState();
   }
