@@ -90,14 +90,21 @@
   function detectScheme() {
     const root = document.documentElement;
     if (!root) { return ''; }
-    const wash = getComputedStyle(root).getPropertyValue('--WDS-app-wash').trim();
-    const m = wash.match(/#([0-9a-f]{6})/i);
     let scheme = '';
-    if (m) {
-      const v = parseInt(m[1], 16);
-      const lum = ((v >> 16) & 255) * 0.299 + ((v >> 8) & 255) * 0.587 + (v & 255) * 0.114;
-      scheme = lum < 128 ? 'dark' : 'light';
-    } else if (document.body && document.body.classList.contains('dark')) { scheme = 'dark'; }
+    // 1. WhatsApp still toggles the legacy `dark` class on <body>.
+    if (document.body && document.body.classList.contains('dark')) { scheme = 'dark'; }
+    else if (document.body && document.body.classList.contains('light')) { scheme = 'light'; }
+    // 2. Otherwise read a token Wisp never overrides, as computed on <body>
+    //    (warm-gray-200 light / warm-gray-800 dark).
+    if (!scheme) {
+      const wash = getComputedStyle(document.body || root).getPropertyValue('--WDS-app-wash').trim();
+      const m = wash.match(/#([0-9a-f]{6})/i);
+      if (m) {
+        const v = parseInt(m[1], 16);
+        const lum = ((v >> 16) & 255) * 0.299 + ((v >> 8) & 255) * 0.587 + (v & 255) * 0.114;
+        scheme = lum < 128 ? 'dark' : 'light';
+      } else if (window.matchMedia) { scheme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
+    }
     if (scheme && scheme !== lastScheme) {
       lastScheme = scheme;
       root.setAttribute('data-wisp-scheme', scheme);

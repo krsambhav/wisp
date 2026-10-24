@@ -25,7 +25,7 @@ html {
 html[data-wisp-scheme="dark"] {
   --wisp-background: #09090B; --wisp-surface: #09090B; --wisp-surface-emphasized: #1C1C1F;
   --wisp-surface-highlight: #141416; --wisp-chat-background: #09090B; --wisp-composer: #1C1C1F;
-  --wisp-line: #27272A;
+  --wisp-line: #3F3F46;
   --WDS-background-wash-plain: #09090B !important; --WDS-surface-default: #09090B !important;
   --WDS-surface-emphasized: #1C1C1F !important; --WDS-surface-highlight: #141416 !important;
   --WDS-systems-chat-background-wallpaper: #09090B !important; --WDS-systems-chat-foreground-wallpaper: #09090B !important;
@@ -47,7 +47,7 @@ html, html[data-wisp-scheme="dark"] {
 /* ---- Panes: one surface, one hairline --------------------------------- */
 #app, #app > div, .app-wrapper-web, .two, div:has(> #main), div:has(> #side) { background: var(--wisp-background) !important; }
 #side { background: transparent !important; border-right: 0 !important; }
-div:has(> #side) { border-right: 1px solid var(--wisp-line) !important; }
+div:has(> #side) { border-right: 0.5px solid var(--wisp-line) !important; }
 div:has(> #side) > header, div:has(> #side) > header > header { background: transparent !important; border: 0 !important; }
 header[data-tab="2"] { background: transparent !important; border: 0 !important; }
 header[data-tab="2"] [data-navbar-item] { border-radius: 12px !important; }
