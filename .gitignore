@@ -1,0 +1,11 @@
+# Xcode / build
+Wisp/build/
+Wisp/build-tests/
+Wisp/DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+# macOS
+.DS_Store
+# Local
+/tmp/

@@ -1,0 +1,16 @@
+/* ==========================================================================
+   Wisp theme: Default — a refined take on WhatsApp's own design.
+   Version: 1 (2026-10)
+   Keeps WhatsApp's green identity, softens surfaces, tightens borders.
+   ========================================================================== */
+html { --radius-app: 12px !important; }
+
+/* Slightly softer wallpaper doodle. */
+html { --wisp-doodle-opacity: 0.35; }
+
+/* Hover states on list rows use the theme highlight instead of flat gray. */
+#pane-side [role="row"]:hover > div,
+#pane-side [role="listitem"]:hover > div { background: var(--wisp-surface-highlight) !important; }
+
+/* Composer: pill-shaped, with a hairline border. */
+#main footer [contenteditable="true"] { border-radius: 10px; }

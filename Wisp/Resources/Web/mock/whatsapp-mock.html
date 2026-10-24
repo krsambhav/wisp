@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<!--
+  Wisp development fixture. Mimics the parts of WhatsApp Web's DOM that Wisp's
+  theme engine, state detection and notification bridge rely on, so those paths
+  can be exercised without a linked phone. Loaded only when WISP_MOCK=1 (Debug).
+  It is NOT WhatsApp and talks to no server.
+-->
+<html id="whatsapp-web" class="" lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<title>WhatsApp</title>
+<style>
+  :root {
+    --WDS-accent:#1DAA61; --WDS-accent-emphasized:#15603E; --WDS-accent-deemphasized:#D9FDD3;
+    --WDS-background-wash-plain:#FFFFFF; --WDS-surface-default:#FFFFFF; --WDS-surface-emphasized:#F7F5F3;
+    --WDS-surface-highlight:rgba(194,189,184,.15); --WDS-content-default:#0A0A0A; --WDS-content-deemphasized:rgba(0,0,0,.6);
+    --WDS-lines-divider:rgba(0,0,0,.1); --WDS-systems-bubble-surface-incoming:#FFFFFF; --WDS-systems-bubble-surface-outgoing:#D9FDD3;
+    --WDS-systems-chat-background-wallpaper:#F5F1EB; --WDS-systems-chat-foreground-wallpaper:#EAE0D3; --WDS-systems-chat-surface-composer:#FFFFFF;
+    --WDS-content-on-accent:#fff; --WDS-content-read:#007BFC; --shadow-rgb:11,20,26;
+  }
+  body.dark {
+    --WDS-accent:#21C063; --WDS-accent-emphasized:#144D37; --WDS-accent-deemphasized:#103529;
+    --WDS-background-wash-plain:#161717; --WDS-surface-default:#161717; --WDS-surface-emphasized:#1D1F1F;
+    --WDS-surface-highlight:rgba(255,255,255,.1); --WDS-content-default:#FAFAFA; --WDS-content-deemphasized:rgba(255,255,255,.6);
+    --WDS-lines-divider:rgba(255,255,255,.1); --WDS-systems-bubble-surface-incoming:#242626; --WDS-systems-bubble-surface-outgoing:#144D37;
+    --WDS-systems-chat-background-wallpaper:#161717; --WDS-systems-chat-foreground-wallpaper:#1D1F1F; --WDS-systems-chat-surface-composer:#242626;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; height:100%; font-family: -apple-system, system-ui, sans-serif; font-size: 14px; color: var(--WDS-content-default); background: var(--WDS-background-wash-plain); }
+  #app { height: 100%; }
+  .landing { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:16px; }
+  .two { display:flex; height:100%; }
+  #side { width: 30%; min-width: 300px; display:flex; flex-direction:column; background: var(--WDS-surface-default); border-right: 1px solid var(--WDS-lines-divider); }
+  #side header, #main header { height: 60px; display:flex; align-items:center; padding: 0 16px; gap: 12px; background: var(--WDS-surface-emphasized); }
+  .search { padding: 8px 12px; } .search [contenteditable] { background: var(--WDS-surface-emphasized); border-radius: 8px; padding: 8px 12px; min-height: 18px; outline: none; }
+  #pane-side { flex:1; overflow:auto; }
+  #pane-side [role=row] { height: 72px; } #pane-side [role=row] > div { display:flex; align-items:center; gap:12px; padding: 0 16px; height:100%; border-bottom: 1px solid var(--WDS-lines-divider); cursor: default; }
+  #pane-side [aria-selected=true] > div { background: var(--WDS-surface-emphasized); }
+  .avatar { width:44px; height:44px; border-radius:50%; background: var(--WDS-accent-deemphasized); flex:none; }
+  .row-text { flex:1; min-width:0; } .row-text .name { font-weight: 500; } .row-text .preview { color: var(--WDS-content-deemphasized); font-size: 13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .unread { background: var(--WDS-accent); color: var(--WDS-content-on-accent); border-radius: 999px; font-size: 11px; padding: 2px 7px; }
+  #main { flex:1; display:flex; flex-direction:column; background: var(--WDS-systems-chat-background-wallpaper); }
+  .messages { flex:1; overflow:auto; padding: 12px 8%; display:flex; flex-direction:column; gap: 6px; }
+  .message-in, .message-out { display:flex; } .message-out { justify-content:flex-end; }
+  .message-in > div:first-child, .message-out > div:first-child { max-width: 65%; padding: 6px 9px 8px; border-radius: 7.5px; box-shadow: 0 1px .5px rgba(var(--shadow-rgb),.13); position:relative; }
+  .message-in > div:first-child { background: var(--WDS-systems-bubble-surface-incoming); } .message-out > div:first-child { background: var(--WDS-systems-bubble-surface-outgoing); }
+  .copyable-text .selectable-text { font-size: 14.2px; line-height: 19px; }
+  .meta { font-size: 11px; color: var(--WDS-content-deemphasized); text-align: right; margin-top: 2px; }
+  #main footer { padding: 10px 16px; background: var(--WDS-systems-chat-surface-composer); display:flex; gap: 10px; align-items:center; }
+  #main footer [contenteditable] { flex:1; background: var(--WDS-surface-emphasized); border-radius: 8px; padding: 9px 12px; outline:none; }
+  button.wa { background: var(--WDS-accent); color: var(--WDS-content-on-accent); border: 0; border-radius: 20px; padding: 8px 14px; font: inherit; cursor:pointer; }
+  .toolbar { position: fixed; bottom: 8px; left: 8px; display:flex; gap:6px; flex-wrap:wrap; z-index: 9; }
+  .toolbar button { font-size: 11px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--WDS-lines-divider); background: var(--WDS-surface-default); color: var(--WDS-content-default); }
+  canvas { background:#fff; border: 1px solid #ddd; }
+</style>
+</head>
+<body class="">
+<div id="app"><div class="landing">
+  <strong>Mock WhatsApp — landing</strong>
+  <canvas aria-label="Scan this QR code to link a device!" width="200" height="200"></canvas>
+  <span>Switching to chats in 1.5s…</span>
+</div></div>
+<div class="toolbar">
+  <button onclick="mock.notify()">notify</button>
+  <button onclick="mock.notifySame()">notify (same tag)</button>
+  <button onclick="mock.unread(3)">unread 3</button>
+  <button onclick="mock.unread(0)">unread 0</button>
+  <button onclick="mock.download()">download</button>
+  <button onclick="mock.upload()">upload</button>
+  <button onclick="mock.external()">external link</button>
+  <button onclick="mock.dark()">toggle dark</button>
+  <button onclick="mock.crash()">throw</button>
+</div>
+<script>
+  const mock = {
+    log(...a) { console.log('[mock]', ...a); },
+    chats() {
+      document.getElementById('app').innerHTML = `
+      <div class="two">
+        <div id="side">
+          <header><div class="avatar" style="width:36px;height:36px"></div><strong>Chats</strong></header>
+          <div class="search"><div role="textbox" contenteditable="true" data-placeholder="Search"></div></div>
+          <div id="pane-side">
+            ${['Alice','Bob','Design team','Mom','Carlos','Weekend plans','Dana','Eve','Frank','Grace'].map((n,i)=>`
+            <div role="row" ${i===0?'aria-selected="true"':''}><div><div class="avatar"></div><div class="row-text"><div class="name">${n}</div><div class="preview">${i%3===0?'Sounds good, see you then!':'Can you send me the file?'}</div></div>${i===1||i===2?'<span class="unread">'+(i)+'</span>':''}</div></div>`).join('')}
+          </div>
+        </div>
+        <div id="main">
+          <header><div class="avatar" style="width:40px;height:40px"></div><div><div><strong>Alice</strong></div><div style="font-size:12px;color:var(--WDS-content-deemphasized)">online</div></div></header>
+          <div class="messages">
+            <div class="message-in"><div><div class="copyable-text"><span class="selectable-text">Hey! Did you get a chance to look at the mockups?</span></div><div class="meta">10:21</div></div></div>
+            <div class="message-out"><div><div class="copyable-text"><span class="selectable-text">Yes — they look great. A couple of notes on spacing, sending them now.</span></div><div class="meta">10:22 ✓✓</div></div></div>
+            <div class="message-in"><div><div class="copyable-text"><span class="selectable-text">Perfect, thanks!</span></div><div class="meta">10:22</div></div></div>
+            <div class="message-out"><div><div class="copyable-text"><span class="selectable-text">Also: lunch Thursday?</span></div><div class="meta">10:30 ✓✓</div></div></div>
+            <div class="message-in"><div><div class="copyable-text"><span class="selectable-text">Sounds good, see you then!</span></div><div class="meta">10:31</div></div></div>
+          </div>
+          <footer><div contenteditable="true" role="textbox" data-placeholder="Type a message"></div><button class="wa">Send</button></footer>
+        </div>
+      </div>`;
+      mock.log('chats rendered');
+    },
+    unread(n) { document.title = n > 0 ? `(${n}) WhatsApp` : 'WhatsApp'; },
+    async iconBlob() {
+      const c = document.createElement('canvas'); c.width = c.height = 64;
+      const g = c.getContext('2d'); g.fillStyle = '#1DAA61'; g.beginPath(); g.arc(32,32,32,0,7); g.fill();
+      g.fillStyle = '#fff'; g.font = 'bold 30px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('A', 32, 34);
+      const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+      return URL.createObjectURL(blob);
+    },
+    async notify() {
+      if (!('Notification' in window)) { mock.log('Notification API unavailable'); return; }
+      const icon = await mock.iconBlob();
+      const n = new Notification('Alice', { body: 'Hey! Are we still on for Thursday?', tag: 'chat-alice', icon, renotify: true });
+      n.onclick = () => { mock.log('notification clicked → opening chat'); document.body.setAttribute('data-opened-chat', 'alice'); };
+      mock.log('Notification created, permission=', Notification.permission);
+      return n;
+    },
+    async notifySame() { const n = await mock.notify(); setTimeout(() => n && n.close(), 4000); },
+    download() {
+      const blob = new Blob(['Hello from the Wisp mock page.\n'], { type: 'text/plain' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'wisp-mock-download.txt';
+      document.body.appendChild(a); a.click(); a.remove(); mock.log('download clicked');
+    },
+    upload() { const i = document.createElement('input'); i.type = 'file'; i.multiple = true; i.onchange = () => mock.log('files chosen:', i.files.length); i.click(); },
+    external() { window.open('https://example.com/', '_blank'); },
+    dark() { document.body.classList.toggle('dark'); },
+    crash() { throw new Error('mock page error'); }
+  };
+  window.mock = mock;
+  setTimeout(mock.chats, 1500);
+  const params = new URLSearchParams(location.search);
+  if (params.get('auto') === '1') {
+    setTimeout(() => mock.unread(2), 3000);
+    setTimeout(() => mock.notify(), 3500);
+    setTimeout(() => mock.notify(), 3700);     // duplicate within window → should be suppressed/replaced
+    setTimeout(() => mock.download(), 5000);
+  }
+  if (params.get('dark') === '1') { document.body.classList.add('dark'); }
+</script>
+</body>
+</html>

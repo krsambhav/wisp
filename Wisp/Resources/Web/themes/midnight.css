@@ -1,0 +1,29 @@
+/* ==========================================================================
+   Wisp theme: Midnight — a sophisticated dark theme.
+   Version: 1 (2026-10)
+   Layered near-black surfaces with low-contrast dividers and a cool accent.
+   Best with WhatsApp's theme set to "System default" or "Dark".
+   ========================================================================== */
+html { --radius-app: 12px !important; }
+
+/* Quiet wallpaper: no doodle. */
+html { --WDS-systems-chat-foreground-wallpaper: var(--wisp-chat-background) !important; }
+#main > div[style*="background-image"], #main [data-asset-chat-background] { background-image: none !important; }
+
+/* Surfaces separated by hairlines rather than tone jumps. */
+#side header, #main header { border-bottom: 1px solid var(--wisp-divider) !important; box-shadow: none !important; }
+#main footer { border-top: 1px solid var(--wisp-divider) !important; }
+
+/* Bubbles: soft elevation, no harsh green. */
+.message-in > div:first-child,
+.message-out > div:first-child {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Rows */
+#pane-side [role="row"]:hover > div,
+#pane-side [role="listitem"]:hover > div { background: var(--wisp-surface-highlight) !important; }
+#pane-side [aria-selected="true"] > div { background: var(--wisp-surface-emphasized) !important; }
+
+/* Selection color follows accent. */
+#app ::selection { background: color-mix(in srgb, var(--wisp-accent) 35%, transparent); }

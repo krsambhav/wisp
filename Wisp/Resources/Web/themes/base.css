@@ -1,0 +1,72 @@
+/* ==========================================================================
+   Wisp base enhancements — applied for every theme.
+   Version: 1 (2026-10)
+   Rules in this file are deliberately conservative: they rely on CSS custom
+   properties that WhatsApp Web defines itself, plus a handful of long-lived
+   structural hooks (#app, #side, #main, #pane-side, .message-in/.message-out).
+   If a hook stops matching, the rule simply has no effect — nothing breaks.
+   ========================================================================== */
+
+/* ---- 1. Scrollbars (WebKit) ------------------------------------------- */
+#app ::-webkit-scrollbar { width: 9px; height: 9px; }
+#app ::-webkit-scrollbar-track { background: transparent; }
+#app ::-webkit-scrollbar-thumb {
+  background: var(--wisp-scrollbar);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+#app ::-webkit-scrollbar-thumb:hover { background: var(--wisp-scrollbar-hover); background-clip: padding-box; }
+#app ::-webkit-scrollbar-corner { background: transparent; }
+
+/* ---- 2. Typography ---------------------------------------------------- */
+html, body, #app {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+#app { font-family: var(--wisp-font-family); }
+/* Message text size (opt-in via --wisp-message-font-scale; 1 = WhatsApp default) */
+#main .copyable-text .selectable-text,
+#main .selectable-text.copyable-text {
+  font-size: calc(14.2px * var(--wisp-message-font-scale, 1));
+  line-height: calc(19px * var(--wisp-message-font-scale, 1));
+}
+
+/* ---- 3. Layout polish ------------------------------------------------- */
+/* Remove the legacy green stripe behind the app on wide windows. */
+html { --app-background-stripe: transparent !important; }
+#app > div { background: var(--wisp-background) !important; }
+
+/* Hairline dividers between panes instead of heavy borders. */
+#side { border-right: 1px solid var(--wisp-divider); box-sizing: border-box; }
+
+/* Optional sidebar width override (set only when the user picks a width). */
+html[data-wisp-sidebar] #side {
+  flex: 0 0 var(--wisp-sidebar-width) !important;
+  width: var(--wisp-sidebar-width) !important;
+  max-width: var(--wisp-sidebar-width) !important;
+}
+
+/* ---- 4. Message bubbles ----------------------------------------------- */
+html[data-wisp-bubbles="rounded"] .message-in > div:first-child,
+html[data-wisp-bubbles="rounded"] .message-out > div:first-child {
+  border-radius: var(--wisp-bubble-radius) !important;
+}
+html[data-wisp-bubbles="rounded"] .message-in > div:first-child { border-top-left-radius: 4px !important; }
+html[data-wisp-bubbles="rounded"] .message-out > div:first-child { border-top-right-radius: 4px !important; }
+/* Hide the bubble "tail" when bubbles are rounded (safe no-op if absent). */
+html[data-wisp-bubbles="rounded"] .message-in [data-icon="tail-in"],
+html[data-wisp-bubbles="rounded"] .message-out [data-icon="tail-out"] { display: none !important; }
+
+/* ---- 5. Density ------------------------------------------------------- */
+html[data-wisp-density="compact"] .message-in,
+html[data-wisp-density="compact"] .message-out { margin-bottom: 2px !important; }
+html[data-wisp-density="compact"] #main footer { padding-top: 4px !important; padding-bottom: 4px !important; }
+html[data-wisp-density="compact"] #main header,
+html[data-wisp-density="compact"] #side header { min-height: 52px !important; }
+
+/* ---- 6. Focus & motion ------------------------------------------------ */
+#app :focus-visible { outline: 2px solid var(--wisp-accent); outline-offset: 1px; }
+@media (prefers-reduced-motion: reduce) {
+  #app *, #app *::before, #app *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

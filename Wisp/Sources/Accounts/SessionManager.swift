@@ -1,0 +1,111 @@
+import Foundation
+import WebKit
+
+/// Creates sessions lazily, keeps the active one in front, and (optionally)
+/// keeps background accounts alive so they still deliver notifications.
+@MainActor
+@Observable
+final class SessionManager {
+    private(set) var activeAccountID: UUID?
+    private(set) var sessions: [UUID: AccountSession] = [:]
+    @ObservationIgnored private unowned let env: AppEnvironment
+
+    init(environment: AppEnvironment) {
+        self.env = environment
+        let store = environment.accounts
+        let preferred = environment.settings.window.lastActiveAccountID
+        activeAccountID = store.accounts.first { $0.id == preferred }?.id ?? store.accounts.first?.id
+        ensureSessionsForBackgroundAccounts()
+    }
+
+    var accounts: [Account] { env.accounts.accounts }
+
+    var activeSession: AccountSession? {
+        guard let id = activeAccountID else { return nil }
+        return session(for: id)
+    }
+
+    var activeAccount: Account? { activeAccountID.flatMap { env.accounts.account(id: $0) } }
+
+    func session(for id: UUID) -> AccountSession? {
+        if let s = sessions[id] { return s }
+        guard let account = env.accounts.account(id: id) else { return nil }
+        let s = AccountSession(account: account, environment: env)
+        sessions[id] = s
+        return s
+    }
+
+    var loadedSessions: [AccountSession] { sessions.values.filter(\.isWebViewCreated) }
+
+    var totalUnread: Int { sessions.values.reduce(0) { $0 + $1.unreadCount } }
+
+    func activate(_ id: UUID) {
+        guard env.accounts.account(id: id) != nil, id != activeAccountID else { return }
+        activeAccountID = id
+        env.settings.window.lastActiveAccountID = id
+        session(for: id)?.loadIfNeeded()
+        unloadSessionsNotNeeded()
+        Log.info("Activated account \(id.uuidString.prefix(8))", .accounts)
+    }
+
+    func activate(index: Int) {
+        guard accounts.indices.contains(index) else { return }
+        activate(accounts[index].id)
+    }
+
+    /// Sessions for accounts marked "keep loaded" are created and loaded eagerly
+    /// so they receive messages; others are created on first activation.
+    func ensureSessionsForBackgroundAccounts() {
+        for a in accounts where a.keepLoadedInBackground || a.id == activeAccountID {
+            session(for: a.id)?.loadIfNeeded()
+        }
+    }
+
+    /// Tears down web views of accounts that are neither active nor pinned.
+    private func unloadSessionsNotNeeded() {
+        for (id, s) in sessions where id != activeAccountID {
+            if let a = env.accounts.account(id: id), !a.keepLoadedInBackground, s.isWebViewCreated {
+                s.tearDown()
+                Log.info("Unloaded background session \(id.uuidString.prefix(8)) (not pinned)", .accounts)
+            }
+        }
+    }
+
+    // MARK: Account CRUD
+
+    @discardableResult
+    func addAccount(name: String) -> Account {
+        let a = env.accounts.add(name: name)
+        activate(a.id)
+        return a
+    }
+
+    func updateAccount(_ a: Account) {
+        env.accounts.update(a)
+        sessions[a.id]?.updateAccount(a)
+        ensureSessionsForBackgroundAccounts()
+        unloadSessionsNotNeeded()
+    }
+
+    func removeAccount(id: UUID) async {
+        guard accounts.count > 1 else { return }
+        if let s = sessions[id] { s.tearDown(); sessions[id] = nil }
+        env.notifications.withdrawAll(accountID: id)
+        if let a = env.accounts.account(id: id) {
+            do { try await WKWebsiteDataStore.remove(forIdentifier: a.dataStoreID) }
+            catch { Log.warning("Could not remove data store: \(error.localizedDescription)", .accounts) }
+        }
+        env.accounts.remove(id: id)
+        if activeAccountID == id, let first = accounts.first { activeAccountID = nil; activate(first.id) }
+        env.badgesDidChange()
+    }
+
+    // MARK: Fan-out
+
+    func applyLiveStylesEverywhere() { for s in loadedSessions { s.applyLiveStyles() } }
+    func applyAppearanceEverywhere() { for s in loadedSessions { s.applyAppearance() } }
+    func refreshUserScriptsEverywhere() { for s in loadedSessions { s.refreshUserScripts() } }
+    func reloadAll() { for s in loadedSessions { s.reload() } }
+    func retryFailed() { for s in loadedSessions { s.retryNowIfFailed() } }
+    func setDeveloperToolsEverywhere(_ on: Bool) { for s in loadedSessions { s.setDeveloperTools(on) } }
+}
