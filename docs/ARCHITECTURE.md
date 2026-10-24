@@ -24,7 +24,7 @@ Resources: `Wisp/Resources/Web/` holds the injected scripts (`wisp-page.js`, `wi
 ## Launch and data flow
 
 1. `AppEnvironment.shared` is created lazily on first access (the SwiftUI scene body may run before the delegate's launch callbacks). It constructs stores (`SettingsStore`, `AccountStore`, `ScriptStore`, `CustomCSSStore`), the `InjectionEngine`, `NotificationBridge`, `DownloadManager`, `NetworkMonitor`, then `SessionManager`, `MainWindowController` and `MenuBarController`, wires callbacks, and starts observation.
-2. `SessionManager` picks the last active account and creates an `AccountSession` for it and for every account marked "keep loaded in background". Other accounts get a session only when activated; switching away from an unpinned account tears its web view down.
+2. `SessionManager` picks the last active account and creates an `AccountSession` for it and for every account marked "connect at launch". Other accounts get a session only when activated; switching away from an unpinned account tears its web view down.
 3. `AccountSession.webView` lazily builds the `WKWebView` through `WebViewFactory`: a `WKWebsiteDataStore(forIdentifier:)` per account, `applicationNameForUserAgent` set to a Safari-style `Version/x Safari/605.1.15` suffix (WhatsApp treats the bare WKWebView UA as an unsupported browser), media playback without user gesture, and the injection engine's scripts and handlers.
 4. `MainShellView` hosts the active session's web view through `WebViewContainer`, which only re-parents the existing view. Settings is a separate SwiftUI scene; the web view is never recreated.
 

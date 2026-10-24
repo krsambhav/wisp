@@ -35,7 +35,7 @@ Honest list of what Wisp cannot do, or cannot guarantee, because of WebKit, What
 
 - Account avatars and names are set in Wisp; the WhatsApp profile photo is not scraped from the page.
 - Removing an account deletes its WebKit data store; WhatsApp's "Linked devices" list on the phone still shows the device until you unlink it there.
-- Accounts not marked "keep loaded in background" are unloaded when you switch away and receive no notifications until reopened.
+- Accounts not marked "connect at launch" are not loaded until you first open them, so they receive no notifications before that. Once opened, a session stays alive for the rest of the run and switching between accounts is instant.
 
 ## Platform
 
