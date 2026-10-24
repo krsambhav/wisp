@@ -15,7 +15,15 @@ final class SessionManager {
         let store = environment.accounts
         let preferred = environment.settings.window.lastActiveAccountID
         activeAccountID = store.accounts.first { $0.id == preferred }?.id ?? store.accounts.first?.id
-        ensureSessionsForBackgroundAccounts()
+        // Sessions are created by `ensureSessionsForBackgroundAccounts()` from the app
+        // delegate, after the account list is final.
+    }
+
+    /// Re-validates the active account after the account list changed underneath us.
+    func reconcileActiveAccount() {
+        if activeAccountID == nil || env.accounts.account(id: activeAccountID!) == nil {
+            activeAccountID = accounts.first?.id
+        }
     }
 
     var accounts: [Account] { env.accounts.accounts }
@@ -64,7 +72,11 @@ final class SessionManager {
     /// Tears down web views of accounts that are neither active nor pinned.
     private func unloadSessionsNotNeeded() {
         for (id, s) in sessions where id != activeAccountID {
-            if let a = env.accounts.account(id: id), !a.keepLoadedInBackground, s.isWebViewCreated {
+            guard let a = env.accounts.account(id: id) else {
+                s.tearDown(); sessions[id] = nil   // account no longer exists
+                continue
+            }
+            if !a.keepLoadedInBackground, s.isWebViewCreated {
                 s.tearDown()
                 Log.info("Unloaded background session \(id.uuidString.prefix(8)) (not pinned)", .accounts)
             }
@@ -88,16 +100,20 @@ final class SessionManager {
     }
 
     func removeAccount(id: UUID) async {
-        guard accounts.count > 1 else { return }
-        if let s = sessions[id] { s.tearDown(); sessions[id] = nil }
-        env.notifications.withdrawAll(accountID: id)
-        if let a = env.accounts.account(id: id) {
-            do { try await WKWebsiteDataStore.remove(forIdentifier: a.dataStoreID) }
-            catch { Log.warning("Could not remove data store: \(error.localizedDescription)", .accounts) }
+        guard accounts.count > 1, let removed = env.accounts.account(id: id) else { return }
+        // Order matters: make another account active and drop the account record
+        // *before* suspending, so SwiftUI cannot resurrect a session for it mid-await.
+        if activeAccountID == id, let next = accounts.first(where: { $0.id != id }) {
+            activeAccountID = next.id
+            env.settings.window.lastActiveAccountID = next.id
+            session(for: next.id)?.loadIfNeeded()
         }
         env.accounts.remove(id: id)
-        if activeAccountID == id, let first = accounts.first { activeAccountID = nil; activate(first.id) }
+        if let s = sessions[id] { s.tearDown(); sessions[id] = nil }
+        env.notifications.withdrawAll(accountID: id)
         env.badgesDidChange()
+        do { try await WKWebsiteDataStore.remove(forIdentifier: removed.dataStoreID) }
+        catch { Log.warning("Could not remove data store: \(error.localizedDescription)", .accounts) }
     }
 
     // MARK: Fan-out

@@ -192,7 +192,7 @@ final class AppEnvironment {
             for var s in scripts {
                 s.id = UUID(); s.enabled = false
                 _ = self.scripts.create(name: s.name)
-                if var created = self.scripts.scripts.last { created.source = s.source; created.summary = s.summary; created.world = s.world; created.injectionTime = s.injectionTime; self.scripts.update(created) }
+                if var created = self.scripts.scripts.last { created.source = s.source; created.summary = s.summary; created.world = s.world; created.injectionTime = s.injectionTime; created.enabled = false; self.scripts.update(created) }
             }
         }
         toasts.show(title: "Preset “\(preset.name)” applied")

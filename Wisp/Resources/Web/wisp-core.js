@@ -102,9 +102,11 @@
     }, 350);
   }
 
+  let appObserved = false;
   function observeApp() {
     const root = document.documentElement;
-    if (!root) { return; }
+    if (!root || appObserved) { return; }
+    appObserved = true;
     const mo = new MutationObserver(scheduleState);
     mo.observe(root, { childList: true, subtree: true });
     scheduleState();

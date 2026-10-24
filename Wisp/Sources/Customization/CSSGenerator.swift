@@ -194,15 +194,25 @@ nonisolated enum CSSGenerator {
     nonisolated static func validate(css: String) -> String? {
         var depth = 0
         var inString: Character? = nil
+        var escaped = false
         var inComment = false
+        var commentLength = 0
         var prev: Character = " "
         for ch in css {
-            if inComment { if prev == "*" && ch == "/" { inComment = false }; prev = ch; continue }
-            if let q = inString { if ch == q && prev != "\\" { inString = nil }; prev = ch; continue }
+            if inComment {
+                commentLength += 1
+                if prev == "*" && ch == "/" && commentLength > 1 { inComment = false }
+                prev = ch; continue
+            }
+            if let q = inString {
+                if escaped { escaped = false }
+                else if ch == "\\" { escaped = true }
+                else if ch == q || ch == "\n" { inString = nil }
+                prev = ch; continue
+            }
             switch ch {
-            case "\"", "'": inString = ch
-            case "/" where prev == "/": break
-            case "*" where prev == "/": inComment = true
+            case "\"", "'": inString = ch; escaped = false
+            case "*" where prev == "/": inComment = true; commentLength = 0
             case "{": depth += 1
             case "}": depth -= 1; if depth < 0 { return "Unexpected “}” — more closing than opening braces." }
             default: break

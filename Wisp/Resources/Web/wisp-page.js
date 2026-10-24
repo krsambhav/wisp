@@ -92,7 +92,7 @@
 
     close() {
       if (live.delete(this.__wispID)) {
-        post({ kind: 'close', id: this.__wispID });
+        post({ kind: 'close', id: this.__wispID, tag: this.tag });
         const ev = new Event('close');
         this.dispatchEvent(ev);
         if (typeof this.onclose === 'function') { try { this.onclose(ev); } catch (_) {} }

@@ -16,13 +16,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if env.settings.general.showMenuBarItem && env.settings.general.hideDockIconInMenuBarMode {
             NSApp.setActivationPolicy(.accessory)
         }
-        if !env.settings.general.startHidden {
-            env.window.show()
-            NSApp.activateFrontmost()
+        // Under XCTest the host app must not touch the real session stores.
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil || NSClassFromString("XCTestCase") != nil {
+            Log.info("Running as test host — sessions not loaded", .app)
+            return
         }
-        env.sessions.ensureSessionsForBackgroundAccounts()
-        Log.info("Window visible \(Int(Date().timeIntervalSince(env.launchedAt) * 1000)) ms after environment init", .performance)
-        Task { _ = await env.notifications.requestAuthorization() }
+        Task { @MainActor in
+            if env.accounts.needsOrphanCheck {
+                await env.accounts.adoptOrphanedStoresIfNeeded()
+                env.sessions.reconcileActiveAccount()
+            }
+            env.sessions.ensureSessionsForBackgroundAccounts()
+            if !env.settings.general.startHidden {
+                env.window.show()
+                NSApp.activateFrontmost()
+            }
+            Log.info("Window visible \(Int(Date().timeIntervalSince(env.launchedAt) * 1000)) ms after environment init", .performance)
+            _ = await env.notifications.requestAuthorization()
+        }
         #if DEBUG
         DebugHooks.installAfterLaunch(env)
         #endif

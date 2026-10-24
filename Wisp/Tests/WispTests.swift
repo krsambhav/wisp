@@ -129,3 +129,13 @@ final class JSLiteralTests: XCTestCase {
         XCTAssertEqual("a'b\\c\nd".jsStringLiteral, "'a\\'b\\\\c\\nd'")
     }
 }
+
+final class CSSValidatorEdgeCaseTests: XCTestCase {
+    func testEscapedBackslashInString() {
+        XCTAssertNil(CSSGenerator.validate(css: #"a::before { content: "foo\\"; } b { color: red; }"#))
+    }
+    func testShortCommentIsNotClosedEarly() {
+        XCTAssertNotNil(CSSGenerator.validate(css: "/*/ a { }"))
+        XCTAssertNil(CSSGenerator.validate(css: "/**/ a { }"))
+    }
+}

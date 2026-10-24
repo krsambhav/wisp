@@ -118,7 +118,7 @@ struct ScriptsSettingsView: View {
                 Picker("", selection: binding.world) { ForEach(ScriptWorld.allCases) { Text($0.label).tag($0) } }.labelsHidden().frame(width: 190)
                 Spacer()
                 if isDirty { WButton(title: "Revert", small: true) { syncDraft() } }
-                WButton(title: "Save", icon: "check", style: .primary, small: true) { if let d = draft { env.scripts.update(d) } }
+                WButton(title: "Save", icon: "check", style: .primary, small: true) { if let d = draft { env.scripts.update(d); syncDraft() } }
                     .disabled(!isDirty).opacity(isDirty ? 1 : 0.5)
                     .keyboardShortcut("s", modifiers: .command)
             }
@@ -137,7 +137,7 @@ struct ScriptsSettingsView: View {
                 Spacer()
                 Text(script.world == .page ? "Page-context scripts can break WhatsApp. Prefer isolated." : "Scripts are re-injected on every reload (⌘R).").font(WispUI.caption).foregroundStyle(WispUI.muted)
                 WButton(title: "Save & Reload", icon: "refresh-cw", small: true) {
-                    if let d = draft { env.scripts.update(d) }
+                    if let d = draft { env.scripts.update(d); syncDraft() }
                     env.sessions.reloadAll()
                 }
                 WButton(title: "Delete", icon: "trash-2", style: .destructive, small: true) {

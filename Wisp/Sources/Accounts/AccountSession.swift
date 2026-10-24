@@ -270,9 +270,9 @@ final class AccountSession {
         env.notifications.deliver(n, account: account, isAccountVisibleAndFocused: isVisibleAndFocused)
     }
 
-    func handleNotificationClosed(id: Int) {
-        // WhatsApp closes a notification when the chat is read: mirror it.
-        env.notifications.withdrawAll(accountID: account.id)
+    func handleNotificationClosed(id: Int, tag: String) {
+        // WhatsApp closes a notification when its chat is read: mirror that one only.
+        env.notifications.withdraw(accountID: account.id, tag: tag, id: id)
     }
 
     /// Called when the user clicks a native notification for this account.

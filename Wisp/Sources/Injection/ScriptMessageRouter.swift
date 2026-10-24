@@ -28,7 +28,7 @@ final class ScriptMessageRouter: NSObject, WKScriptMessageHandler {
             let kindStr = body["kind"] as? String ?? "show"
             let id = (body["id"] as? NSNumber)?.intValue ?? 0
             if kindStr == "close" {
-                session.handleNotificationClosed(id: id)
+                session.handleNotificationClosed(id: id, tag: String((body["tag"] as? String ?? "").prefix(128)))
             } else {
                 let payload = IncomingNotification(
                     id: id,

@@ -20,7 +20,13 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         updateAppearance()
         let accessory = env.settings.general.showMenuBarItem && env.settings.general.hideDockIconInMenuBarMode
         let policy: NSApplication.ActivationPolicy = accessory ? .accessory : .regular
-        if NSApp.activationPolicy() != policy { NSApp.setActivationPolicy(policy) }
+        if NSApp.activationPolicy() != policy {
+            let key = NSApp.keyWindow
+            NSApp.setActivationPolicy(policy)
+            // Changing policy deactivates the app; bring it (and the window being used) back.
+            NSApp.activateFrontmost()
+            key?.makeKeyAndOrderFront(nil)
+        }
     }
 
     private func install() {

@@ -88,15 +88,16 @@ final class NotificationBridge: NSObject {
             Log.debug("Notification suppressed: account is visible and focused", .notifications)
             return
         }
-        guard deduper.shouldShow(key: NotificationDeduper.key(accountID: account.id, title: n.title, body: n.body, tag: n.tag)) else {
-            Log.debug("Duplicate notification suppressed", .notifications)
-            return
-        }
+        if Self.isAdHocSigned { return }
         if authorizationStatus == .notDetermined {
             Task { _ = await requestAuthorization(); self.deliver(n, account: account, isAccountVisibleAndFocused: isAccountVisibleAndFocused) }
             return
         }
         guard authorizationStatus == .authorized || authorizationStatus == .provisional else { return }
+        guard deduper.shouldShow(key: NotificationDeduper.key(accountID: account.id, title: n.title, body: n.body, tag: n.tag)) else {
+            Log.debug("Duplicate notification suppressed", .notifications)
+            return
+        }
 
         let showPreview = account.showPreviews ?? prefs.showPreviews
         let content = UNMutableNotificationContent()

@@ -52,7 +52,9 @@ final class ScriptStore {
             let ia = order.firstIndex(of: a.id) ?? Int.max, ib = order.firstIndex(of: b.id) ?? Int.max
             return ia != ib ? ia < ib : a.createdAt < b.createdAt
         }
-        let changed = loaded != scripts
+        // Compare only what affects injection; timestamps differ between memory and disk.
+        func key(_ s: CustomScript) -> String { "\(s.id)|\(s.enabled)|\(s.world.rawValue)|\(s.injectionTime.rawValue)|\(s.name)|\(s.source.hashValue)" }
+        let changed = loaded.map(key) != scripts.map(key)
         scripts = loaded
         revalidateAll()
         if changed { revision += 1 }

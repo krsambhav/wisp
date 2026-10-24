@@ -12,18 +12,28 @@ final class AccountStore {
         self.url = url
         load()
         if accounts.isEmpty {
-            // accounts.json missing or unreadable. If WebKit still has per-account data
-            // stores on disk (e.g. after a bad update), adopt them so nobody is logged out.
-            let orphans = WKWebsiteDataStore.allDataStoreIdentifiers
-            if !orphans.isEmpty {
-                accounts = orphans.enumerated().map { i, id in Account(name: i == 0 ? "Personal" : "Account \(i + 1)", dataStoreID: id, colorIndex: 3 + i) }
-                Log.warning("accounts.json was missing; adopted \(orphans.count) existing session store(s)", .accounts)
-            } else {
-                // Zero-friction first launch: one account, no dialog.
-                accounts = [Account(name: "Personal", colorIndex: 3)]
-            }
-            save()
+            // Zero-friction first launch: one account, no dialog. Not saved yet:
+            // `adoptOrphanedStoresIfNeeded` first checks whether WebKit still has
+            // per-account stores on disk (accounts.json lost after a bad update).
+            accounts = [Account(name: "Personal", colorIndex: 3)]
+            needsOrphanCheck = true
         }
+    }
+
+    /// True until the first-launch / lost-file path has checked for existing session stores.
+    private(set) var needsOrphanCheck = false
+
+    /// If accounts.json was missing but WebKit still has per-account data stores,
+    /// adopt them so an update never logs anyone out. Must run before any session loads.
+    func adoptOrphanedStoresIfNeeded() async {
+        guard needsOrphanCheck else { return }
+        needsOrphanCheck = false
+        let orphans = await WKWebsiteDataStore.allDataStoreIdentifiers
+        if !orphans.isEmpty {
+            accounts = orphans.enumerated().map { i, id in Account(name: i == 0 ? "Personal" : "Account \(i + 1)", dataStoreID: id, colorIndex: 3 + i) }
+            Log.warning("accounts.json was missing; adopted \(orphans.count) existing session store(s)", .accounts)
+        }
+        save()
     }
 
     private struct File: Codable { var version = 1; var accounts: [Account] }
