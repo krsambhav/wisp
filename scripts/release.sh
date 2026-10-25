@@ -21,8 +21,8 @@ cd "$ROOT"
 [[ -z "$(git status --porcelain)" ]] || { echo "working tree not clean"; git status --short; exit 1; }
 git rev-parse "v$VERSION" >/dev/null 2>&1 && { echo "tag v$VERSION exists"; exit 1; }
 
-BUILD_NO="$(( $(grep -E '^\s+CFBundleVersion:' Wisp/project.yml | sed -E 's/.*"([0-9]+)".*/\1/') + 1 ))"
-sed -i '' -E "s/^(\s+CFBundleShortVersionString:) \"[^\"]+\"/\1 \"$VERSION\"/; s/^(\s+CFBundleVersion:) \"[0-9]+\"/\1 \"$BUILD_NO\"/" Wisp/project.yml
+BUILD_NO="$(( $(grep -E '^[[:space:]]+CFBundleVersion:' Wisp/project.yml | sed -E 's/.*"([0-9]+)".*/\1/') + 1 ))"
+sed -i '' -E "s/^([[:space:]]+CFBundleShortVersionString:) \"[^\"]+\"/\1 \"$VERSION\"/; s/^([[:space:]]+CFBundleVersion:) \"[0-9]+\"/\1 \"$BUILD_NO\"/" Wisp/project.yml
 (cd Wisp && xcodegen generate -q)
 git add Wisp/project.yml Wisp/Wisp.xcodeproj Wisp/Resources/Info.plist
 git commit -q -m "Release $VERSION"
