@@ -20,6 +20,7 @@ final class AppEnvironment {
     let downloads: DownloadManager
     let network: NetworkMonitor
     let updates = UpdateManager()
+    let resources = ResourceMonitor()
     let toasts = ToastCenter()
     let settingsNavigation = SettingsNavigation()
     let launchedAt = Date()

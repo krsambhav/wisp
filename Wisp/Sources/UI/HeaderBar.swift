@@ -16,6 +16,7 @@ struct HeaderBar: View {
             Spacer().frame(width: 84)
             AccountSwitcher(palette: palette)
             Spacer(minLength: 16)
+            if env.resources.showsInHeader { ResourceMeter(palette: palette) }
             updatePill
             statusPill
             HStack(spacing: 2) {

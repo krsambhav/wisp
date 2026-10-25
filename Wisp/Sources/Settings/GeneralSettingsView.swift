@@ -45,6 +45,10 @@ struct GeneralSettingsView: View {
                     WToggle(isOn: $settings.general.hideDockIconInMenuBarMode).disabled(!settings.general.showMenuBarItem)
                 }
                 WDivider()
+                WRow(title: "Show CPU and memory in the header", description: "Live usage of Wisp and its WebKit helpers, grouped the way Activity Monitor does. Click the meter for a breakdown.") {
+                    WToggle(isOn: Binding(get: { env.resources.showsInHeader }, set: { env.resources.showsInHeader = $0 }))
+                }
+                WDivider()
                 WRow(title: "Confirm before quitting") { WToggle(isOn: $settings.general.confirmBeforeQuit) }
                 WDivider()
                 WRow(title: "Open links in your default browser", description: "Links in chats open outside Wisp. Off keeps WhatsApp from leaving its page but still never navigates away.") {

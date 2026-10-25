@@ -97,6 +97,10 @@ final class Service: NSObject, WispUpdateHelperProtocol, @unchecked Sendable {
             reply(error.localizedDescription)
         }
     }
+
+    func processUsage(coalition: UInt64, reply: @escaping @Sendable (Data?) -> Void) {
+        reply(try? JSONEncoder().encode(ProcessTable.members(ofCoalition: coalition)))
+    }
 }
 
 final class ListenerDelegate: NSObject, NSXPCListenerDelegate, @unchecked Sendable {
