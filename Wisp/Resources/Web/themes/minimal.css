@@ -65,6 +65,10 @@ header[data-tab="2"] [data-navbar-item]:hover { background: var(--wisp-surface-e
 #main footer div { border-color: transparent !important; box-shadow: none !important; }
 #main footer [role="textbox"][data-tab="10"] { font-size: 15px !important; }
 
+/* Empty state (no chat open): same surface as the rest, card on the muted surface. */
+section[data-testid="intro-panel"] { background: var(--wisp-background) !important; border: 0 !important; }
+section[data-testid="intro-panel"] [data-testid="intro_panel_v2_title_card"] { background: var(--wisp-surface-emphasized) !important; border-radius: 20px !important; box-shadow: none !important; }
+
 /* ---- Sidebar ------------------------------------------------------------ */
 #side div:has(> input), #side div:has(> [role="textbox"]) { border: 0 !important; box-shadow: none !important; }
 #side #all-filter, #side button[id^="label_item_"], #side #new-filter {
@@ -156,6 +160,46 @@ html[data-wisp-scheme="dark"] #main [data-wisp-bubble="out"] { --WDS-content-rea
 /* Inverted bubble: swatches that WhatsApp hard-codes as light surfaces. */
 #main [data-wisp-bubble="out"] [style*="background-color: rgb(255, 255, 255)"],
 #main [data-wisp-bubble="out"] [style*="background: rgb(255, 255, 255)"] { background-color: color-mix(in srgb, var(--wisp-bubble-out-fg) 12%, transparent) !important; }
+
+/* ---- ⌘K search palette (WhatsApp mounts a second #side inside the modal) --- */
+[data-animate-modal-backdrop] { background: color-mix(in srgb, #09090B 42%, transparent) !important; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+[data-animate-modal-popup]:has(> [data-animate-modal-body] #side) {
+  width: 620px !important; max-width: calc(100vw - 48px) !important; border-radius: 20px !important; overflow: hidden !important;
+  box-shadow: 0 32px 80px -16px rgba(0, 0, 0, .45), 0 0 0 0.5px var(--wisp-line) !important;
+}
+/* Let the popup's max-height bound the list instead of clipping the hint bar. */
+[data-animate-modal-popup]:has(> [data-animate-modal-body] #side) > [data-animate-modal-body] { display: flex !important; flex-direction: column !important; min-height: 0 !important; height: auto !important; max-height: 100% !important; }
+[data-animate-modal-body] > div { border-radius: 0 !important; background: var(--wisp-surface) !important; }
+[data-animate-modal-body] > div:has(> #side) { display: flex !important; flex-direction: column !important; min-height: 0 !important; flex: 1 1 auto !important; }
+[data-animate-modal-body] div:has(> #side) { border-right: 0 !important; }
+[data-animate-modal-body] #side { width: 100% !important; padding: 14px 14px 10px !important; border-radius: 0 !important; flex: 1 1 auto !important; min-height: 0 !important; height: auto !important; }
+/* Search field: a flat, filled bar instead of an outlined pill. */
+[data-animate-modal-body] #side > div:first-child, [data-animate-modal-body] #side > div:first-child > div { height: auto !important; padding: 0 !important; background: transparent !important; }
+[data-animate-modal-body] #side div:has(> div > input) {
+  height: 52px !important; border-radius: 14px !important; padding: 0 10px 0 16px !important;
+  background: color-mix(in srgb, var(--wisp-text-primary) 5%, var(--wisp-surface)) !important; outline: 0 !important; box-shadow: none !important; border: 0 !important;
+}
+[data-animate-modal-body] #side div:has(> div > input:focus) { outline: 0 !important; }
+[data-animate-modal-body] #side div:has(> div > input) > div:first-child { color: var(--wisp-text-secondary) !important; margin-right: 10px !important; }
+[data-animate-modal-body] #side input { font-size: 16px !important; font-weight: 500 !important; color: var(--wisp-text-primary) !important; caret-color: var(--wisp-accent) !important; }
+[data-animate-modal-body] #side input::placeholder { color: var(--wisp-text-secondary) !important; font-weight: 400 !important; }
+/* Results. */
+[data-animate-modal-body] #pane-side { padding: 0 !important; margin-top: 10px !important; border-radius: 0 !important; background: transparent !important; flex: 1 1 auto !important; min-height: 0 !important; height: auto !important; max-height: none !important; }
+/* Match highlight: WhatsApp hard-codes green; here it is bold text with an accent underline. */
+[data-animate-modal-body] #pane-side span[title][dir] > span { color: inherit !important; font-weight: 700 !important; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--wisp-accent) 45%, transparent); text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
+[data-animate-modal-body] #pane-side:has([role="row"]) { border-top: 0.5px solid var(--wisp-line) !important; padding-top: 4px !important; }
+[data-animate-modal-body] #pane-side [role="grid"] { padding-top: 4px !important; }
+[data-animate-modal-body] #pane-side [role="row"] h2 span { font-size: 11.5px !important; font-weight: 600 !important; letter-spacing: .06em !important; text-transform: uppercase !important; color: var(--wisp-text-secondary) !important; }
+[data-animate-modal-body] #pane-side [role="row"] > div > div:has(> h2) { padding: 14px 12px 6px !important; }
+[data-animate-modal-body] #pane-side [role="row"] > div > div > div { border-radius: 12px !important; }
+[data-animate-modal-body] #pane-side [role="row"]:hover > div > div > div { background: var(--wisp-surface-highlight) !important; }
+/* Keyboard hints, like a proper command palette. */
+[data-animate-modal-body] #side::after {
+  content: "↑↓ navigate   ·   ↵ open   ·   esc close"; display: block; order: 99;
+  margin-top: 8px; padding: 10px 6px 2px; border-top: 0.5px solid var(--wisp-line);
+  font-size: 11.5px; font-weight: 500; letter-spacing: .01em; color: var(--wisp-text-secondary); white-space: pre;
+}
+[data-animate-modal-body] #side > div:first-child + div { order: 1; }
 
 /* ---- Misc ---------------------------------------------------------------- */
 #app ::selection { background: color-mix(in srgb, var(--wisp-accent) 18%, transparent); }

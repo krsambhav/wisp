@@ -89,7 +89,7 @@ Unread counts come from KVO on `WKWebView.title`: WhatsApp sets `"(N) WhatsApp"`
 
 ## Window and system integration
 
-- `MainWindowController` creates an `NSWindow` with `.fullSizeContentView`, hidden title, transparent title bar and an empty `NSToolbar` in `.unifiedCompact` style so the title bar is 38 pt and the traffic lights sit centered in Wisp's header. Frame autosave restores size and position; `windowShouldClose` hides instead of closing when "keep running" is on; the window background follows the theme so nothing flashes white.
+- `MainWindowController` creates an `NSWindow` with `.fullSizeContentView`, hidden title, transparent title bar and an empty `NSToolbar` in `.unified` style so the title bar is 52 pt and the traffic lights sit centered in Wisp's header. Frame autosave restores size and position; `windowShouldClose` hides instead of closing when "keep running" is on; the window background follows the theme so nothing flashes white.
 - `MenuBarController` manages an `NSStatusItem` (left click toggles the window, right click opens the menu) and the activation policy for menu bar mode.
 - `GlobalHotKeyManager` registers the shortcut with Carbon `RegisterEventHotKey`, which works in the sandbox without Accessibility permission.
 - `LaunchAtLogin` wraps `SMAppService.mainApp`; the system is the source of truth for the toggle.

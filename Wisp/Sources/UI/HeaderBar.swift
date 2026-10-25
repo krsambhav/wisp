@@ -1,27 +1,34 @@
 import SwiftUI
 
-/// 38pt native header. Traffic lights live in the leading 70pt (window chrome);
-/// then account switcher; trailing: status, mute, settings.
+/// 52pt native header that doubles as the title bar. The traffic lights sit in
+/// the leading inset (window chrome); then the account tabs; trailing: status,
+/// mute, settings. The bar shares the page surface so the shell and WhatsApp
+/// read as one canvas.
 struct HeaderBar: View {
+    static let height: CGFloat = 52
+
     let palette: ThemePalette
     @Environment(AppEnvironment.self) private var env
 
     var body: some View {
         let fg = palette.shellForeground.color
-        HStack(spacing: 6) {
-            Spacer().frame(width: 72)
+        HStack(spacing: 10) {
+            Spacer().frame(width: 84)
             AccountSwitcher(palette: palette)
-            Spacer()
+            Spacer(minLength: 16)
             statusPill
-            WIconButton(icon: env.settings.notifications.isEffectivelyMuted ? "bell-off" : "bell",
-                        help: env.settings.notifications.isEffectivelyMuted ? "Notifications muted — click to unmute" : "Mute notifications",
-                        tint: env.settings.notifications.isEffectivelyMuted ? WispUI.warning : fg.opacity(0.75)) { env.toggleMute() }
-            WIconButton(icon: "settings", help: "Settings (⌘,)", tint: fg.opacity(0.75)) { env.openSettings() }
-            Spacer().frame(width: 6)
+            HStack(spacing: 2) {
+                HeaderIconButton(icon: env.settings.notifications.isEffectivelyMuted ? "bell-off" : "bell",
+                                 help: env.settings.notifications.isEffectivelyMuted ? "Notifications muted — click to unmute" : "Mute notifications",
+                                 palette: palette,
+                                 tint: env.settings.notifications.isEffectivelyMuted ? WispUI.warning : nil) { env.toggleMute() }
+                HeaderIconButton(icon: "settings", help: "Settings (⌘,)", palette: palette) { env.openSettings() }
+            }
+            Spacer().frame(width: 10)
         }
-        .frame(height: 38)
+        .frame(height: Self.height)
         .background(palette.shellBackground.color)
-        .overlay(alignment: .bottom) { Rectangle().fill(palette.shellDivider.color).frame(height: 1) }
+        .overlay(alignment: .bottom) { Rectangle().fill(palette.shellDivider.color).frame(height: 0.5) }
         .foregroundStyle(fg)
     }
 
@@ -38,5 +45,32 @@ struct HeaderBar: View {
                 EmptyView()
             }
         }
+    }
+}
+
+/// Icon button tinted from the shell palette (not the settings palette) so it
+/// follows WhatsApp's light/dark scheme like the rest of the header.
+struct HeaderIconButton: View {
+    let icon: String
+    var help: String = ""
+    let palette: ThemePalette
+    var tint: Color? = nil
+    let action: () -> Void
+    @State private var hovering = false
+
+    var body: some View {
+        let fg = palette.shellForeground.color
+        Button(action: action) {
+            WIcon(icon, size: 16)
+                .foregroundStyle(tint ?? fg.opacity(hovering ? 0.95 : 0.6))
+                .frame(width: 34, height: 34)
+                .background(hovering ? fg.opacity(0.06) : .clear)
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering = $0 }
+        .help(help)
+        .animation(.easeOut(duration: 0.12), value: hovering)
     }
 }

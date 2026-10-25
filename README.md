@@ -19,7 +19,7 @@ Wisp loads the official `https://web.whatsapp.com` and leaves WhatsApp's end-to-
 - External links open in your default browser; the chat view never navigates away from WhatsApp.
 
 **Native macOS**
-- Native title bar with traffic lights inside a 38 pt header, system light/dark appearance, window frame restoration.
+- Native title bar with traffic lights inside a 52 pt header, system light/dark appearance, window frame restoration.
 - Dock badge with total unread count, menu bar item with unread count and a quick menu (accounts, mute, reload, settings, quit).
 - Menu bar mode (hide the Dock icon), keep running when the window closes, start hidden, launch at login (`SMAppService`), confirm-before-quit.
 - Global show/hide shortcut (default ⌃⌥W, recordable in Settings).

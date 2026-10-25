@@ -4,7 +4,7 @@ import SwiftUI
 /// The main window. AppKit-owned so that:
 ///  - the frame is restored via autosave,
 ///  - ⌘W hides instead of closing (when "keep running" is on),
-///  - the traffic lights sit inside our own 38pt header (unified compact toolbar trick),
+///  - the traffic lights sit inside our own 52pt header (unified compact toolbar trick),
 ///  - the SwiftUI shell is hosted once and never recreated.
 @MainActor
 final class MainWindowController: NSWindowController, NSWindowDelegate {
@@ -36,13 +36,13 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         window.backgroundColor = .windowBackgroundColor
         window.identifier = NSUserInterfaceItemIdentifier("WispMain")
 
-        // An empty toolbar in unified-compact style makes the title bar 38pt
-        // tall so the traffic lights are vertically centered in our header.
+        // An empty toolbar in unified style makes the title bar 52pt tall so
+        // the traffic lights are vertically centered in our header (HeaderBar.height).
         let toolbar = NSToolbar(identifier: "WispMainToolbar")
         toolbar.showsBaselineSeparator = false
         toolbar.displayMode = .iconOnly
         window.toolbar = toolbar
-        window.toolbarStyle = .unifiedCompact
+        window.toolbarStyle = .unified
 
         let root = AnyView(MainShellView().environment(env))
         let hosting = NSHostingView(rootView: root)

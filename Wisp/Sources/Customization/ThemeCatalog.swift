@@ -55,7 +55,7 @@ nonisolated enum ThemeCatalog {
             bubbleIncoming: HexColor("#F4F4F5"), bubbleOutgoing: HexColor("#18181B"), bubbleSystem: HexColor("#F4F4F5"), bubbleMeta: HexColor("#71717A"),
             chatBackground: HexColor("#FFFFFF"), chatPattern: HexColor("#FFFFFF"), composer: HexColor("#F4F4F5"), tray: HexColor("#FFFFFF"),
             unreadBadge: HexColor("#18181B"), unreadBadgeText: HexColor("#FAFAFA"), scrollbar: HexColor("#09090B1F"), scrollbarHover: HexColor("#09090B38"),
-            shellBackground: HexColor("#F4F4F5"), shellForeground: HexColor("#09090B"), shellDivider: HexColor("#00000000")
+            shellBackground: HexColor("#FFFFFF"), shellForeground: HexColor("#09090B"), shellDivider: HexColor("#00000000")
         ),
         dark: ThemePalette(
             accent: HexColor("#FAFAFA"), accentEmphasized: HexColor("#E4E4E7"), accentDeemphasized: HexColor("#27272A"), onAccent: HexColor("#09090B"),
