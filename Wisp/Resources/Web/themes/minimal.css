@@ -93,11 +93,14 @@ section[data-testid="intro-panel"] [data-testid="intro_panel_v2_title_card"] { b
 #side #all-filter *, #side button[id^="label_item_"] *, #side #new-filter * { color: inherit; }
 #pane-side { padding: 0 8px !important; }
 #pane-side [role="row"] div { border-bottom-color: transparent !important; }
+/* One surface per row: the full-width cell carries hover/selection; WhatsApp's own
+   inset surface underneath it (which produced a second, offset rounded rect) is cleared. */
 #pane-side [role="row"] > div { border-radius: 12px !important; transition: background-color .12s ease; }
-#pane-side [role="row"]:hover > div { background: var(--wisp-surface-highlight) !important; }
+#pane-side [role="row"] > div > div > div { background: transparent !important; box-shadow: none !important; }
+#pane-side [role="row"]:hover > div { background: color-mix(in srgb, var(--wisp-text-primary) 3%, var(--wisp-surface)) !important; }
 #pane-side [role="row"][aria-selected="true"] > div,
 #pane-side [role="row"] > div[aria-selected="true"],
-#pane-side [role="row"] > div:has([aria-selected="true"]) { background: var(--wisp-surface-emphasized) !important; box-shadow: none !important; }
+#pane-side [role="row"] > div:has([aria-selected="true"]) { background: color-mix(in srgb, var(--wisp-text-primary) 5%, var(--wisp-surface)) !important; box-shadow: none !important; }
 #pane-side [role="row"] > div, #pane-side [role="row"] > div > div { outline: none !important; border-color: transparent !important; box-shadow: none !important; }
 /* Row typography (structure: name = span[title][dir], preview = span[title]:not([dir])). */
 #pane-side [role="row"] span[title][dir] { font-size: 15px !important; font-weight: 600 !important; line-height: 20px !important; color: var(--wisp-text-primary) !important; }
@@ -195,8 +198,6 @@ html[data-wisp-scheme="dark"] #main [data-wisp-bubble="out"] { --WDS-content-rea
 [data-animate-modal-body] #pane-side [role="grid"] { padding-top: 4px !important; }
 [data-animate-modal-body] #pane-side [role="row"] h2 span { font-size: 11.5px !important; font-weight: 600 !important; letter-spacing: .06em !important; text-transform: uppercase !important; color: var(--wisp-text-secondary) !important; }
 [data-animate-modal-body] #pane-side [role="row"] > div > div:has(> h2) { padding: 14px 12px 6px !important; }
-[data-animate-modal-body] #pane-side [role="row"] > div > div > div { border-radius: 12px !important; }
-[data-animate-modal-body] #pane-side [role="row"]:hover > div > div > div { background: var(--wisp-surface-highlight) !important; }
 /* Keyboard hints, like a proper command palette. */
 [data-animate-modal-body] #side::after {
   content: "↑↓ navigate   ·   ↵ open   ·   esc close"; display: block; order: 99;
