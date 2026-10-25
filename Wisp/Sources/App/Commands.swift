@@ -38,6 +38,7 @@ struct WispCommands: Commands {
                 .keyboardShortcut("r", modifiers: .command)
             Button("Hard Reload (Ignore Cache)") { environment.reloadActive(ignoringCache: true) }
                 .keyboardShortcut("r", modifiers: [.command, .shift])
+            Button("Free Up Memory") { environment.freeUpMemory() }
             Divider()
             Button("Zoom In") { adjustZoom(by: 0.1) }.keyboardShortcut("+", modifiers: .command)
             Button("Zoom Out") { adjustZoom(by: -0.1) }.keyboardShortcut("-", modifiers: .command)

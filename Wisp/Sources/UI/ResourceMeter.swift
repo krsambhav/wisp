@@ -13,9 +13,11 @@ struct ResourceMeter: View {
         let fg = palette.shellForeground.color
         let monitor = env.resources
         let lit = hovering || showingDetails
+        let high = monitor.isHigh
+        let ink = high ? WispUI.warning : fg
         Button { showingDetails.toggle() } label: {
             HStack(spacing: 8) {
-                Sparkline(values: monitor.history, color: fg.opacity(lit ? 0.85 : 0.5))
+                Sparkline(values: monitor.history, color: ink.opacity(lit || high ? 0.85 : 0.5))
                     .frame(width: 32, height: 12)
                 if let s = monitor.sample {
                     HStack(spacing: 5) {
@@ -29,17 +31,18 @@ struct ResourceMeter: View {
             }
             .font(WispUI.font(11, .medium))
             .monospacedDigit()
-            .foregroundStyle(fg.opacity(lit ? 0.92 : 0.55))
+            .foregroundStyle(ink.opacity(lit || high ? 0.92 : 0.55))
             .padding(.leading, 9).padding(.trailing, 10)
             .frame(height: 26)
-            .background(lit ? fg.opacity(0.06) : .clear)
+            .background(lit ? ink.opacity(0.06) : (high ? ink.opacity(0.1) : .clear))
             .clipShape(Capsule())
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
         .onHover { hovering = $0 }
         .animation(.easeOut(duration: 0.12), value: lit)
-        .help("CPU and memory used by Wisp, including its WebKit helpers. Click for details.")
+        .help(high ? "Wisp is using a lot of \(monitor.sample.map { $0.memory >= ResourceMonitor.highMemory } == true ? "memory" : "CPU"). Click to free it up."
+                   : "CPU and memory used by Wisp, including its WebKit helpers. Click for details.")
         .popover(isPresented: $showingDetails, arrowEdge: .bottom) {
             ResourceDetails()
                 .presentationBackground(WispUI.cardElevated)
@@ -107,10 +110,31 @@ private struct ResourceDetails: View {
                 Spacer().frame(height: 14)
             }
 
+            if monitor.isHigh || monitor.isFreeing {
+                WDivider()
+                HStack(alignment: .top, spacing: 8) {
+                    WIcon(monitor.isFreeing ? "refresh-cw" : "zap", size: 13)
+                        .foregroundStyle(monitor.isFreeing ? WispUI.mutedForeground : WispUI.warning)
+                        .padding(.top, 1)
+                    Text(monitor.isFreeing
+                         ? "Reloading WhatsApp to release memory…"
+                         : "Usage is high. Freeing memory clears WebKit's caches and reloads WhatsApp. You stay linked; unsent drafts are lost.")
+                        .font(WispUI.caption).foregroundStyle(WispUI.mutedForeground)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.horizontal, 16).padding(.vertical, 10)
+            }
+
             WDivider()
-            HStack {
-                WButton(title: "Activity Monitor", icon: "gauge", style: .ghost, small: true) { monitor.openActivityMonitor() }
+            HStack(spacing: 6) {
+                if monitor.isFreeing {
+                    ProgressView().controlSize(.small).frame(width: 28, height: 28)
+                } else {
+                    WButton(title: "Free up memory", icon: "sparkles", style: monitor.isHigh ? .primary : .outline, small: true) { env.freeUpMemory() }
+                        .help("Clears WebKit caches and reloads WhatsApp. You stay linked; unsent drafts are lost.")
+                }
                 Spacer()
+                WIconButton(icon: "gauge", help: "Open Activity Monitor") { monitor.openActivityMonitor() }
                 WButton(title: "Hide", style: .ghost, small: true) {
                     monitor.showsInHeader = false
                     env.toasts.show(title: "Resource meter hidden. Turn it back on in Settings › General.", actionTitle: "Undo") {

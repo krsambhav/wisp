@@ -162,6 +162,35 @@ final class AppEnvironment {
 
     func reloadActive(ignoringCache: Bool = false) { sessions.activeSession?.reload(ignoringCache: ignoringCache) }
 
+    /// Restarts every loaded page in a fresh WebContent process, dropping what
+    /// WhatsApp accumulated in memory (a plain reload keeps the process and its
+    /// footprint). The device stays linked; unsent drafts are lost. Refuses
+    /// while WhatsApp is still downloading history, since interrupting that
+    /// can unlink the device.
+    func freeUpMemory() {
+        guard !resources.isFreeing else { return }
+        if let syncing = sessions.loadedSessions.first(where: \.mayBeSyncing) {
+            Log.info("Free up memory refused: \(syncing.account.name) is still loading", .performance)
+            toasts.show(title: "WhatsApp (\(syncing.account.name)) is still loading. Try again once its chat list appears.")
+            return
+        }
+        let before = resources.sample?.memory ?? 0
+        resources.isFreeing = true
+        Log.info("Freeing memory: reloading \(sessions.loadedSessions.count) page(s) from \(ResourceFormat.memory(before))", .performance)
+        Task { [weak self] in
+            guard let self else { return }
+            for session in sessions.loadedSessions { await session.restartContentProcess() }
+            try? await Task.sleep(for: .seconds(15))
+            resources.isFreeing = false
+            let after = resources.sample?.memory ?? before
+            if before > after, before - after > 50 << 20 {
+                toasts.show(title: "Freed \(ResourceFormat.memory(before - after)). WhatsApp reloaded.")
+            } else {
+                toasts.show(title: "WhatsApp reloaded.")
+            }
+        }
+    }
+
     /// Menu / Settings entry point. Reports the outcome as a toast; the header
     /// pill and Settings › General carry the state afterwards.
     func checkForUpdates() {

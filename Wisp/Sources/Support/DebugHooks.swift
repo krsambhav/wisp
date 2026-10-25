@@ -106,6 +106,11 @@ enum DebugHooks {
                 try? "\(app.updates.state)".write(to: url.appendingPathComponent("update.txt"), atomically: true, encoding: .utf8)
             }
         }
+        let memReq = url.appendingPathComponent("memory.request")
+        if FileManager.default.fileExists(atPath: memReq.path) {
+            try? FileManager.default.removeItem(at: memReq)
+            Task { @MainActor in app.freeUpMemory() }
+        }
         let req = url.appendingPathComponent("snap.request")
         guard FileManager.default.fileExists(atPath: req.path) else { return }
         try? FileManager.default.removeItem(at: req)

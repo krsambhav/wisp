@@ -31,7 +31,15 @@ nonisolated struct SelectorHealth: Equatable, Sendable {
 @Observable
 final class AccountSession {
     private(set) var account: Account
-    private(set) var pageState: PageState = .idle
+    private(set) var pageState: PageState = .idle {
+        didSet { if pageState == .loading, oldValue != .loading { loadingSince = Date() } }
+    }
+    /// When the page last entered `.loading`; a sync in progress is recent,
+    /// a loading screen that has sat for ages is stuck.
+    private(set) var loadingSince: Date?
+    var mayBeSyncing: Bool {
+        hasFinishedFirstLoad && pageState == .loading && (loadingSince.map { Date().timeIntervalSince($0) < 600 } ?? true)
+    }
     private(set) var unreadCount: Int = 0
     private(set) var hasFinishedFirstLoad = false
     private(set) var selectorHealth: SelectorHealth?
@@ -113,12 +121,27 @@ final class AccountSession {
         }
         _webView = nil
         isWebViewCreated = false
+        isUnloadedForTermination = false
+        isUnloadingForTermination = false
         pageState = .idle
         unreadCount = 0
         hasFinishedFirstLoad = false
     }
 
     // MARK: Termination
+
+    /// Replaces the web view and, with it, the WebContent process. A plain
+    /// reload keeps the process, so WhatsApp's footprint never shrinks; this
+    /// unloads the page cleanly (pagehide closes IndexedDB), tears the view
+    /// down, and loads WhatsApp again in a fresh process.
+    func restartContentProcess() async {
+        guard _webView != nil else { return }
+        beginUnloadForTermination()
+        let deadline = Date().addingTimeInterval(2)
+        while Date() < deadline, !isUnloadedForTermination { try? await Task.sleep(for: .milliseconds(50)) }
+        tearDown()
+        loadIfNeeded()
+    }
 
     private(set) var isUnloadedForTermination = false
     private var isUnloadingForTermination = false

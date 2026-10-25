@@ -39,7 +39,22 @@ final class ResourceMonitor {
     /// Two minutes at `interval`.
     static let historyLength = 60
 
+    /// Above either of these the header pill turns amber and the popover
+    /// suggests freeing memory. CPU is averaged over the last 30 s so a page
+    /// load doesn't trip it.
+    static let highMemory: UInt64 = 2 << 30
+    static let highCPU: Double = 90
+
     private(set) var sample: Sample?
+    /// True while `AppEnvironment.freeUpMemory()` is reloading pages.
+    var isFreeing = false
+
+    var isHigh: Bool {
+        guard let sample else { return false }
+        if sample.memory >= Self.highMemory { return true }
+        let recent = history.suffix(15)
+        return recent.count >= 15 && recent.reduce(0, +) / Double(recent.count) >= Self.highCPU
+    }
     /// CPU percent per tick, oldest first.
     private(set) var history: [Double] = []
     private(set) var peakCPU: Double = 0
