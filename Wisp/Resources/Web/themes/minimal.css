@@ -136,7 +136,6 @@ html, html[data-wisp-scheme="dark"] { --WDS-systems-bubble-surface-outgoing: var
   background: var(--wisp-surface-emphasized) !important;
   color: var(--wisp-text-secondary) !important;
   box-shadow: 0 0 0 0.5px var(--wisp-line), 0 1px 2px rgba(0, 0, 0, 0.06) !important;
-  transition: background-color .12s ease, color .12s ease;
 }
 #main [data-testid="reaction-entry-point"]:hover,
 #main div[role="button"][aria-label*="Forward" i]:hover,
