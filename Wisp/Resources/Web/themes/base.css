@@ -65,9 +65,11 @@ html[data-wisp-density="compact"] #side header { min-height: 52px !important; }
 /* Text-bubble meta (time + receipts). WhatsApp lays this out twice: a
    visibility:hidden inline spacer at the end of the text reserves the room, and
    the visible footer (the div after .copyable-text) is drawn over that gap. Both
-   must change together or the footer wraps or overlaps the text. */
-#main .copyable-text > div > span > span:has(> span:first-child) { padding-left: 9px !important; }
-#main .copyable-text > div > span > span:has(> span:first-child) > span,
+   must change together or the footer wraps or overlaps the text.
+   The text branch (span.selectable-text) is excluded: a mention is the same
+   span-in-span shape and was shrinking to timestamp size. */
+#main .copyable-text > div > span:not(.selectable-text) > span:has(> span:first-child) { padding-left: 9px !important; }
+#main .copyable-text > div > span:not(.selectable-text) > span:has(> span:first-child) > span,
 #main div:has(> .copyable-text) > .copyable-text ~ div span { font-size: 10.5px !important; }
 
 /* ---- 6. Motion -------------------------------------------------------- */
