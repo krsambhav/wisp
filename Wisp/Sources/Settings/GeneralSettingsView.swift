@@ -48,6 +48,9 @@ struct GeneralSettingsView: View {
                 WRow(title: "Show CPU and memory in the header", description: "Live usage of Wisp and its WebKit helpers, grouped the way Activity Monitor does. Click the meter for a breakdown.") {
                     WToggle(isOn: Binding(get: { env.resources.showsInHeader }, set: { env.resources.showsInHeader = $0 }))
                 }
+                WRow(title: "Free up memory when idle", description: "After 15 minutes in the background above 1.5 GB, WhatsApp is reloaded in a fresh process. Never while a draft, a transfer, a dialog or playing media is open.") {
+                    WToggle(isOn: Binding(get: { env.resources.freesWhenIdle }, set: { env.resources.freesWhenIdle = $0 }))
+                }
                 WDivider()
                 WRow(title: "Confirm before quitting") { WToggle(isOn: $settings.general.confirmBeforeQuit) }
                 WDivider()

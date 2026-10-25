@@ -164,9 +164,9 @@
       stateTimer = 0;
       const s = computeState();
       detectScheme();
-      if (s === 'chats') { markBubbles(); }
       if (s !== lastState) {
         lastState = s;
+        if (s === 'chats') { markBubbles(); }
         post('wispState', { state: s, scheme: lastScheme });
       }
       // Chat-panel hooks (#main, bubbles) only exist once a chat is open; run the
@@ -178,14 +178,48 @@
     }, 350);
   }
 
+  // Bubble tagging walks every message leaf in #main and reads layout for the
+  // untagged ones, so it runs at most once per frame (requestAnimationFrame
+  // callbacks precede paint, so new bubbles never flash untagged).
+  let bubbleFrame = 0;
+  let bubbleTimer = 0;
+  function runBubblePass() {
+    if (bubbleFrame) { cancelAnimationFrame(bubbleFrame); bubbleFrame = 0; }
+    if (bubbleTimer) { clearTimeout(bubbleTimer); bubbleTimer = 0; }
+    if (lastState === 'chats') { markBubbles(); }
+  }
+  function tagBubblesBeforePaint() {
+    if (bubbleFrame) { return; }
+    bubbleFrame = requestAnimationFrame(runBubblePass);
+    // Frames pause while the page is hidden (occluded window); keep tags
+    // current there too, for window thumbnails and snapshots.
+    bubbleTimer = setTimeout(runBubblePass, 300);
+  }
+
   let appObserved = false;
   function observeApp() {
     const root = document.documentElement;
     if (!root || appObserved) { return; }
     appObserved = true;
-    // Mutation callbacks run before the next paint, so tagging bubbles here
-    // (cheap: only untagged leaves are visited) avoids any visible flash.
-    const mo = new MutationObserver(() => { scheduleState(); if (lastState === 'chats') { markBubbles(); } });
+    // WhatsApp mutates the DOM constantly (hover classes, clocks, typing
+    // indicators). Only an added element can be a new bubble, and only the
+    // structure or the <html>/<body> class list can change page state or
+    // scheme, so everything else is ignored here.
+    const mo = new MutationObserver((records) => {
+      let added = false;
+      let structural = false;
+      for (const r of records) {
+        if (r.type === 'childList') {
+          structural = true;
+          if (!added) { for (const n of r.addedNodes) { if (n.nodeType === 1) { added = true; break; } } }
+        } else if (r.target === root || r.target === document.body) {
+          structural = true;
+        }
+        if (added) { break; }
+      }
+      if (structural) { scheduleState(); }
+      if (added && lastState === 'chats') { tagBubblesBeforePaint(); }
+    });
     mo.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
     scheduleState();
   }

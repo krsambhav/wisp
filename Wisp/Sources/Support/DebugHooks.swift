@@ -16,11 +16,14 @@ import WebKit
 ///   WISP_DEBUG_WINDOW_DIR=/dir       write PNGs of every app window (native content) after 6s
 ///   WISP_DEBUG_QUIT_AFTER=<seconds>  terminate after N seconds (bypasses the sync-guard alert)
 ///   WISP_DEBUG_THEME=<id>            select a theme at launch (default|minimal|midnight)
+///   WISP_DEBUG_IDLE_FREE_AFTER=<s>   idle free-up after this many seconds in the background (default 900)
+///   WISP_DEBUG_IDLE_FREE_MB=<mb>     idle free-up footprint floor in MB (default 1536)
 ///   WISP_DEBUG_MODE=<mode>           appearance mode (system|light|dark)
 ///   WISP_DEBUG_THEME_DIR=<dir>       load theme CSS from this directory and hot-reload it on change
 ///   WISP_DEBUG_SNAPSHOT_DIR=<dir>    touch <dir>/snap.request to write <dir>/snap.png (page) + window PNGs;
 ///                                    touch <dir>/outline.request to run <dir>/outline.js (core world) → outline.txt
 ///                                    write "check"|"install" to <dir>/update.request to drive the updater → update.txt
+///                                    write an account index to <dir>/activate.request to switch accounts
 ///   WISP_DEBUG_IMPORT_SCRIPT=<path>  import a .js file as an enabled user script
 ///   WISP_DEBUG_CSS=<path>            load custom CSS from a file
 ///   WISP_DEBUG_RESET_SCRIPTS=1       delete all user scripts first
@@ -110,6 +113,12 @@ enum DebugHooks {
         if FileManager.default.fileExists(atPath: memReq.path) {
             try? FileManager.default.removeItem(at: memReq)
             Task { @MainActor in app.freeUpMemory() }
+        }
+        let actReq = url.appendingPathComponent("activate.request")
+        if FileManager.default.fileExists(atPath: actReq.path) {
+            let index = Int((try? String(contentsOf: actReq, encoding: .utf8))?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "") ?? 0
+            try? FileManager.default.removeItem(at: actReq)
+            app.sessions.activate(index: index)
         }
         let req = url.appendingPathComponent("snap.request")
         guard FileManager.default.fileExists(atPath: req.path) else { return }

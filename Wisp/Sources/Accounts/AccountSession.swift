@@ -143,6 +143,37 @@ final class AccountSession {
         loadIfNeeded()
     }
 
+    /// True when nothing in the page would be lost by a restart: no draft in
+    /// the composer, no dialog open (media viewer, attachment preview), no
+    /// transfer running, no media playing. Unknown page shapes count as busy.
+    func isSafeToRestart() async -> Bool {
+        guard let w = _webView, w.url != nil else { return true }
+        switch pageState {
+        case .idle, .failed: return true
+        // A QR page is tiny, and a restart mid-link (code scanned, phone syncing) would break the link.
+        case .loading, .qr: return false
+        case .chats, .unknown: break
+        }
+        let js = """
+        (() => {
+          const box = document.querySelector('footer [role="textbox"]');
+          const draft = !!box && (box.textContent || '').trim().length > 0;
+          const dialog = !!document.querySelector('#app [role="dialog"], [data-animate-modal-popup]');
+          const transfer = !!document.querySelector('#main progress, #main [role="progressbar"]');
+          const playing = [...document.querySelectorAll('video, audio')].some((m) => !m.paused && !m.ended);
+          return JSON.stringify({ draft, dialog, transfer, playing });
+        })()
+        """
+        guard let raw = try? await w.eval(js, world: ContentWorlds.core),
+              let data = raw.data(using: .utf8),
+              let flags = try? JSONDecoder().decode([String: Bool].self, from: data) else { return false }
+        if let reason = flags.first(where: \.value)?.key {
+            Log.debug("\(account.name): not safe to restart (\(reason))", .performance)
+            return false
+        }
+        return true
+    }
+
     private(set) var isUnloadedForTermination = false
     private var isUnloadingForTermination = false
 

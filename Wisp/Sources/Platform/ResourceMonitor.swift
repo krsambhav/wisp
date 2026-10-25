@@ -7,11 +7,14 @@ import Foundation
 /// not our children (launchd owns them), but they share our resource
 /// coalition, which is also how Activity Monitor groups them.
 ///
-/// Sampling runs every two seconds while a window is on screen and stops when
-/// nothing is showing it (the header meter drives it from `.task`). Rows come
-/// from the unsandboxed update helper so memory matches Activity Monitor's
-/// footprint; if the helper is unreachable the app walks the process table
-/// itself and reports resident size instead.
+/// The sampler runs for the life of the app at a cadence that follows how
+/// closely anyone is looking: every two seconds while the header meter or its
+/// popover is on screen, every ten seconds while a window is merely visible,
+/// and every thirty seconds in the background, where its only job is to feed
+/// the idle free-up in `AppEnvironment`. Rows come from the unsandboxed update
+/// helper so memory matches Activity Monitor's footprint; if the helper is
+/// unreachable the app walks the process table itself and reports resident
+/// size instead.
 @MainActor
 @Observable
 final class ResourceMonitor {
@@ -35,19 +38,46 @@ final class ResourceMonitor {
         var processCount: Int { groups.reduce(0) { $0 + $1.count } }
     }
 
-    static let interval: Duration = .seconds(2)
-    /// Two minutes at `interval`.
+    nonisolated struct IdleFree: Sendable, Equatable {
+        let date: Date
+        let freed: UInt64
+    }
+
+    /// Cadence while a view is watching, while a window is visible, and in the background.
+    static let closeInterval: Duration = .seconds(2)
+    static let quietInterval: Duration = .seconds(10)
+    static let hiddenInterval: Duration = .seconds(30)
+    /// Two minutes at `closeInterval`.
     static let historyLength = 60
 
     /// Above either of these the header pill turns amber and the popover
-    /// suggests freeing memory. CPU is averaged over the last 30 s so a page
-    /// load doesn't trip it.
+    /// suggests freeing memory. CPU is averaged over the last 15 samples so a
+    /// page load doesn't trip it.
     static let highMemory: UInt64 = 2 << 30
     static let highCPU: Double = 90
+
+    /// Idle free-up: after this long in the background, above this footprint,
+    /// at most once per cooldown. The floor sits above what WhatsApp needs
+    /// right after a fresh load (about 1.1 GB with two accounts), so a restart
+    /// only happens when there is something to give back.
+    static let idleFreeAfter: TimeInterval = debugOverride("WISP_DEBUG_IDLE_FREE_AFTER") ?? 15 * 60
+    static let idleFreeMemory: UInt64 = debugOverride("WISP_DEBUG_IDLE_FREE_MB").map { UInt64($0) << 20 } ?? 1536 << 20
+    static let idleFreeCooldown: TimeInterval = 60 * 60
+
+    /// Debug builds can shorten the idle limits to exercise the free-up.
+    private static func debugOverride(_ key: String) -> Double? {
+        #if DEBUG
+        return ProcessInfo.processInfo.environment[key].flatMap(Double.init)
+        #else
+        return nil
+        #endif
+    }
 
     private(set) var sample: Sample?
     /// True while `AppEnvironment.freeUpMemory()` is reloading pages.
     var isFreeing = false
+    /// The most recent automatic free-up this run, shown in the popover.
+    var lastIdleFree: IdleFree?
 
     var isHigh: Bool {
         guard let sample else { return false }
@@ -55,55 +85,77 @@ final class ResourceMonitor {
         let recent = history.suffix(15)
         return recent.count >= 15 && recent.reduce(0, +) / Double(recent.count) >= Self.highCPU
     }
-    /// CPU percent per tick, oldest first.
+    /// CPU percent per sample, oldest first.
     private(set) var history: [Double] = []
     private(set) var peakCPU: Double = 0
 
     var showsInHeader: Bool {
         didSet { UserDefaults.standard.set(showsInHeader, forKey: Self.showKey) }
     }
+    /// Restart WhatsApp in a fresh process when Wisp has been in the background
+    /// long enough and its footprint is high (see the `idleFree*` limits).
+    var freesWhenIdle: Bool {
+        didSet { UserDefaults.standard.set(freesWhenIdle, forKey: Self.idleKey) }
+    }
     private static let showKey = "wisp.resources.showInHeader"
+    private static let idleKey = "wisp.resources.freeWhenIdle"
 
     @ObservationIgnored private var isRunning = false
+    @ObservationIgnored private var watchers = 0
+    @ObservationIgnored private var sampler = ResourceSampler()
+    @ObservationIgnored private let coalition = ProcessTable.coalitionID(of: getpid())
     @ObservationIgnored private var helper: NSXPCConnection?
     @ObservationIgnored private var helperFailed = false
+    @ObservationIgnored private var logged = false
 
     init() {
         showsInHeader = UserDefaults.standard.object(forKey: Self.showKey) as? Bool ?? true
+        freesWhenIdle = UserDefaults.standard.object(forKey: Self.idleKey) as? Bool ?? true
     }
 
-    /// Samples until the calling task is cancelled. Safe to call from several
-    /// views; only the first caller runs the loop.
+    /// Samples until the calling task is cancelled. Only the first caller runs the loop.
     func run() async {
         guard !isRunning else { return }
         isRunning = true
         defer {
             isRunning = false
-            helper?.invalidate()
-            helper = nil
+            dropHelper()
         }
-        var sampler = ResourceSampler()
-        let coalition = ProcessTable.coalitionID(of: getpid())
-        var logged = false
         while !Task.isCancelled {
-            if Self.somethingIsOnScreen {
-                let rows = await fetchRows(coalition: coalition)
-                if !logged {
-                    logged = true
-                    Log.info("Resource meter: \(rows.count) processes in coalition \(coalition), exact=\(rows.allSatisfy(\.exact)) via \(helperFailed ? "sandbox" : "helper")", .performance)
-                }
-                publish(sampler.sample(rows))
-            }
-            try? await Task.sleep(for: Self.interval)
+            let onScreen = Self.somethingIsOnScreen
+            await refresh()
+            let interval = watchers > 0 && onScreen ? Self.closeInterval : onScreen ? Self.quietInterval : Self.hiddenInterval
+            // In the background let the XPC helper exit between samples.
+            if interval == Self.hiddenInterval { dropHelper() }
+            try? await Task.sleep(for: interval)
         }
     }
 
-    private func fetchRows(coalition: UInt64) async -> [ProcessUsage] {
-        if !helperFailed, let rows = await helperRows(coalition: coalition) { return rows }
+    /// Keeps the sampler at its close cadence while the calling view is alive.
+    /// Suspends until the task is cancelled.
+    func watch() async {
+        watchers += 1
+        defer { watchers -= 1 }
+        while !Task.isCancelled { try? await Task.sleep(for: .seconds(3600)) }
+    }
+
+    /// Takes one sample now (the free-up uses it to measure what it gave back).
+    func refresh() async {
+        let rows = await fetchRows()
+        if !logged {
+            logged = true
+            Log.info("Resource meter: \(rows.count) processes in coalition \(coalition), exact=\(rows.allSatisfy(\.exact)) via \(helperFailed ? "sandbox" : "helper")", .performance)
+        }
+        publish(sampler.sample(rows))
+    }
+
+    private func fetchRows() async -> [ProcessUsage] {
+        if !helperFailed, let rows = await helperRows() { return rows }
+        let coalition = self.coalition
         return await Task.detached(priority: .utility) { ProcessTable.members(ofCoalition: coalition) }.value
     }
 
-    private func helperRows(coalition: UInt64) async -> [ProcessUsage]? {
+    private func helperRows() async -> [ProcessUsage]? {
         if helper == nil {
             let c = NSXPCConnection(serviceName: WispUpdateHelper.serviceName)
             c.remoteObjectInterface = NSXPCInterface(with: WispUpdateHelperProtocol.self)
@@ -123,11 +175,15 @@ final class ResourceMonitor {
         guard let data, let rows = try? JSONDecoder().decode([ProcessUsage].self, from: data), !rows.isEmpty else {
             Log.warning("Resource helper unavailable, falling back to in-process sampling", .performance)
             helperFailed = true
-            helper.invalidate()
-            self.helper = nil
+            dropHelper()
             return nil
         }
         return rows
+    }
+
+    private func dropHelper() {
+        helper?.invalidate()
+        helper = nil
     }
 
     private func publish(_ s: Sample) {

@@ -47,7 +47,7 @@ struct ResourceMeter: View {
             ResourceDetails()
                 .presentationBackground(WispUI.cardElevated)
         }
-        .task { await monitor.run() }
+        .task { await monitor.watch() }
     }
 }
 
@@ -110,15 +110,13 @@ private struct ResourceDetails: View {
                 Spacer().frame(height: 14)
             }
 
-            if monitor.isHigh || monitor.isFreeing {
+            if monitor.isHigh || monitor.isFreeing || monitor.lastIdleFree != nil {
                 WDivider()
                 HStack(alignment: .top, spacing: 8) {
-                    WIcon(monitor.isFreeing ? "refresh-cw" : "zap", size: 13)
-                        .foregroundStyle(monitor.isFreeing ? WispUI.mutedForeground : WispUI.warning)
+                    WIcon(monitor.isFreeing ? "refresh-cw" : monitor.isHigh ? "zap" : "moon", size: 13)
+                        .foregroundStyle(monitor.isHigh && !monitor.isFreeing ? WispUI.warning : WispUI.mutedForeground)
                         .padding(.top, 1)
-                    Text(monitor.isFreeing
-                         ? "Reloading WhatsApp to release memory…"
-                         : "Usage is high. Freeing memory clears WebKit's caches and reloads WhatsApp. You stay linked; unsent drafts are lost.")
+                    Text(notice(monitor))
                         .font(WispUI.caption).foregroundStyle(WispUI.mutedForeground)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -145,6 +143,16 @@ private struct ResourceDetails: View {
             .padding(.horizontal, 8).padding(.vertical, 8)
         }
         .frame(width: 300)
+    }
+
+    private func notice(_ monitor: ResourceMonitor) -> String {
+        if monitor.isFreeing { return "Reloading WhatsApp to release memory…" }
+        if monitor.isHigh { return "Usage is high. Freeing memory clears WebKit's caches and reloads WhatsApp. You stay linked; unsent drafts are lost." }
+        if let last = monitor.lastIdleFree {
+            let when = last.date.formatted(date: .omitted, time: .shortened)
+            return last.freed > 50 << 20 ? "Freed \(ResourceFormat.memory(last.freed)) while idle at \(when)." : "Reloaded WhatsApp while idle at \(when)."
+        }
+        return ""
     }
 }
 

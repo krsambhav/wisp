@@ -26,6 +26,8 @@ final class AppEnvironment {
     let launchedAt = Date()
     /// Set by debug hooks (timed quit) to bypass the sync guard.
     var isQuitForced = false
+    /// Last moment Wisp was the active app; drives the idle free-up.
+    @ObservationIgnored private var lastActive = Date()
 
     /// Debug-only: load the bundled mock page instead of web.whatsapp.com
     /// (WISP_MOCK=1). Lets the theme engine, bridge and notifications be
@@ -58,7 +60,24 @@ final class AppEnvironment {
 
         wire()
         startObservingSettings()
+        startResourceWatch()
         Log.info("Environment ready in \(Int(Date().timeIntervalSince(launchedAt) * 1000)) ms", .performance)
+    }
+
+    /// Runs the sampler for the life of the app (its cadence follows whether
+    /// anyone is looking) and checks once a minute whether an idle free-up is due.
+    private func startResourceWatch() {
+        Task { [resources] in await resources.run() }
+        NotificationCenter.default.addObserver(forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.lastActive = Date() }
+        }
+        Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(60))
+                guard let self else { return }
+                await self.freeMemoryIfIdle()
+            }
+        }
     }
 
     // MARK: Wiring
@@ -174,21 +193,46 @@ final class AppEnvironment {
             toasts.show(title: "WhatsApp (\(syncing.account.name)) is still loading. Try again once its chat list appears.")
             return
         }
-        let before = resources.sample?.memory ?? 0
-        resources.isFreeing = true
-        Log.info("Freeing memory: reloading \(sessions.loadedSessions.count) page(s) from \(ResourceFormat.memory(before))", .performance)
         Task { [weak self] in
             guard let self else { return }
-            for session in sessions.loadedSessions { await session.restartContentProcess() }
-            try? await Task.sleep(for: .seconds(15))
-            resources.isFreeing = false
-            let after = resources.sample?.memory ?? before
-            if before > after, before - after > 50 << 20 {
-                toasts.show(title: "Freed \(ResourceFormat.memory(before - after)). WhatsApp reloaded.")
-            } else {
-                toasts.show(title: "WhatsApp reloaded.")
-            }
+            let freed = await performFreeUp()
+            toasts.show(title: freed > 50 << 20 ? "Freed \(ResourceFormat.memory(freed)). WhatsApp reloaded." : "WhatsApp reloaded.")
         }
+    }
+
+    /// The automatic counterpart: Wisp has been in the background for a while,
+    /// the footprint is above the idle floor, and no page has anything to lose
+    /// (draft, open dialog, transfer, playing media). Quiet: no toast, the
+    /// popover shows what was freed. Called once a minute.
+    func freeMemoryIfIdle() async {
+        guard resources.freesWhenIdle, !resources.isFreeing else { return }
+        if NSApp.isActive { lastActive = Date(); return }
+        let idle = Date().timeIntervalSince(lastActive)
+        guard idle >= ResourceMonitor.idleFreeAfter,
+              let sample = resources.sample, sample.memory >= ResourceMonitor.idleFreeMemory else { return }
+        if let last = resources.lastIdleFree, Date().timeIntervalSince(last.date) < ResourceMonitor.idleFreeCooldown { return }
+        let live = sessions.loadedSessions
+        guard !live.isEmpty, !live.contains(where: \.mayBeSyncing) else { return }
+        for session in live where !(await session.isSafeToRestart()) { return }
+        Log.info("Idle \(Int(idle / 60)) min at \(ResourceFormat.memory(sample.memory)); freeing memory", .performance)
+        let freed = await performFreeUp()
+        resources.lastIdleFree = .init(date: Date(), freed: freed)
+    }
+
+    /// Restarts every loaded page and returns how much the footprint dropped.
+    private func performFreeUp() async -> UInt64 {
+        await resources.refresh()
+        let before = resources.sample?.memory ?? 0
+        resources.isFreeing = true
+        defer { resources.isFreeing = false }
+        Log.info("Freeing memory: reloading \(sessions.loadedSessions.count) page(s) from \(ResourceFormat.memory(before))", .performance)
+        for session in sessions.loadedSessions { await session.restartContentProcess() }
+        try? await Task.sleep(for: .seconds(15))
+        await resources.refresh()
+        let after = resources.sample?.memory ?? before
+        let freed = before > after ? before - after : 0
+        Log.info("Freed \(ResourceFormat.memory(freed)); now \(ResourceFormat.memory(after))", .performance)
+        return freed
     }
 
     /// Menu / Settings entry point. Reports the outcome as a toast; the header
