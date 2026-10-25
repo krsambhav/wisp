@@ -29,3 +29,7 @@ html { --WDS-systems-chat-foreground-wallpaper: var(--wisp-chat-background) !imp
 
 /* Selection color follows accent. */
 #app ::selection { background: color-mix(in srgb, var(--wisp-accent) 35%, transparent); }
+
+/* Jump-to-message flash: WhatsApp pulses the row to the accent at 35%; keep the timing, soften the wash. */
+@keyframes wisp-jump-flash { 50% { background-color: color-mix(in srgb, var(--wisp-text-primary) 9%, transparent); } }
+#main div.focusable-list-item { animation-name: wisp-jump-flash !important; }
