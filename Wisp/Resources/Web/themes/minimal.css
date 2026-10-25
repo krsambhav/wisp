@@ -126,20 +126,27 @@ html, html[data-wisp-scheme="dark"] { --WDS-systems-bubble-surface-outgoing: var
 #main span[data-icon="tail-in"], #main span[data-icon="tail-out"] { display: none !important; }
 #main [data-wisp-bubble="in"] { margin-left: 20px !important; }
 #main [data-wisp-bubble="out"] { margin-right: 20px !important; }
-/* Hover "React" button beside a bubble. WhatsApp paints it with its surface
-   token (white on our white chat background) and a white glyph; give it a real
-   surface, a hairline and a readable glyph on both sides of the chat. */
-#main [data-testid="reaction-entry-point"] {
+/* Round hover buttons beside a bubble (React, Forward media). WhatsApp paints
+   them with its surface token (white on our white chat background) and an
+   "always white" glyph. Matched by test id, by aria-label, and by the hashed
+   class pair that defines that look, so a localized label still catches. */
+#main [data-testid="reaction-entry-point"],
+#main div[role="button"][aria-label*="Forward" i],
+#main div[role="button"].x1280gxy.x17t9dm2 {
   background: var(--wisp-surface-emphasized) !important;
   color: var(--wisp-text-secondary) !important;
   box-shadow: 0 0 0 0.5px var(--wisp-line), 0 1px 2px rgba(0, 0, 0, 0.06) !important;
   transition: background-color .12s ease, color .12s ease;
 }
-#main [data-testid="reaction-entry-point"]:hover {
+#main [data-testid="reaction-entry-point"]:hover,
+#main div[role="button"][aria-label*="Forward" i]:hover,
+#main div[role="button"].x1280gxy.x17t9dm2:hover {
   background: color-mix(in srgb, var(--wisp-text-primary) 10%, var(--wisp-surface)) !important;
   color: var(--wisp-text-primary) !important;
 }
-#main [data-testid="reaction-entry-point"] * { color: inherit !important; -webkit-text-fill-color: currentColor !important; fill: currentColor; }
+#main [data-testid="reaction-entry-point"] *,
+#main div[role="button"][aria-label*="Forward" i] *,
+#main div[role="button"].x1280gxy.x17t9dm2 * { color: inherit !important; -webkit-text-fill-color: currentColor !important; fill: currentColor; }
 /* Outgoing bubbles are the inverted surface. Backgrounds come from WhatsApp's own
    bubble token (so stickers and media stay transparent); every content token is
    flipped inside, which covers replies, captions, mentions, links and receipts. */
@@ -174,8 +181,8 @@ html, html[data-wisp-scheme="dark"] { --WDS-systems-bubble-surface-outgoing: var
 }
 html[data-wisp-scheme="dark"] #main [data-wisp-bubble="out"] { --WDS-content-read: #2563EB; --icon-ack: #2563EB; --link-rgb: 37, 99, 235; }
 /* Anything WhatsApp colors directly (document cards, captions, link previews) becomes legible on the inverted surface. */
-#main [data-wisp-bubble="out"]:not([data-wisp-plain]) *:not(svg):not(path):not(img):not(video):not(canvas):not([data-icon]):not([data-testid="reaction-entry-point"]):not([data-testid="reaction-entry-point"] *),
-#main div:has(> span[data-icon="tail-out"]):not([data-wisp-plain]) *:not(svg):not(path):not(img):not(video):not(canvas):not([data-icon]):not([data-testid="reaction-entry-point"]):not([data-testid="reaction-entry-point"] *) { color: var(--wisp-bubble-out-fg) !important; -webkit-text-fill-color: var(--wisp-bubble-out-fg) !important; opacity: 1; }
+#main [data-wisp-bubble="out"]:not([data-wisp-plain]) *:not(svg):not(path):not(img):not(video):not(canvas):not([data-icon]):not([data-testid="reaction-entry-point"]):not([data-testid="reaction-entry-point"] *):not(.x1280gxy.x17t9dm2):not(.x1280gxy.x17t9dm2 *):not([aria-label*="Forward" i]):not([aria-label*="Forward" i] *),
+#main div:has(> span[data-icon="tail-out"]):not([data-wisp-plain]) *:not(svg):not(path):not(img):not(video):not(canvas):not([data-icon]):not([data-testid="reaction-entry-point"]):not([data-testid="reaction-entry-point"] *):not(.x1280gxy.x17t9dm2):not(.x1280gxy.x17t9dm2 *):not([aria-label*="Forward" i]):not([aria-label*="Forward" i] *) { color: var(--wisp-bubble-out-fg) !important; -webkit-text-fill-color: var(--wisp-bubble-out-fg) !important; opacity: 1; }
 #main [data-wisp-bubble="out"]:not([data-wisp-plain]) [data-icon] { color: color-mix(in srgb, var(--wisp-bubble-out-fg) 80%, transparent) !important; }
 #main [data-wisp-bubble="out"] svg:not([data-icon*="check"]) { color: var(--wisp-bubble-out-fg) !important; }
 #main [data-wisp-bubble="out"] [data-icon="msg-dblcheck"], #main [data-wisp-bubble="out"] [data-icon="msg-check"] { color: var(--wisp-link) !important; }
