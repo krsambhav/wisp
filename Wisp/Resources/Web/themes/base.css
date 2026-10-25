@@ -64,6 +64,14 @@ html[data-wisp-density="compact"] #side header { min-height: 52px !important; }
 
 /* ---- 6. Motion -------------------------------------------------------- */
 /* (Focus rings are left to WhatsApp; a custom outline doubled up on the search and composer fields.) */
+/* Chat switch: WhatsApp remounts #main for every conversation, so a mount
+   animation covers the hard cut. The pane rises and fades; the message region
+   (header + div) fades a beat later to soften messages popping in. `backwards`
+   fill so no transform lingers once the animation has finished. */
+@keyframes wisp-chat-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes wisp-fade-in { from { opacity: 0; } to { opacity: 1; } }
+#main { animation: wisp-chat-in 220ms cubic-bezier(.2, .7, .2, 1) backwards; }
+#main > header + div { animation: wisp-fade-in 240ms ease-out 60ms backwards; }
 @media (prefers-reduced-motion: reduce) {
   #app *, #app *::before, #app *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
