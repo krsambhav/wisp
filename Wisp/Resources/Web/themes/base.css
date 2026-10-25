@@ -64,7 +64,7 @@ html[data-wisp-density="compact"] #side header { min-height: 52px !important; }
 
 /* Text-bubble meta (time + receipts): a touch more air before it, a touch smaller. */
 #main .copyable-text > div > span > span:has(> span:first-child) { padding-left: 9px !important; }
-#main .copyable-text > div > span > span:has(> span:first-child) > span:first-child { font-size: 10.5px !important; }
+#main .copyable-text > div > span > span:has(> span:first-child) > span:first-child { font-size: 9px !important; }
 
 /* ---- 6. Motion -------------------------------------------------------- */
 /* (Focus rings are left to WhatsApp; a custom outline doubled up on the search and composer fields.) */
