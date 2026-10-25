@@ -13,6 +13,7 @@ All sources live in `Wisp/Sources/`.
 | `Web/` | `WebViewFactory` (configuration, data store, user agent), `WebViewCoordinator` (navigation + UI delegate: policy, uploads, media permission, JS dialogs), `DownloadManager` (`WKDownloadDelegate`), `WebViewContainer` (SwiftUI host), `UserAgent`. |
 | `Injection/` | `InjectionEngine` (builds `WKUserScript`s, live style updates), `ScriptMessageRouter` (validates bridge messages), `ContentWorlds` (world + handler names). |
 | `Customization/` | `Theme`/`ThemePalette`, `ThemeCatalog` (built-ins), `CSSGenerator` (tokens → CSS), `CustomScript`/`ScriptStore` (user scripts, hot reload), `CustomCSSStore`, `PresetIO`. |
+| `Updates/` | `UpdateManager` (GitHub Releases check, state machine, scheduling), `UpdateInstaller` (download, extract, signature verification, XPC call). The swap/relaunch lives in `Wisp/Helper` (unsandboxed `WispUpdateHelper.xpc`); the shared `@objc` protocol is in `Wisp/Shared`. |
 | `Notifications/` | `NotificationBridge` (`UNUserNotificationCenter`), `NotificationDeduper`, `UnreadTitleParser`. |
 | `Platform/` | `MainWindowController` (AppKit window), `MenuBarController` (`NSStatusItem`), `GlobalHotKeyManager` (Carbon hot key), `LaunchAtLogin` (`SMAppService`), `NetworkMonitor` (`NWPathMonitor`). |
 | `Settings/` | `SettingsStore` (settings.json, debounced save) and one SwiftUI view per section (General, Appearance, Scripts, Notifications, Accounts, Advanced). |
