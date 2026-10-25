@@ -69,6 +69,10 @@ header[data-tab="2"] [data-navbar-item]:hover { background: var(--wisp-surface-e
 section[data-testid="intro-panel"] { background: var(--wisp-background) !important; border: 0 !important; }
 section[data-testid="intro-panel"] [data-testid="intro_panel_v2_title_card"] { background: var(--wisp-surface-emphasized) !important; border-radius: 20px !important; box-shadow: none !important; }
 
+/* Link / QR landing page: WhatsApp hard-codes a cream wash and 1px black card borders. */
+.app-wrapper-web > div:has([data-testid="download-native-client-button"]) { background: var(--wisp-background) !important; }
+.app-wrapper-web > div:has([data-testid="download-native-client-button"]) > div > div { border-color: var(--wisp-line) !important; }
+
 /* ---- Sidebar ------------------------------------------------------------ */
 #side div:has(> input), #side div:has(> [role="textbox"]) { border: 0 !important; box-shadow: none !important; }
 #side #all-filter, #side button[id^="label_item_"], #side #new-filter {

@@ -13,14 +13,19 @@ struct MainShellView: View {
             ZStack {
                 palette.shellBackground.color
                 if let session = env.sessions.activeSession {
-                    WebViewContainer(webView: session.webView)
-                        .id(session.account.id)
-                        .onAppear { session.loadIfNeeded() }
-                    SessionOverlays(session: session, palette: palette)
+                    ZStack {
+                        WebViewContainer(webView: session.webView)
+                            .onAppear { session.loadIfNeeded() }
+                        SessionOverlays(session: session, palette: palette)
+                    }
+                    .id(session.account.id)
+                    .transition(.asymmetric(insertion: .opacity.combined(with: .offset(y: 10)).combined(with: .scale(scale: 0.995, anchor: .top)),
+                                            removal: .opacity))
                 } else {
                     NoAccountsView()
                 }
             }
+            .animation(SessionManager.switchAnimation, value: env.sessions.activeAccountID)
         }
         .overlay(alignment: .bottomTrailing) { ToastStack() }
         .ignoresSafeArea()

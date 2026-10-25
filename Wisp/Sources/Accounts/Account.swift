@@ -22,7 +22,7 @@ nonisolated struct Account: Identifiable, Codable, Equatable, Sendable {
 
     init(id: UUID = UUID(), name: String, dataStoreID: UUID = UUID(), colorIndex: Int = 0, avatarFileName: String? = nil,
          createdAt: Date = Date(), notificationsEnabled: Bool = true, showPreviews: Bool? = nil, muted: Bool = false,
-         keepLoadedInBackground: Bool = false) {
+         keepLoadedInBackground: Bool = true) {
         self.id = id; self.name = name; self.dataStoreID = dataStoreID; self.colorIndex = colorIndex
         self.avatarFileName = avatarFileName; self.createdAt = createdAt
         self.notificationsEnabled = notificationsEnabled; self.showPreviews = showPreviews; self.muted = muted

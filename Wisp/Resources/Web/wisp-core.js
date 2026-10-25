@@ -91,8 +91,10 @@
     const root = document.documentElement;
     if (!root) { return ''; }
     let scheme = '';
+    // 0. The link/QR landing page is always rendered light, whatever <body> says.
+    if ((lastState || computeState()) === 'qr') { scheme = 'light'; }
     // 1. WhatsApp still toggles the legacy `dark` class on <body>.
-    if (document.body && document.body.classList.contains('dark')) { scheme = 'dark'; }
+    else if (document.body && document.body.classList.contains('dark')) { scheme = 'dark'; }
     else if (document.body && document.body.classList.contains('light')) { scheme = 'light'; }
     // 2. Otherwise read a token Wisp never overrides, as computed on <body>
     //    (warm-gray-200 light / warm-gray-800 dark).

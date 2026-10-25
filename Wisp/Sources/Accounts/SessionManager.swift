@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import WebKit
 
 /// Creates sessions lazily, keeps the active one in front, and (optionally)
@@ -47,9 +48,12 @@ final class SessionManager {
 
     var totalUnread: Int { sessions.values.reduce(0) { $0 + $1.unreadCount } }
 
+    /// Shared curve for the tab fill glide and the content crossfade.
+    nonisolated static let switchAnimation: Animation = .spring(response: 0.34, dampingFraction: 0.86)
+
     func activate(_ id: UUID) {
         guard env.accounts.account(id: id) != nil, id != activeAccountID else { return }
-        activeAccountID = id
+        withAnimation(Self.switchAnimation) { activeAccountID = id }
         env.settings.window.lastActiveAccountID = id
         session(for: id)?.loadIfNeeded()
         // Sessions stay alive once created: switching back must be instant, never a reload.

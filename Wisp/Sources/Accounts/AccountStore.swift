@@ -36,7 +36,9 @@ final class AccountStore {
         save()
     }
 
-    private struct File: Codable { var version = 1; var accounts: [Account] }
+    /// v2 (2026-10): accounts connect at launch by default so every tab shows
+    /// its unread count and delivers notifications without being opened first.
+    private struct File: Codable { var version = 2; var accounts: [Account] }
 
     private var backupURL: URL { url.appendingPathExtension("bak") }
 
@@ -44,8 +46,13 @@ final class AccountStore {
         for candidate in [url, backupURL] {
             guard let data = try? Data(contentsOf: candidate) else { continue }
             do {
-                accounts = try JSONDecoder.standard.decode(File.self, from: data).accounts
+                let file = try JSONDecoder.standard.decode(File.self, from: data)
+                accounts = file.accounts
                 if candidate == backupURL { Log.warning("accounts.json unreadable; restored from backup", .accounts) }
+                if file.version < 2 {
+                    for i in accounts.indices { accounts[i].keepLoadedInBackground = true }
+                    save()
+                }
                 return
             } catch { Log.error("\(candidate.lastPathComponent) unreadable: \(error.localizedDescription)", .accounts) }
         }
