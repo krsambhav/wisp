@@ -19,6 +19,7 @@
 		271CB401D680D29361323323 /* WKWebView+Eval.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA1D0C4069F4568EC0D2906 /* WKWebView+Eval.swift */; };
 		303FD803C827F7609EEB4B9C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9C98AEDADA7F11636F99883 /* AppDelegate.swift */; };
 		30784EA605291F1A6FD241F2 /* AccountSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18F0D999B001AF8015EC7835 /* AccountSession.swift */; };
+		31659215AE4BDA42CF9E38C4 /* UpdateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F026D0FB806F79055A358687 /* UpdateManager.swift */; };
 		316842389CA09E1F60A89D9F /* NotificationsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D8CB5075BF83524A4E1FFC4 /* NotificationsSettingsView.swift */; };
 		33ED15E8D083B7B9C96F1659 /* WDropdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = 073CECC2062F9BDA0E9D3B47 /* WDropdown.swift */; };
 		376DD4E2667E1DD114B6DC4B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A81AC6D1098F0F519B3A60EE /* Assets.xcassets */; };
@@ -32,6 +33,7 @@
 		6BC487395397EC1266A0296D /* wisp-page.js in Resources */ = {isa = PBXBuildFile; fileRef = 1F84F2A5A36D915F822C5B3F /* wisp-page.js */; };
 		6D09AE3A2C4730F8159F9B37 /* GeneralSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D70C3574410BD2EA0C39AE2 /* GeneralSettingsView.swift */; };
 		6D4689AE915D2F9B72DDD6B0 /* WispTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 902A6C9420E28BFF89D9F036 /* WispTests.swift */; };
+		6D9D8424DF895BBBC86A2B1F /* UpdateInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BA562E97405C37EA10D689C /* UpdateInstaller.swift */; };
 		6F32D29C5A1EF4E18C4E4231 /* minimal.css in Resources */ = {isa = PBXBuildFile; fileRef = 55094F4F0250E5A71568F1A5 /* minimal.css */; };
 		6FD94242118C9E580C3121D9 /* WebViewFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ED13910467AB5559C30AE6B /* WebViewFactory.swift */; };
 		721847B3DFA40A6C1CF8BABB /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34D54DF54F2D122DB9D9432F /* NetworkMonitor.swift */; };
@@ -121,6 +123,7 @@
 		7EC4060BDCB16E41A6CAEE9D /* NotificationBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationBridge.swift; sourceTree = "<group>"; };
 		86543920FACD2B26A3C4347C /* AdvancedSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedSettingsView.swift; sourceTree = "<group>"; };
 		8B9B7B0C6496966AC951001B /* Paths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Paths.swift; sourceTree = "<group>"; };
+		8BA562E97405C37EA10D689C /* UpdateInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateInstaller.swift; sourceTree = "<group>"; };
 		8BE1893FDCB218A871DD9532 /* ThemeCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeCatalog.swift; sourceTree = "<group>"; };
 		8EC397EA5FF036DBDACB1AE3 /* ContentWorlds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentWorlds.swift; sourceTree = "<group>"; };
 		902A6C9420E28BFF89D9F036 /* WispTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WispTests.swift; sourceTree = "<group>"; };
@@ -150,6 +153,7 @@
 		E76CE818DEA932D8803ECDE2 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
 		E9EDEBAEEBEA79AB2E64BFB4 /* HotKeyRecorderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotKeyRecorderView.swift; sourceTree = "<group>"; };
 		EF21546B130CDE107DA8D35A /* whatsapp-mock.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = "whatsapp-mock.html"; sourceTree = "<group>"; };
+		F026D0FB806F79055A358687 /* UpdateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateManager.swift; sourceTree = "<group>"; };
 		F342A861CC0E8DB141D6CC57 /* wisp-user-runtime.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "wisp-user-runtime.js"; sourceTree = "<group>"; };
 		F72BB8F40B8DFD16D494EC01 /* midnight.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = midnight.css; sourceTree = "<group>"; };
 		F8FD0A8C6BC10BB816CB8937 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
@@ -280,6 +284,15 @@
 			path = Tests;
 			sourceTree = "<group>";
 		};
+		AAD449C5E3A5DD38DD40E2D5 /* Updates */ = {
+			isa = PBXGroup;
+			children = (
+				8BA562E97405C37EA10D689C /* UpdateInstaller.swift */,
+				F026D0FB806F79055A358687 /* UpdateManager.swift */,
+			);
+			path = Updates;
+			sourceTree = "<group>";
+		};
 		ADBAA5ABDAA477E88D1AEFA1 /* Web */ = {
 			isa = PBXGroup;
 			children = (
@@ -345,6 +358,7 @@
 				DF2BEB71B5C38D973B520DE4 /* Settings */,
 				530691DEB966A3224B029A24 /* Support */,
 				417363B16D4280430FFFF723 /* UI */,
+				AAD449C5E3A5DD38DD40E2D5 /* Updates */,
 				ADBAA5ABDAA477E88D1AEFA1 /* Web */,
 			);
 			path = Sources;
@@ -533,6 +547,8 @@
 				E398C5B0B9498EAAFF2271B1 /* Theme.swift in Sources */,
 				1E18BA701C9F1E0AA3A1091B /* ThemeCatalog.swift in Sources */,
 				F980BC0DFF81D229421F2649 /* ToastView.swift in Sources */,
+				6D9D8424DF895BBBC86A2B1F /* UpdateInstaller.swift in Sources */,
+				31659215AE4BDA42CF9E38C4 /* UpdateManager.swift in Sources */,
 				CC23F07D36158D042D6069DC /* UserAgent.swift in Sources */,
 				2356D0E5E8BACE29449457BC /* WComponents.swift in Sources */,
 				33ED15E8D083B7B9C96F1659 /* WDropdown.swift in Sources */,

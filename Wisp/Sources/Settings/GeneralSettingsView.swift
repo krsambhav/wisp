@@ -22,6 +22,15 @@ struct GeneralSettingsView: View {
                 }
             }
 
+            WGroupLabel("Updates")
+            WCard {
+                WRow(title: "Wisp \(env.updates.currentVersion)", description: updateStatusText) { updateButton }
+                WDivider()
+                WRow(title: "Check for updates automatically", description: "Looks for new releases on GitHub shortly after launch and every six hours. Nothing is installed until you click Update.") {
+                    WToggle(isOn: Binding(get: { env.updates.automaticChecks }, set: { env.updates.automaticChecks = $0 }))
+                }
+            }
+
             WGroupLabel("Window")
             WCard {
                 WRow(title: "Keep running when the window closes", description: "⌘W hides the window; Wisp keeps receiving notifications. Quit with ⌘Q.") {
@@ -54,5 +63,36 @@ struct GeneralSettingsView: View {
             }
         }
         .onAppear { launchAtLogin = LaunchAtLogin.isEnabled }
+    }
+
+    private var updateStatusText: String? {
+        switch env.updates.state {
+        case .idle: env.updates.lastCheck.map { "Last checked \($0.formatted(.relative(presentation: .named)))." }
+        case .checking: "Checking GitHub…"
+        case .upToDate: "You're on the latest version."
+        case .available(let r): "Version \(r.version) is available. Updating downloads \(ByteCountFormatter.string(fromByteCount: r.assetSize, countStyle: .file)), installs and relaunches Wisp."
+        case .downloading: "Downloading…"
+        case .installing: "Installing…"
+        case .installed(let r): "Version \(r.version) is installed and will start when Wisp relaunches."
+        case .failed(let why): why
+        }
+    }
+
+    @ViewBuilder private var updateButton: some View {
+        HStack(spacing: 8) {
+            if env.updates.state.release != nil {
+                WButton(title: "Release notes", style: .ghost, small: true) { env.updates.openReleaseNotes() }
+            }
+            switch env.updates.state {
+            case .checking, .downloading, .installing:
+                ProgressView().controlSize(.small).frame(height: 28)
+            case .available(let r):
+                WButton(title: "Update to \(r.version)", icon: "download", style: .primary, small: true) { Task { await env.updates.downloadAndInstall() } }
+            case .installed:
+                WButton(title: "Relaunch", icon: "rocket", style: .primary, small: true) { env.updates.relaunch() }
+            default:
+                WButton(title: "Check for Updates", icon: "refresh-cw", style: .outline, small: true) { env.checkForUpdates() }
+            }
+        }
     }
 }

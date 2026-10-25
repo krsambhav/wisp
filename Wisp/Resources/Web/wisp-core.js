@@ -122,7 +122,7 @@
   // Every message has at least one of these leaves. The bubble is the ancestor
   // just below the full-width row: climb while the parent is narrower than ~90%
   // of the conversation. Direction: receipts (only on outgoing) or placement.
-  const LEAF_SELECTOR = '.copyable-text, [data-icon^="msg-"], span[data-icon^="tail-"], img[src^="blob:"], video, audio, [role="img"]';
+  const LEAF_SELECTOR = '.copyable-text, [data-testid="msg-meta"], [data-icon^="msg-"], span[data-icon^="tail-"], img[src^="blob:"], video, audio, [role="img"]';
   function bubbleFor(leaf, mainWidth) {
     let el = leaf;
     for (let i = 0; i < 12 && el && el.parentElement; i++) {

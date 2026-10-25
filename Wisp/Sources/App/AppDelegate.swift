@@ -41,6 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             Log.info("Window visible \(Int(Date().timeIntervalSince(env.launchedAt) * 1000)) ms after environment init", .performance)
             _ = await env.notifications.requestAuthorization()
+            env.updates.startAutomaticChecks()
         }
         #if DEBUG
         DebugHooks.installAfterLaunch(env)

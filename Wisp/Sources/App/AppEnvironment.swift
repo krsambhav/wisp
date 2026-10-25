@@ -19,6 +19,7 @@ final class AppEnvironment {
     let notifications: NotificationBridge
     let downloads: DownloadManager
     let network: NetworkMonitor
+    let updates = UpdateManager()
     let toasts = ToastCenter()
     let settingsNavigation = SettingsNavigation()
     let launchedAt = Date()
@@ -75,6 +76,12 @@ final class AppEnvironment {
             if !NSApp.isActive || !self.window.isKeyAndVisible { self.notifications.notifyDownloadFinished(url: url) }
         }
         network.onReconnect = { [weak self] in self?.sessions.retryFailed() }
+        updates.onUpdateFound = { [weak self] release in
+            guard let self else { return }
+            self.toasts.show(title: "Wisp \(release.version) is available", actionTitle: "Update") { [weak self] in
+                Task { await self?.updates.downloadAndInstall() }
+            }
+        }
         scripts.onExternalChange = { [weak self] in
             guard let self else { return }
             self.sessions.refreshUserScriptsEverywhere()
@@ -153,6 +160,20 @@ final class AppEnvironment {
     }
 
     func reloadActive(ignoringCache: Bool = false) { sessions.activeSession?.reload(ignoringCache: ignoringCache) }
+
+    /// Menu / Settings entry point. Reports the outcome as a toast; the header
+    /// pill and Settings › General carry the state afterwards.
+    func checkForUpdates() {
+        Task { @MainActor in
+            await updates.check(userInitiated: true)
+            switch updates.state {
+            case .upToDate: toasts.show(title: "Wisp \(updates.currentVersion) is up to date")
+            case .available(let r): toasts.show(title: "Wisp \(r.version) is available", actionTitle: "Update") { [weak self] in Task { await self?.updates.downloadAndInstall() } }
+            case .failed(let why): toasts.show(title: "Couldn’t check for updates: \(why)")
+            default: break
+            }
+        }
+    }
     func focusSearch() { sessions.activeSession?.focusSearch() }
 
     func toggleMute() {

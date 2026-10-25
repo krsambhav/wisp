@@ -8,6 +8,14 @@ Wisp loads the official `https://web.whatsapp.com` and leaves WhatsApp's end-to-
 
 > WhatsApp is a trademark of WhatsApp LLC. Wisp is an independent, unofficial client shell that loads the official WhatsApp Web and is not affiliated with or endorsed by WhatsApp or Meta.
 
+## Install
+
+Download the latest `Wisp-x.y.z.zip` from [Releases](https://github.com/krsambhav/wisp/releases), unzip, and drag **Wisp.app** to Applications. Needs macOS 14 or later.
+
+The first launch is blocked by Gatekeeper because the build is signed with a developer certificate but not notarized: open **System Settings → Privacy & Security**, scroll down and click **Open Anyway** next to the Wisp message. That is a one-time step; nothing else to configure.
+
+**Updates** are built in. Wisp checks this repository's Releases shortly after launch and every six hours (toggle in Settings → General → Updates, or use **Wisp → Check for Updates…**). When a newer version exists a pill appears in the header; one click downloads the zip, verifies that it is signed by the same developer as the running app, swaps the bundle in place and relaunches. Nothing is installed without that click, and updates never touch your WhatsApp sessions.
+
 ## Features
 
 **Core**
@@ -74,6 +82,8 @@ scripts/dev-run.sh --mock   # bundled mock page, no phone needed
 ```
 
 Local notification testing needs a real signing identity; see [docs/BUILD.md](docs/BUILD.md).
+
+To ship a build to someone, `scripts/package-release.sh` produces a signed `dist/Wisp-<version>.zip`. To publish a release that existing installs pick up through the in-app updater, run `scripts/release.sh <version>` (bumps the version, tags, builds, pushes and creates the GitHub Release with the zip attached).
 
 ## Keyboard shortcuts
 

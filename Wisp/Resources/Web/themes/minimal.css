@@ -120,7 +120,7 @@ section[data-testid="intro-panel"] [data-testid="intro_panel_v2_title_card"] { b
 /* ---- Bubbles ------------------------------------------------------------ */
 /* Untagged outgoing bubbles render like incoming ones (readable) until the core
    script tags them a frame later; stickers/media (data-wisp-plain) stay transparent. */
-html, html[data-wisp-scheme="dark"] { --WDS-systems-bubble-surface-outgoing: var(--wisp-bubble-incoming) !important; --outgoing-background: var(--wisp-bubble-incoming) !important; }
+html, html[data-wisp-scheme="dark"] { --WDS-systems-bubble-surface-outgoing: var(--wisp-bubble-incoming) !important; --WDS-systems-bubble-surface-outgoing-RGB: var(--wisp-bubble-incoming-rgb) !important; --outgoing-background: var(--wisp-bubble-incoming) !important; }
 #main [data-wisp-bubble="out"]:not([data-wisp-plain]) { background: var(--wisp-bubble-outgoing) !important; }
 #main [data-wisp-bubble], #main div:has(> span[data-icon^="tail-"]) { border-radius: 18px !important; box-shadow: none !important; }
 #main span[data-icon="tail-in"], #main span[data-icon="tail-out"] { display: none !important; }
@@ -141,6 +141,7 @@ html, html[data-wisp-scheme="dark"] { --WDS-systems-bubble-surface-outgoing: var
   --WDS-systems-bubble-surface-overlay: color-mix(in srgb, var(--wisp-bubble-out-fg) 12%, transparent);
   --WDS-systems-bubble-surface-incoming: color-mix(in srgb, var(--wisp-bubble-out-fg) 12%, transparent);
   --WDS-systems-bubble-surface-outgoing: var(--wisp-bubble-outgoing);
+  --WDS-systems-bubble-surface-outgoing-RGB: var(--wisp-bubble-outgoing-rgb);
   --WDS-systems-bubble-surface-system: color-mix(in srgb, var(--wisp-bubble-out-fg) 12%, transparent);
   --WDS-surface-default: color-mix(in srgb, var(--wisp-bubble-out-fg) 10%, transparent);
   --WDS-surface-emphasized: color-mix(in srgb, var(--wisp-bubble-out-fg) 16%, transparent);

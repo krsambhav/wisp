@@ -1,5 +1,6 @@
 # Xcode / build
 Wisp/build/
+build/
 Wisp/build-tests/
 Wisp/build-release/
 Wisp/DerivedData/

@@ -150,3 +150,14 @@ To sign from Xcode instead, set `DEVELOPMENT_TEAM` and `CODE_SIGN_IDENTITY: "App
    ```
 
 6. Distribute the stapled `.app` in a zip or DMG. Users should move it to `/Applications` before first launch to avoid App Translocation.
+
+## Publishing a release (in-app updater)
+
+`UpdateManager` reads `https://api.github.com/repos/krsambhav/wisp/releases/latest` and compares the tag (`v1.2.3`) with `CFBundleShortVersionString`. The first asset named `Wisp*.zip` is downloaded into the sandbox container, extracted with `ditto`, checked with `SecStaticCodeCheckValidity` against the running app's Team ID and bundle identifier, swapped into place (rename old → rename new, old removed) and the app relaunches through a tiny `/bin/sh` helper that waits for the old process to exit. Files Wisp downloads itself carry no quarantine flag, so Gatekeeper does not re-prompt after an update.
+
+```sh
+scripts/release.sh 1.0.1 --notes "What changed"          # Apple Development signed (default)
+scripts/release.sh 1.0.1 --identity "Developer ID Application" --notarize
+```
+
+The script refuses to run on a dirty tree or an existing tag. It bumps `CFBundleShortVersionString`/`CFBundleVersion` in `project.yml`, regenerates the project, commits "Release x.y.z", tags `vx.y.z`, runs `package-release.sh`, pushes, and calls `gh release create` with the zip. The updater only needs write access to the folder the app lives in: `/Applications` and `~/Applications` are covered by temporary-exception entitlements; anywhere else it asks once for the folder and keeps a security-scoped bookmark. Set `WISP_DEBUG_VERSION=0.9.0` on a Debug build to exercise the full path against a real release.

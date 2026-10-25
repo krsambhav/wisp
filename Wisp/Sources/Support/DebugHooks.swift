@@ -20,6 +20,7 @@ import WebKit
 ///   WISP_DEBUG_THEME_DIR=<dir>       load theme CSS from this directory and hot-reload it on change
 ///   WISP_DEBUG_SNAPSHOT_DIR=<dir>    touch <dir>/snap.request to write <dir>/snap.png (page) + window PNGs;
 ///                                    touch <dir>/outline.request to run <dir>/outline.js (core world) → outline.txt
+///                                    write "check"|"install" to <dir>/update.request to drive the updater → update.txt
 ///   WISP_DEBUG_IMPORT_SCRIPT=<path>  import a .js file as an enabled user script
 ///   WISP_DEBUG_CSS=<path>            load custom CSS from a file
 ///   WISP_DEBUG_RESET_SCRIPTS=1       delete all user scripts first
@@ -93,6 +94,16 @@ enum DebugHooks {
                 }
                 try? text.write(to: url.appendingPathComponent("outline.txt"), atomically: true, encoding: .utf8)
                 Log.info("Outline written to \(dir)/outline.txt", .web)
+            }
+        }
+        let updateReq = url.appendingPathComponent("update.request")
+        if FileManager.default.fileExists(atPath: updateReq.path) {
+            let mode = ((try? String(contentsOf: updateReq, encoding: .utf8)) ?? "check").trimmingCharacters(in: .whitespacesAndNewlines)
+            try? FileManager.default.removeItem(at: updateReq)
+            Task { @MainActor in
+                await app.updates.check(userInitiated: true)
+                if mode == "install" { await app.updates.downloadAndInstall() }
+                try? "\(app.updates.state)".write(to: url.appendingPathComponent("update.txt"), atomically: true, encoding: .utf8)
             }
         }
         let req = url.appendingPathComponent("snap.request")

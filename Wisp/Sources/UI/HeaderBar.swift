@@ -16,6 +16,7 @@ struct HeaderBar: View {
             Spacer().frame(width: 84)
             AccountSwitcher(palette: palette)
             Spacer(minLength: 16)
+            updatePill
             statusPill
             HStack(spacing: 2) {
                 HeaderIconButton(icon: env.settings.notifications.isEffectivelyMuted ? "bell-off" : "bell",
@@ -30,6 +31,23 @@ struct HeaderBar: View {
         .background(palette.shellBackground.color)
         .overlay(alignment: .bottom) { Rectangle().fill(palette.shellDivider.color).frame(height: 0.5) }
         .foregroundStyle(fg)
+    }
+
+    @ViewBuilder private var updatePill: some View {
+        switch env.updates.state {
+        case .available(let r):
+            Button { Task { await env.updates.downloadAndInstall() } } label: { WBadge(text: "Update to \(r.version)", color: WispUI.success) }
+                .buttonStyle(.plain).help("Download and install Wisp \(r.version), then relaunch")
+        case .downloading:
+            WBadge(text: "Downloading update", color: WispUI.mutedForeground)
+        case .installing:
+            WBadge(text: "Installing update", color: WispUI.mutedForeground)
+        case .installed(let r):
+            Button { env.updates.relaunch() } label: { WBadge(text: "Relaunch for \(r.version)", color: WispUI.success) }
+                .buttonStyle(.plain)
+        default:
+            EmptyView()
+        }
     }
 
     @ViewBuilder private var statusPill: some View {

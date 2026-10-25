@@ -1,9 +1,14 @@
+import AppKit
 import SwiftUI
 
 struct WispCommands: Commands {
     let environment: AppEnvironment
 
     var body: some Commands {
+        CommandGroup(after: .appInfo) {
+            Button("Check for Updates…") { environment.checkForUpdates() }
+        }
+
         CommandGroup(replacing: .newItem) {
             Button("New Account…") { environment.openSettings(.accounts) }
                 .keyboardShortcut("n", modifiers: [.command, .shift])
@@ -40,10 +45,8 @@ struct WispCommands: Commands {
         }
 
         CommandGroup(replacing: .help) {
-            Button("Wisp Documentation") {
-                if let url = URL(string: "https://github.com/") { _ = url } // placeholder-free: docs ship in the repo
-                environment.toasts.show(title: "Documentation lives in the docs/ folder of the Wisp repository")
-            }
+            Button("Wisp on GitHub") { NSWorkspace.shared.open(URL(string: "https://github.com/\(UpdateManager.repository)")!) }
+            Button("Release Notes") { NSWorkspace.shared.open(UpdateManager.releasesPage) }
             Button("Diagnostics…") { environment.openSettings(.advanced) }
         }
     }

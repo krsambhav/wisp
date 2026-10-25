@@ -68,6 +68,10 @@ targets:
     entitlements:
       path: Resources/Wisp.entitlements
       properties:
+        # In-app updater: replace the bundle where it normally lives without a prompt.
+        # Elsewhere it falls back to a one-time folder pick (security-scoped bookmark).
+        com.apple.security.temporary-exception.files.absolute-path.read-write: ["/Applications/"]
+        com.apple.security.temporary-exception.files.home-relative-path.read-write: ["/Applications/"]
         com.apple.security.app-sandbox: true
         com.apple.security.network.client: true
         com.apple.security.device.audio-input: true

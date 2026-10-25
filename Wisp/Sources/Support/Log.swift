@@ -3,7 +3,7 @@ import os
 
 /// Log categories map 1:1 to subsystems so Console.app filtering is useful.
 nonisolated enum LogCategory: String, CaseIterable, Sendable {
-    case app, window, web, injection, scripts, notifications, accounts, downloads, performance, settings
+    case app, window, web, injection, scripts, notifications, accounts, downloads, performance, settings, updates
 }
 
 nonisolated enum LogLevel: Int, Codable, Sendable, Comparable, CaseIterable, Identifiable {

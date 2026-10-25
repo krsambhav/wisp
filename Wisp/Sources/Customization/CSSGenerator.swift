@@ -90,6 +90,8 @@ nonisolated enum CSSGenerator {
           --wisp-outline: \(p.outline.css);
           --wisp-bubble-incoming: \(p.bubbleIncoming.css);
           --wisp-bubble-outgoing: \(p.bubbleOutgoing.css);
+          --wisp-bubble-incoming-rgb: \(p.bubbleIncoming.rgbTriplet);
+          --wisp-bubble-outgoing-rgb: \(p.bubbleOutgoing.rgbTriplet);
           --wisp-chat-background: \(p.chatBackground.css);
           --wisp-composer: \(p.composer.css);
           --wisp-unread-badge: \(p.unreadBadge.css);
@@ -128,8 +130,8 @@ nonisolated enum CSSGenerator {
         s += t("WDS-lines-divider", p.divider) + rgb("WDS-lines-divider-RGB", p.divider)
         s += t("WDS-lines-outline-default", p.outline)
         s += t("WDS-lines-outline-deemphasized", p.outlineDeemphasized)
-        s += t("WDS-systems-bubble-surface-incoming", p.bubbleIncoming)
-        s += t("WDS-systems-bubble-surface-outgoing", p.bubbleOutgoing)
+        s += t("WDS-systems-bubble-surface-incoming", p.bubbleIncoming) + rgb("WDS-systems-bubble-surface-incoming-RGB", p.bubbleIncoming)
+        s += t("WDS-systems-bubble-surface-outgoing", p.bubbleOutgoing) + rgb("WDS-systems-bubble-surface-outgoing-RGB", p.bubbleOutgoing)
         s += t("WDS-systems-bubble-surface-system", p.bubbleSystem)
         s += t("WDS-systems-bubble-content-deemphasized", p.bubbleMeta)
         s += t("WDS-systems-chat-background-wallpaper", p.chatBackground)
