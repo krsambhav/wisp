@@ -23,11 +23,13 @@
 		316842389CA09E1F60A89D9F /* NotificationsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D8CB5075BF83524A4E1FFC4 /* NotificationsSettingsView.swift */; };
 		33ED15E8D083B7B9C96F1659 /* WDropdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = 073CECC2062F9BDA0E9D3B47 /* WDropdown.swift */; };
 		376DD4E2667E1DD114B6DC4B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A81AC6D1098F0F519B3A60EE /* Assets.xcassets */; };
+		3F1020CCDE29614C2663098E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 319076CACB92A3A3F8ED198D /* main.swift */; };
 		413AEC9DC816F414D0B85551 /* Commands.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9FCF9795526624BBB551802 /* Commands.swift */; };
 		46A433CC2DD61C0CB9E060C1 /* ScriptMessageRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E634539835C16CEF1579A33 /* ScriptMessageRouter.swift */; };
 		5459D787DB08BB109552E5E0 /* NotificationDeduper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B187F944AC0FED1CDBE5839D /* NotificationDeduper.swift */; };
 		5535C4676EA8FBCCB486F998 /* CustomCSSStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA597BB303A924BAE39F5BC2 /* CustomCSSStore.swift */; };
 		5F5F5ECCE02C7190C650E88D /* GlobalHotKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1355DB1BFFD1E68CB353FE46 /* GlobalHotKey.swift */; };
+		67C9D462827A20E4C04E45FB /* UpdateHelperProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3059F1C7092479B59AEE2023 /* UpdateHelperProtocol.swift */; };
 		6870C64DBF6105DA2F985A9F /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CBF1D115C3B3EDFC2A3F08 /* Log.swift */; };
 		6B828349FA7964AF65247B62 /* SettingsRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE22C323FE0380923DFB9AE2 /* SettingsRootView.swift */; };
 		6BC487395397EC1266A0296D /* wisp-page.js in Resources */ = {isa = PBXBuildFile; fileRef = 1F84F2A5A36D915F822C5B3F /* wisp-page.js */; };
@@ -49,9 +51,11 @@
 		9AE74602809FDF0C1599A3E5 /* AppearanceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E12607F9F4690C2D785F84 /* AppearanceSettingsView.swift */; };
 		A123225CE0CBF7126ADB93D7 /* LaunchAtLogin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36EB16F2FD446272EF2A8E90 /* LaunchAtLogin.swift */; };
 		A7391350B3124830C21CC6F3 /* ScriptStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4AF49D7E645911049E5DB93 /* ScriptStore.swift */; };
+		A95F5E7403D41FD823A08A3C /* WispUpdateHelper.xpc in CopyFiles */ = {isa = PBXBuildFile; fileRef = C34AF5E75C87EB48FF250473 /* WispUpdateHelper.xpc */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A969C1327171911AAF5C3C8F /* ScriptsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54D5C2DC3E92E215B7A5C8CA /* ScriptsSettingsView.swift */; };
 		B1587027C6F57EB77E0EC5C7 /* PresetIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 363BF57149F6B5AAC92E31E0 /* PresetIO.swift */; };
 		B251F790B5D6FCB67C0C6E61 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29DB8DC4A87CE9F34C6023A6 /* DesignTokens.swift */; };
+		B71E010F927C8D9DCB5FF538 /* UpdateHelperProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3059F1C7092479B59AEE2023 /* UpdateHelperProtocol.swift */; };
 		BB5F9C474C74B8837AFA7606 /* Paths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B9B7B0C6496966AC951001B /* Paths.swift */; };
 		BCCFC9F85F3527D04FBABE0B /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 991F2463D2820E2C966E21F2 /* SessionManager.swift */; };
 		C41BF7AA33F304880583BDAF /* whatsapp-mock.html in Resources */ = {isa = PBXBuildFile; fileRef = EF21546B130CDE107DA8D35A /* whatsapp-mock.html */; };
@@ -85,7 +89,27 @@
 			remoteGlobalIDString = 9FED08DA26E69D96AED0CA8F;
 			remoteInfo = Wisp;
 		};
+		3A19D031FFD494D961B23D63 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2B79780F0B29692CEE165AFF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3818783F2405202AE17F47A6;
+			remoteInfo = WispUpdateHelper;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8851B46EBA5FFE234FB70DFD /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
+			dstSubfolderSpec = 16;
+			files = (
+				A95F5E7403D41FD823A08A3C /* WispUpdateHelper.xpc in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		073CECC2062F9BDA0E9D3B47 /* WDropdown.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WDropdown.swift; sourceTree = "<group>"; };
@@ -100,8 +124,10 @@
 		29DB8DC4A87CE9F34C6023A6 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
 		2ADF441E71AB703809F03DCC /* HeaderBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderBar.swift; sourceTree = "<group>"; };
 		2D70C3574410BD2EA0C39AE2 /* GeneralSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsView.swift; sourceTree = "<group>"; };
+		3059F1C7092479B59AEE2023 /* UpdateHelperProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateHelperProtocol.swift; sourceTree = "<group>"; };
 		30A6D250437101BD16A0EF18 /* MainShellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainShellView.swift; sourceTree = "<group>"; };
 		313969E753E3FF9C22088FDF /* UserAgent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserAgent.swift; sourceTree = "<group>"; };
+		319076CACB92A3A3F8ED198D /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		325B4025CEE91B187FF7D362 /* WispTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WispTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		349871CD61DECFF2CCCD7220 /* Debouncer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Debouncer.swift; sourceTree = "<group>"; };
 		34D54DF54F2D122DB9D9432F /* NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
@@ -142,10 +168,12 @@
 		BF2E3F6951BD4CEE383A3B2A /* CustomScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomScript.swift; sourceTree = "<group>"; };
 		BFA1D0C4069F4568EC0D2906 /* WKWebView+Eval.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WKWebView+Eval.swift"; sourceTree = "<group>"; };
 		C2EBFB3271B10A8315237F28 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
+		C34AF5E75C87EB48FF250473 /* WispUpdateHelper.xpc */ = {isa = PBXFileReference; explicitFileType = "wrapper.xpc-service"; includeInIndex = 0; path = WispUpdateHelper.xpc; sourceTree = BUILT_PRODUCTS_DIR; };
 		C48C1A0B0B5F5FF1899CFEF3 /* default.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = default.css; sourceTree = "<group>"; };
 		C527A4100B05CFC787F383C3 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		C5D8EB4570EB13587E9F0E37 /* CSSGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSSGenerator.swift; sourceTree = "<group>"; };
 		C66D73E77D0EAD042C9AC3C5 /* ToastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastView.swift; sourceTree = "<group>"; };
+		C6A60E89D68BCCA06E957C24 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CED376D64080E299E8AF1EE8 /* AccountsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsSettingsView.swift; sourceTree = "<group>"; };
 		CFDF9361EACB342CC167C56A /* WebViewContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebViewContainer.swift; sourceTree = "<group>"; };
 		D0CBF1D115C3B3EDFC2A3F08 /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
@@ -204,6 +232,15 @@
 			path = themes;
 			sourceTree = "<group>";
 		};
+		2741D7E5B0944B241A9CA62B /* Helper */ = {
+			isa = PBXGroup;
+			children = (
+				C6A60E89D68BCCA06E957C24 /* Info.plist */,
+				319076CACB92A3A3F8ED198D /* main.swift */,
+			);
+			path = Helper;
+			sourceTree = "<group>";
+		};
 		31D7444BE720694450D5E092 /* Platform */ = {
 			isa = PBXGroup;
 			children = (
@@ -250,6 +287,14 @@
 				8B9B7B0C6496966AC951001B /* Paths.swift */,
 			);
 			path = Support;
+			sourceTree = "<group>";
+		};
+		6B53D34E779136B1A39C5376 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				3059F1C7092479B59AEE2023 /* UpdateHelperProtocol.swift */,
+			);
+			path = Shared;
 			sourceTree = "<group>";
 		};
 		8426D56C9D180D8186C0FE03 /* Customization */ = {
@@ -319,6 +364,7 @@
 			children = (
 				9419236D77396D53BBCDB867 /* Wisp.app */,
 				325B4025CEE91B187FF7D362 /* WispTests.xctest */,
+				C34AF5E75C87EB48FF250473 /* WispUpdateHelper.xpc */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -339,7 +385,9 @@
 		B980EDE3FE52D6F007934D46 = {
 			isa = PBXGroup;
 			children = (
+				2741D7E5B0944B241A9CA62B /* Helper */,
 				8CF29B374AFEBC0343C93E1D /* Resources */,
+				6B53D34E779136B1A39C5376 /* Shared */,
 				DC91FCE8149294B16394408C /* Sources */,
 				A2803158F58256EA947FCE9C /* Tests */,
 				B7756A2DAF10E6E2D9C5CA77 /* Products */,
@@ -392,16 +440,35 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		3818783F2405202AE17F47A6 /* WispUpdateHelper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D5AABAA57EBD81562D843F99 /* Build configuration list for PBXNativeTarget "WispUpdateHelper" */;
+			buildPhases = (
+				F26C374A36AE2B538E3FED17 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = WispUpdateHelper;
+			packageProductDependencies = (
+			);
+			productName = WispUpdateHelper;
+			productReference = C34AF5E75C87EB48FF250473 /* WispUpdateHelper.xpc */;
+			productType = "com.apple.product-type.xpc-service";
+		};
 		9FED08DA26E69D96AED0CA8F /* Wisp */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = DB7B583FB74B1FCF01BEC40C /* Build configuration list for PBXNativeTarget "Wisp" */;
 			buildPhases = (
 				9D93DB780FFF4DC6180B4608 /* Sources */,
 				FCFBC2DD2F37A7B9481D6068 /* Resources */,
+				8851B46EBA5FFE234FB70DFD /* CopyFiles */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				5ED48C03980F4DD38C6AA940 /* PBXTargetDependency */,
 			);
 			name = Wisp;
 			packageProductDependencies = (
@@ -437,6 +504,10 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
+					3818783F2405202AE17F47A6 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Manual;
+					};
 					9FED08DA26E69D96AED0CA8F = {
 						DevelopmentTeam = "";
 						ProvisioningStyle = Manual;
@@ -462,6 +533,7 @@
 			projectRoot = "";
 			targets = (
 				9FED08DA26E69D96AED0CA8F /* Wisp */,
+				3818783F2405202AE17F47A6 /* WispUpdateHelper */,
 				B5F8519D0E8D4DCDA0099DF4 /* WispTests */,
 			);
 		};
@@ -547,6 +619,7 @@
 				E398C5B0B9498EAAFF2271B1 /* Theme.swift in Sources */,
 				1E18BA701C9F1E0AA3A1091B /* ThemeCatalog.swift in Sources */,
 				F980BC0DFF81D229421F2649 /* ToastView.swift in Sources */,
+				67C9D462827A20E4C04E45FB /* UpdateHelperProtocol.swift in Sources */,
 				6D9D8424DF895BBBC86A2B1F /* UpdateInstaller.swift in Sources */,
 				31659215AE4BDA42CF9E38C4 /* UpdateManager.swift in Sources */,
 				CC23F07D36158D042D6069DC /* UserAgent.swift in Sources */,
@@ -560,9 +633,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F26C374A36AE2B538E3FED17 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B71E010F927C8D9DCB5FF538 /* UpdateHelperProtocol.swift in Sources */,
+				3F1020CCDE29614C2663098E /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		5ED48C03980F4DD38C6AA940 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3818783F2405202AE17F47A6 /* WispUpdateHelper */;
+			targetProxy = 3A19D031FFD494D961B23D63 /* PBXContainerItemProxy */;
+		};
 		E370462E3CE522F438F2A7E8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 9FED08DA26E69D96AED0CA8F /* Wisp */;
@@ -637,6 +724,23 @@
 				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
+		};
+		5A572C387EB1494256595CFC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Helper/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.wisp.desktop.UpdateHelper;
+				PRODUCT_NAME = WispUpdateHelper;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+			};
+			name = Debug;
 		};
 		7FCA432365544BB1B03D9352 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -730,6 +834,23 @@
 			};
 			name = Debug;
 		};
+		8DDA527E9F3CEDA036E9C4A6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Helper/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.wisp.desktop.UpdateHelper;
+				PRODUCT_NAME = WispUpdateHelper;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+			};
+			name = Release;
+		};
 		90AEBF1A52E3D22BDAD454A2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -803,6 +924,15 @@
 			buildConfigurations = (
 				804ABEB7077DA0CAF48FBF97 /* Debug */,
 				3498F71907768D50CCE6902E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D5AABAA57EBD81562D843F99 /* Build configuration list for PBXNativeTarget "WispUpdateHelper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5A572C387EB1494256595CFC /* Debug */,
+				8DDA527E9F3CEDA036E9C4A6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

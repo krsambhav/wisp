@@ -61,7 +61,6 @@ final class UpdateManager {
         static let automatic = "wisp.updates.automatic"
     }
     private static let checkInterval: TimeInterval = 6 * 60 * 60
-    private var relaunchHelper: Process?
     private var periodicTask: Task<Void, Never>?
 
     /// Running version. `WISP_DEBUG_VERSION` lets a Debug build pretend to be
@@ -130,41 +129,28 @@ final class UpdateManager {
             let staged = try await UpdateInstaller.downloadAndStage(release)
             state = .installing(release)
             try UpdateInstaller.verify(appAt: staged, expectedVersion: release.version)
-            try await installWithAccess(staged: staged, target: Bundle.main.bundleURL)
+            let target = Bundle.main.bundleURL
+            if target.path.contains("/AppTranslocation/") { throw UpdateError.translocated }
+            // The helper swaps the bundle and arms a relauncher that fires once
+            // this process exits; quitting goes through the normal path so the
+            // web views unload and WhatsApp's IndexedDB is flushed.
+            try await UpdateInstaller.installViaHelper(staged: staged, target: target, relaunchAfterPID: ProcessInfo.processInfo.processIdentifier)
             state = .installed(release)
-            Log.info("Installed \(release.version) at \(Bundle.main.bundleURL.path)", .updates)
-            relaunch()
+            Log.info("Installed \(release.version) at \(target.path); quitting to relaunch", .updates)
+            NSApp.terminate(nil)
+            // Reached only if termination was cancelled (sync guard / confirm dialog).
+            Log.info("Quit cancelled; \(release.version) starts on next launch", .updates)
         } catch {
             Log.error("Update failed: \(error.localizedDescription)", .updates)
             state = .failed(error.localizedDescription)
         }
     }
 
-    /// Swap the bundle; if the sandbox denies the write, ask once for the
-    /// folder (security-scoped bookmark, remembered) and retry.
-    private func installWithAccess(staged: URL, target: URL) async throws {
-        if target.path.contains("/AppTranslocation/") {
-            throw UpdateError.translocated
-        }
-        do {
-            try UpdateInstaller.swap(staged: staged, into: target)
-        } catch {
-            let folder = target.deletingLastPathComponent()
-            guard let access = UpdateInstaller.requestAccess(to: folder) else { throw error }
-            defer { access.stopAccessingSecurityScopedResource() }
-            try UpdateInstaller.swap(staged: staged, into: target)
-        }
-    }
-
-    /// Quit through the normal path (sessions unload, IndexedDB flushes) and
-    /// have a tiny shell helper reopen the new bundle once this process exits.
+    /// Quit so the helper's relauncher (armed during install) opens the new
+    /// bundle. If the helper is no longer armed (it gives up after two
+    /// minutes) the new version simply starts next time Wisp is opened.
     func relaunch() {
-        relaunchHelper?.terminate()
-        relaunchHelper = UpdateInstaller.spawnRelauncher(for: Bundle.main.bundleURL)
         NSApp.terminate(nil)
-        // Reached only if termination was cancelled (sync guard / confirm dialog).
-        relaunchHelper?.terminate()
-        relaunchHelper = nil
     }
 
     func openReleaseNotes() {
@@ -173,7 +159,7 @@ final class UpdateManager {
 }
 
 nonisolated enum UpdateError: LocalizedError {
-    case noAsset, badArchive, signature(String), versionMismatch(String), translocated, noAccess
+    case noAsset, badArchive, signature(String), versionMismatch(String), translocated, helper(String)
 
     var errorDescription: String? {
         switch self {
@@ -182,7 +168,7 @@ nonisolated enum UpdateError: LocalizedError {
         case .signature(let why): "The update's signature could not be verified (\(why))."
         case .versionMismatch(let v): "The downloaded app reports version \(v), not the release version."
         case .translocated: "Move Wisp to your Applications folder first, then update."
-        case .noAccess: "Wisp was not given permission to replace itself."
+        case .helper(let why): "The update could not be installed (\(why))."
         }
     }
 }

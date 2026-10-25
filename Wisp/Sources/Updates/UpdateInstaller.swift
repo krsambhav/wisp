@@ -38,10 +38,9 @@ nonisolated enum UpdateFeed {
     }
 }
 
-/// Download, verify and swap. Everything runs inside the app sandbox: the
-/// archive is extracted in the container's temp dir with `ditto`, the bundle
-/// swap needs write access to the app's parent folder (granted by the
-/// `/Applications` temporary-exception entitlements or a one-time folder pick).
+/// Download, verify, then hand over to the XPC helper. Download and extraction
+/// (`ditto`) happen inside the sandbox in the container's temp dir; the swap
+/// into /Applications and the relaunch happen in WispUpdateHelper.
 nonisolated enum UpdateInstaller {
     // MARK: Download
 
@@ -66,7 +65,6 @@ nonisolated enum UpdateInstaller {
         guard let app = try fm.contentsOfDirectory(at: stage, includingPropertiesForKeys: nil).first(where: { $0.pathExtension == "app" }) else {
             throw UpdateError.badArchive
         }
-        removeQuarantine(at: app)
         return app
     }
 
@@ -110,77 +108,35 @@ nonisolated enum UpdateInstaller {
         return (info as? [String: Any])?[kSecCodeInfoTeamIdentifier as String] as? String
     }
 
-    // MARK: Swap
+    // MARK: Install (via XPC helper)
 
-    static func swap(staged: URL, into target: URL) throws {
-        let fm = FileManager.default
-        let parent = target.deletingLastPathComponent()
-        let old = parent.appendingPathComponent(".\(target.deletingPathExtension().lastPathComponent)-old-\(ProcessInfo.processInfo.processIdentifier).app")
-        try fm.moveItem(at: target, to: old)
-        do {
-            try fm.moveItem(at: staged, to: target)
-        } catch {
-            try? fm.moveItem(at: old, to: target)   // roll back
-            throw error
+    /// The sandbox quarantines everything we write and will not let us clear
+    /// the flag, so the swap and the relaunch run in the unsandboxed
+    /// WispUpdateHelper XPC service (Contents/XPCServices).
+    static func installViaHelper(staged: URL, target: URL, relaunchAfterPID pid: Int32) async throws {
+        let connection = NSXPCConnection(serviceName: WispUpdateHelper.serviceName)
+        connection.remoteObjectInterface = NSXPCInterface(with: WispUpdateHelperProtocol.self)
+        connection.resume()
+        defer { connection.invalidate() }
+        let once = OnceBox()
+        let failure: String? = try await withCheckedThrowingContinuation { cont in
+            let proxy = connection.remoteObjectProxyWithErrorHandler { error in
+                once.run { cont.resume(throwing: UpdateError.helper("service unavailable: \(error.localizedDescription)")) }
+            } as! WispUpdateHelperProtocol
+            proxy.install(staged: staged.path, target: target.path, relaunchAfterPID: pid) { message in
+                once.run { cont.resume(returning: message) }
+            }
         }
-        // The running executable is mapped from `old`; unlinking is fine on
-        // macOS. If it fails (permissions) the next launch sweeps it.
-        try? fm.removeItem(at: old)
+        if let failure { throw UpdateError.helper(failure) }
     }
 
     static func cleanUpLeftovers(next bundle: URL) {
         let fm = FileManager.default
         let parent = bundle.deletingLastPathComponent()
-        guard let items = try? fm.contentsOfDirectory(at: parent, includingPropertiesForKeys: nil, options: [.skipsSubdirectoryDescendants]) else { return }
-        for url in items where url.lastPathComponent.hasPrefix(".Wisp-old-") && url.pathExtension == "app" {
-            try? fm.removeItem(at: url)
+        if let items = try? fm.contentsOfDirectory(at: parent, includingPropertiesForKeys: nil, options: [.skipsSubdirectoryDescendants]) {
+            for url in items where url.lastPathComponent.hasPrefix(".Wisp-old-") && url.pathExtension == "app" { try? fm.removeItem(at: url) }
         }
         try? fm.removeItem(at: Paths.temporaryDirectory)
-    }
-
-    // MARK: Access
-
-    /// Security-scoped access to the folder the app lives in. Remembered in a
-    /// bookmark; on first use shows a pre-navigated panel with a single "Allow".
-    @MainActor
-    static func requestAccess(to folder: URL) -> URL? {
-        let key = "wisp.updates.folderBookmark"
-        if let data = UserDefaults.standard.data(forKey: key) {
-            var stale = false
-            if let url = try? URL(resolvingBookmarkData: data, options: .withSecurityScope, relativeTo: nil, bookmarkDataIsStale: &stale),
-               url.standardizedFileURL == folder.standardizedFileURL, url.startAccessingSecurityScopedResource() {
-                return url
-            }
-        }
-        let panel = NSOpenPanel()
-        panel.message = "Wisp needs permission to replace itself in “\(folder.lastPathComponent)”. Click Allow to continue."
-        panel.prompt = "Allow"
-        panel.directoryURL = folder
-        panel.canChooseDirectories = true
-        panel.canChooseFiles = false
-        panel.canCreateDirectories = false
-        panel.allowsMultipleSelection = false
-        NSApp.activateFrontmost()
-        guard panel.runModal() == .OK, let url = panel.url, url.standardizedFileURL == folder.standardizedFileURL else { return nil }
-        if let data = try? url.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil) {
-            UserDefaults.standard.set(data, forKey: key)
-        }
-        return url.startAccessingSecurityScopedResource() ? url : nil
-    }
-
-    // MARK: Relaunch
-
-    /// `/bin/sh` that waits for this pid to exit, then opens the bundle.
-    /// Gives up after two minutes so a cancelled quit never relaunches later.
-    static func spawnRelauncher(for bundle: URL) -> Process? {
-        let pid = ProcessInfo.processInfo.processIdentifier
-        let quoted = bundle.path.replacingOccurrences(of: "'", with: "'\\''")
-        let script = "i=0; while /bin/kill -0 \(pid) 2>/dev/null; do /bin/sleep 0.2; i=$((i+1)); [ $i -gt 600 ] && exit 0; done; /usr/bin/open '\(quoted)'"
-        let p = Process()
-        p.executableURL = URL(fileURLWithPath: "/bin/sh")
-        p.arguments = ["-c", script]
-        p.standardOutput = nil; p.standardError = nil
-        do { try p.run(); return p } catch { Log.error("Relaunch helper failed: \(error.localizedDescription)", .updates); return nil }
     }
 
     // MARK: Helpers
@@ -196,14 +152,17 @@ nonisolated enum UpdateInstaller {
         guard status == 0 else { throw UpdateError.badArchive }
     }
 
-    /// Belt and braces: strip com.apple.quarantine recursively so the new
-    /// bundle launches without Gatekeeper's "unidentified developer" stop.
-    private static func removeQuarantine(at root: URL) {
-        let fm = FileManager.default
-        var paths = [root.path]
-        if let e = fm.enumerator(at: root, includingPropertiesForKeys: nil, options: []) {
-            for case let u as URL in e { paths.append(u.path) }
-        }
-        for p in paths { removexattr(p, "com.apple.quarantine", XATTR_NOFOLLOW) }
+}
+
+/// Guards a continuation against being resumed by both the XPC error handler
+/// and the reply block.
+nonisolated final class OnceBox: @unchecked Sendable {
+    private let lock = NSLock()
+    private var done = false
+    func run(_ body: () -> Void) {
+        lock.lock(); defer { lock.unlock() }
+        guard !done else { return }
+        done = true
+        body()
     }
 }

@@ -37,6 +37,7 @@ targets:
     platform: macOS
     sources:
       - path: Sources
+      - path: Shared
       - path: Resources
         excludes:
           - "Info.plist"
@@ -68,10 +69,6 @@ targets:
     entitlements:
       path: Resources/Wisp.entitlements
       properties:
-        # In-app updater: replace the bundle where it normally lives without a prompt.
-        # Elsewhere it falls back to a one-time folder pick (security-scoped bookmark).
-        com.apple.security.temporary-exception.files.absolute-path.read-write: ["/Applications/"]
-        com.apple.security.temporary-exception.files.home-relative-path.read-write: ["/Applications/"]
         com.apple.security.app-sandbox: true
         com.apple.security.network.client: true
         com.apple.security.device.audio-input: true
@@ -87,6 +84,32 @@ targets:
         ENABLE_PREVIEWS: YES
         COMBINE_HIDPI_IMAGES: YES
         OTHER_SWIFT_FLAGS: "$(inherited)"
+    dependencies:
+      - target: WispUpdateHelper
+        embed: true
+  # Unsandboxed XPC service used by the in-app updater (see Helper/main.swift).
+  # Signed separately by scripts/sign-dev.sh and scripts/package-release.sh so it
+  # never inherits the app's sandbox entitlement.
+  WispUpdateHelper:
+    type: xpc-service
+    platform: macOS
+    sources:
+      - path: Helper
+      - path: Shared
+    info:
+      path: Helper/Info.plist
+      properties:
+        CFBundleName: WispUpdateHelper
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "1"
+        XPCService:
+          ServiceType: Application
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.wisp.desktop.UpdateHelper
+        PRODUCT_NAME: WispUpdateHelper
+        SWIFT_DEFAULT_ACTOR_ISOLATION: nonisolated
+        SKIP_INSTALL: YES
   WispTests:
     type: bundle.unit-test
     platform: macOS

@@ -5,7 +5,4 @@
 set -euo pipefail
 APP="${1:-$(dirname "$0")/../Wisp/build/Build/Products/Debug/Wisp.app}"
 IDENTITY="${2:-Apple Development}"
-ENTITLEMENTS="$(dirname "$0")/../Wisp/Resources/Wisp.entitlements"
-codesign --force --deep --options runtime --timestamp=none --entitlements "$ENTITLEMENTS" --sign "$IDENTITY" "$APP"
-codesign --verify --deep --strict "$APP" && echo "Signed: $APP"
-codesign -dvv "$APP" 2>&1 | grep -E "^Authority|TeamIdentifier" | head -2
+"$(dirname "$0")/sign-app.sh" "$APP" "$IDENTITY" --timestamp=none

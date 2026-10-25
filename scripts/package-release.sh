@@ -29,10 +29,7 @@ ZIP="$OUT_DIR/Wisp-$VERSION.zip"
 mkdir -p "$OUT_DIR"
 
 echo "▸ Signing with '$IDENTITY'…"
-codesign --force --deep --options runtime --timestamp --entitlements "$ENTITLEMENTS" \
-  --sign "$IDENTITY" "$APP"
-codesign --verify --deep --strict "$APP"
-codesign -dvv "$APP" 2>&1 | grep -E "^Authority|TeamIdentifier" | head -2
+"$ROOT/scripts/sign-app.sh" "$APP" "$IDENTITY" --timestamp
 
 echo "▸ Zipping…"
 rm -f "$ZIP"
