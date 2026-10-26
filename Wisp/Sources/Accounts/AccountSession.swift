@@ -44,6 +44,11 @@ final class AccountSession {
     private(set) var hasFinishedFirstLoad = false
     private(set) var selectorHealth: SelectorHealth?
     private(set) var isWebViewCreated = false
+    /// Bumped each time a web view is created. The shell keys its host view on
+    /// it, so a replacement view (restartContentProcess) is attached to the
+    /// window; a view that is never attached is invisible to WebKit, which
+    /// suspends its process before WhatsApp boots, and the old view stays alive.
+    private(set) var webViewGeneration = 0
     /// Human-readable summary of what WebKit holds for this account ("12 records for web.whatsapp.com").
     private(set) var storedDataSummary: String = "Checking…"
     /// Color scheme WhatsApp is actually rendering ("light"/"dark"), reported by the core script.
@@ -75,6 +80,7 @@ final class AccountSession {
         let w = WebViewFactory.make(for: account, environment: env, router: router, coordinator: coordinator)
         _webView = w
         isWebViewCreated = true
+        webViewGeneration += 1
         applyAppearance()
         titleObservation = w.observe(\.title, options: [.initial, .new]) { [weak self] view, _ in
             let title = view.title

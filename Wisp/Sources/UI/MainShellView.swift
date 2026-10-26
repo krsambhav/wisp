@@ -15,6 +15,7 @@ struct MainShellView: View {
                 if let session = env.sessions.activeSession {
                     ZStack {
                         WebViewContainer(webView: session.webView)
+                            .id(session.webViewGeneration)
                             .onAppear { session.loadIfNeeded() }
                         SessionOverlays(session: session, palette: palette)
                     }
