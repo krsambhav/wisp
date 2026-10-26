@@ -200,12 +200,13 @@ final class AppEnvironment {
         }
     }
 
-    /// The automatic counterpart: Wisp has been in the background for a while,
-    /// the footprint is above the idle floor, and no page has anything to lose
-    /// (draft, open dialog, transfer, playing media). Quiet: no toast, the
-    /// popover shows what was freed. Called once a minute.
+    /// The automatic counterpart (opt-in): the Mac is under memory pressure,
+    /// Wisp has been in the background for a while, the footprint is above the
+    /// idle floor, and no page has anything to lose (draft, open dialog,
+    /// transfer, playing media). Quiet: no toast, the popover shows what was
+    /// freed. Called once a minute.
     func freeMemoryIfIdle() async {
-        guard resources.freesWhenIdle, !resources.isFreeing else { return }
+        guard resources.freesWhenIdle, !resources.isFreeing, resources.isUnderMemoryPressure else { return }
         if NSApp.isActive { lastActive = Date(); return }
         let idle = Date().timeIntervalSince(lastActive)
         guard idle >= ResourceMonitor.idleFreeAfter,
@@ -214,7 +215,7 @@ final class AppEnvironment {
         let live = sessions.loadedSessions
         guard !live.isEmpty, !live.contains(where: \.mayBeSyncing) else { return }
         for session in live where !(await session.isSafeToRestart()) { return }
-        Log.info("Idle \(Int(idle / 60)) min at \(ResourceFormat.memory(sample.memory)); freeing memory", .performance)
+        Log.info("Idle \(Int(idle / 60)) min at \(ResourceFormat.memory(sample.memory)) under memory pressure; freeing memory", .performance)
         let freed = await performFreeUp()
         resources.lastIdleFree = .init(date: Date(), freed: freed)
     }

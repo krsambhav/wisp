@@ -92,11 +92,17 @@ final class ResourceMonitor {
     var showsInHeader: Bool {
         didSet { UserDefaults.standard.set(showsInHeader, forKey: Self.showKey) }
     }
-    /// Restart WhatsApp in a fresh process when Wisp has been in the background
-    /// long enough and its footprint is high (see the `idleFree*` limits).
+    /// Restart WhatsApp in a fresh process when the Mac is low on memory and
+    /// Wisp has been in the background long enough with a high footprint (see
+    /// the `idleFree*` limits). Off by default: a restart means a loading
+    /// screen (and a re-sync) when the user comes back, and WhatsApp climbs
+    /// back to most of its footprint within seconds of a fresh load.
     var freesWhenIdle: Bool {
         didSet { UserDefaults.standard.set(freesWhenIdle, forKey: Self.idleKey) }
     }
+    /// True from a `warning` or `critical` memory-pressure event until the
+    /// kernel reports `normal` again. The idle free-up only acts while this is set.
+    private(set) var isUnderMemoryPressure = false
     private static let showKey = "wisp.resources.showInHeader"
     private static let idleKey = "wisp.resources.freeWhenIdle"
 
@@ -107,10 +113,25 @@ final class ResourceMonitor {
     @ObservationIgnored private var helper: NSXPCConnection?
     @ObservationIgnored private var helperFailed = false
     @ObservationIgnored private var logged = false
+    @ObservationIgnored private var pressureSource: DispatchSourceMemoryPressure?
 
     init() {
         showsInHeader = UserDefaults.standard.object(forKey: Self.showKey) as? Bool ?? true
-        freesWhenIdle = UserDefaults.standard.object(forKey: Self.idleKey) as? Bool ?? true
+        freesWhenIdle = UserDefaults.standard.object(forKey: Self.idleKey) as? Bool ?? false
+        let source = DispatchSource.makeMemoryPressureSource(eventMask: [.normal, .warning, .critical], queue: .main)
+        source.setEventHandler { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                let event = source.data
+                let pressured = event.contains(.warning) || event.contains(.critical)
+                if pressured != self.isUnderMemoryPressure {
+                    Log.info("System memory pressure \(pressured ? "on" : "normal")", .performance)
+                }
+                self.isUnderMemoryPressure = pressured
+            }
+        }
+        source.activate()
+        pressureSource = source
     }
 
     /// Samples until the calling task is cancelled. Only the first caller runs the loop.
