@@ -60,7 +60,7 @@ header[data-tab="2"] [data-navbar-item]:hover { background: var(--wisp-surface-e
 
 #main { background: var(--wisp-chat-background) !important; border-radius: 0 !important; margin: 0 !important; box-shadow: none !important; }
 #main > div { background: transparent !important; background-image: none !important; }
-#main header { background: transparent !important; border-bottom: 0 !important; box-shadow: none !important; height: 68px !important; }
+#main header { background: transparent !important; border-bottom: 1px solid var(--wisp-line) !important; box-shadow: none !important; height: 68px !important; }
 #main footer { background: transparent !important; border-top: 0 !important; padding: 6px 16px 14px !important; }
 #main footer div { border-color: transparent !important; box-shadow: none !important; }
 #main footer [role="textbox"][data-tab="10"] { font-size: 15px !important; }
