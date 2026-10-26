@@ -160,7 +160,7 @@ html, html[data-wisp-scheme="dark"] { --WDS-systems-bubble-surface-outgoing: var
   --WDS-content-disabled: color-mix(in srgb, var(--wisp-bubble-out-fg) 40%, transparent);
   --WDS-content-action-default: var(--wisp-bubble-out-fg);
   --WDS-content-action-emphasized: var(--wisp-bubble-out-fg);
-  --WDS-content-read: var(--wisp-link);
+  --WDS-content-read: var(--wisp-read);
   --WDS-systems-bubble-content-deemphasized: color-mix(in srgb, var(--wisp-bubble-out-fg) 68%, transparent);
   --WDS-systems-bubble-content-business: color-mix(in srgb, var(--wisp-bubble-out-fg) 68%, transparent);
   --WDS-systems-bubble-surface-overlay: color-mix(in srgb, var(--wisp-bubble-out-fg) 12%, transparent);
@@ -183,13 +183,13 @@ html, html[data-wisp-scheme="dark"] { --WDS-systems-bubble-surface-outgoing: var
   --text-muted: color-mix(in srgb, var(--wisp-bubble-out-fg) 65%, transparent); --document-meta: color-mix(in srgb, var(--wisp-bubble-out-fg) 65%, transparent);
   color: var(--wisp-bubble-out-fg) !important;
 }
-html[data-wisp-scheme="dark"] #main [data-wisp-bubble="out"] { --WDS-content-read: #2563EB; --icon-ack: #2563EB; --link-rgb: 37, 99, 235; }
+html[data-wisp-scheme="dark"] #main [data-wisp-bubble="out"] { --icon-ack: #2563EB; --link-rgb: 37, 99, 235; }
 /* Anything WhatsApp colors directly (document cards, captions, link previews) becomes legible on the inverted surface. */
-#main [data-wisp-bubble="out"]:not([data-wisp-plain]) *:not(svg):not(path):not(img):not(video):not(canvas):not([data-icon]):not([data-testid="reaction-entry-point"]):not([data-testid="reaction-entry-point"] *):not(.x1280gxy.x17t9dm2):not(.x1280gxy.x17t9dm2 *):not([aria-label*="Forward" i]):not([aria-label*="Forward" i] *),
-#main div:has(> span[data-icon="tail-out"]):not([data-wisp-plain]) *:not(svg):not(path):not(img):not(video):not(canvas):not([data-icon]):not([data-testid="reaction-entry-point"]):not([data-testid="reaction-entry-point"] *):not(.x1280gxy.x17t9dm2):not(.x1280gxy.x17t9dm2 *):not([aria-label*="Forward" i]):not([aria-label*="Forward" i] *) { color: var(--wisp-bubble-out-fg) !important; -webkit-text-fill-color: var(--wisp-bubble-out-fg) !important; opacity: 1; }
+#main [data-wisp-bubble="out"]:not([data-wisp-plain]) *:not(svg):not(path):not(img):not(video):not(canvas):not([data-icon]):not([aria-label=" Read " i]):not([data-testid="reaction-entry-point"]):not([data-testid="reaction-entry-point"] *):not(.x1280gxy.x17t9dm2):not(.x1280gxy.x17t9dm2 *):not([aria-label*="Forward" i]):not([aria-label*="Forward" i] *),
+#main div:has(> span[data-icon="tail-out"]):not([data-wisp-plain]) *:not(svg):not(path):not(img):not(video):not(canvas):not([data-icon]):not([aria-label=" Read " i]):not([data-testid="reaction-entry-point"]):not([data-testid="reaction-entry-point"] *):not(.x1280gxy.x17t9dm2):not(.x1280gxy.x17t9dm2 *):not([aria-label*="Forward" i]):not([aria-label*="Forward" i] *) { color: var(--wisp-bubble-out-fg) !important; -webkit-text-fill-color: var(--wisp-bubble-out-fg) !important; opacity: 1; }
 #main [data-wisp-bubble="out"]:not([data-wisp-plain]) [data-icon] { color: color-mix(in srgb, var(--wisp-bubble-out-fg) 80%, transparent) !important; }
-#main [data-wisp-bubble="out"] svg:not([data-icon*="check"]) { color: var(--wisp-bubble-out-fg) !important; }
-#main [data-wisp-bubble="out"] [data-icon="msg-dblcheck"], #main [data-wisp-bubble="out"] [data-icon="msg-check"] { color: var(--wisp-link) !important; }
+#main [data-wisp-bubble="out"] svg:not([data-icon*="check"]):not([aria-label=" Read " i] > svg) { color: var(--wisp-bubble-out-fg) !important; }
+/* Read receipt stays red (base.css); delivered/sent ticks take the bubble foreground like the rest of the meta row. */
 /* Inverted bubble: swatches that WhatsApp hard-codes as light surfaces. */
 #main [data-wisp-bubble="out"] [style*="background-color: rgb(255, 255, 255)"],
 #main [data-wisp-bubble="out"] [style*="background: rgb(255, 255, 255)"] { background-color: color-mix(in srgb, var(--wisp-bubble-out-fg) 12%, transparent) !important; }
