@@ -72,7 +72,13 @@ html[data-wisp-density="compact"] #side header { min-height: 52px !important; }
 #main .copyable-text > div > span:not(.selectable-text) > span:has(> span:first-child) > span,
 #main div:has(> .copyable-text) > .copyable-text ~ div span { font-size: 10.5px !important; }
 
-/* ---- 6. Motion -------------------------------------------------------- */
+/* ---- 6. Calls --------------------------------------------------------- */
+/* WhatsApp Web cannot place calls; the header call button (and its group
+   split menu) only advertises the Mac app. Hidden in every theme. */
+#main header button[aria-label$=" call" i],
+#main header button[aria-label="Call" i] { display: none !important; }
+
+/* ---- 7. Motion -------------------------------------------------------- */
 /* (Focus rings are left to WhatsApp; a custom outline doubled up on the search and composer fields.) */
 /* Chat switch: WhatsApp remounts #main for every conversation, so a mount
    animation covers the hard cut. The pane rises and fades; the message region
