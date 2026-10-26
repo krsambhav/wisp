@@ -78,7 +78,12 @@ html[data-wisp-density="compact"] #side header { min-height: 52px !important; }
 #main header button[aria-label$=" call" i],
 #main header button[aria-label="Call" i] { display: none !important; }
 
-/* ---- 7. Receipts ------------------------------------------------------ */
+/* ---- 7. Composer ------------------------------------------------------ */
+/* macOS pins its Writing Tools / Apple Intelligence button to the left edge of
+   the focused text field, where it sat on top of the sticker button. Room for it. */
+#main footer div:has(> [contenteditable="true"][data-tab="10"]) { margin-left: 30px !important; }
+
+/* ---- 8. Receipts ------------------------------------------------------ */
 /* The read receipt (WhatsApp's blue double tick: span " Read " holding the
    wds-ic-read svg) is red in every theme, so "read" is unmistakable next to
    "delivered" at a glance. */
@@ -86,7 +91,7 @@ html { --wisp-read: #EF4444; --WDS-content-read: var(--wisp-read) !important; }
 #main span[aria-label=" Read " i],
 #main span[aria-label=" Read " i] > svg { color: var(--wisp-read) !important; fill: var(--wisp-read) !important; }
 
-/* ---- 8. Motion -------------------------------------------------------- */
+/* ---- 9. Motion -------------------------------------------------------- */
 /* (Focus rings are left to WhatsApp; a custom outline doubled up on the search and composer fields.) */
 /* Chat switch: WhatsApp remounts #main for every conversation, so a mount
    animation covers the hard cut. The pane rises and fades; the message region
