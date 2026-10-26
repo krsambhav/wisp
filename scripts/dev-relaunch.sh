@@ -13,6 +13,11 @@ if pgrep -x Wisp >/dev/null; then
   if pgrep -x Wisp >/dev/null; then echo "Wisp did not exit (sync guard?). Aborting." >&2; exit 1; fi
 fi
 rm -rf "$APP_DST" && cp -R "$APP_SRC" "$APP_DST"
+# Launch Services must resolve the bundle id to the installed copy only: a
+# registered build product gets launched instead on notification clicks.
+LSREG=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
+for stale in "$APP_SRC" "$ROOT/Wisp/build-release/Build/Products/Release/Wisp.app"; do "$LSREG" -u "$stale" >/dev/null 2>&1 || true; done
+"$LSREG" -f "$APP_DST" >/dev/null 2>&1 || true
 : > /tmp/wisp.err
 mkdir -p "$DBG/themes" && cp "$ROOT"/Wisp/Resources/Web/themes/*.css "$DBG/themes/"
 open --env WISP_DEBUG_THEME_DIR="$DBG/themes" --env WISP_DEBUG_SNAPSHOT_DIR="$DBG" "$@" --stderr /tmp/wisp.err "$APP_DST"

@@ -384,7 +384,10 @@ final class AccountSession {
     func notificationClicked(id: Int) {
         let js = "globalThis.__wispNotify ? globalThis.__wispNotify.click(\(id)) : false"
         webView.evaluateJavaScript(js, in: nil, in: .page) { result in
-            if case .failure(let e) = result { Log.warning("Notification click dispatch failed: \(e.localizedDescription)", .notifications) }
+            switch result {
+            case .success(let v): Log.info("Notification click dispatched to page: \(v as? Bool == true ? "handled" : "no live notification \(id)")", .notifications)
+            case .failure(let e): Log.warning("Notification click dispatch failed: \(e.localizedDescription)", .notifications)
+            }
         }
     }
 

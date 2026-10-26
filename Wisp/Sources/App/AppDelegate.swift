@@ -9,6 +9,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         let t0 = Date()
+        // Two copies of Wisp on the same WebKit storage can corrupt WhatsApp's
+        // IndexedDB (and unlink the device). Launch Services starts whichever
+        // copy it has registered for the bundle id — a stale build product, say,
+        // when a notification is clicked — so a second instance only hands over
+        // to the first and exits, before it has touched any storage.
+        let me = ProcessInfo.processInfo.processIdentifier
+        if let bundleID = Bundle.main.bundleIdentifier,
+           let primary = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first(where: { $0.processIdentifier != me }) {
+            Log.warning("Another Wisp is running (pid \(primary.processIdentifier), \(primary.bundleURL?.path ?? "?")); handing over and exiting", .app)
+            primary.activate()
+            exit(0)
+        }
         _ = AppEnvironment.shared
         // SIGTERM (e.g. `kill`, logout) → orderly quit so WebKit flushes storage.
         signal(SIGTERM, SIG_IGN)

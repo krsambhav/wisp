@@ -169,6 +169,7 @@ extension NotificationBridge: UNUserNotificationCenterDelegate {
         let id = (info["id"] as? NSNumber)?.intValue
         let download = info["download"] as? String
         let action = response.actionIdentifier
+        let keys = info.keys.map(String.init(describing:)).sorted()
         await MainActor.run {
             if let download {
                 let url = URL(fileURLWithPath: download)
@@ -176,7 +177,10 @@ extension NotificationBridge: UNUserNotificationCenterDelegate {
                 return
             }
             if let accountString, let accountID = UUID(uuidString: accountString), let id {
+                Log.info("Notification activated (account \(accountString.prefix(8)), id \(id), action \(action))", .notifications)
                 self.onActivate?(accountID, id)
+            } else {
+                Log.warning("Notification response without account/id: \(keys)", .notifications)
             }
         }
     }
