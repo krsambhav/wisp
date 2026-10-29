@@ -90,6 +90,11 @@ html[data-wisp-density="compact"] #side header { min-height: 52px !important; }
 #pane-side [role="row"] [role="gridcell"] > div:last-child { flex-shrink: 0 !important; white-space: nowrap !important; }
 #pane-side [role="row"] [role="gridcell"] > div:last-child span { white-space: nowrap !important; }
 
+/* WhatsApp's "Get WhatsApp for Mac" promo floats over the bottom of the chat
+   list (an absolutely positioned card under a data-tab button). Wisp is the
+   Mac app; hide the promo so the last rows stay reachable. */
+#side div[role="button"][data-tab] > div > div > div:has(> div > [data-testid="wa-square-icon"]) { display: none !important; }
+
 /* ---- 9. Receipts ------------------------------------------------------ */
 /* The read receipt (WhatsApp's blue double tick: span " Read " holding the
    wds-ic-read svg) is red in every theme, so "read" is unmistakable next to
