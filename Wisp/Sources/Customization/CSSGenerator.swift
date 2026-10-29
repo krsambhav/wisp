@@ -208,6 +208,7 @@ nonisolated enum CSSGenerator {
           h.setAttribute('data-wisp-copy-button', \(appearance.copyButtonEnabled ? "'1'" : "'0'"));
           h.setAttribute('data-wisp-download-button', \(appearance.downloadButtonEnabled ? "'1'" : "'0'"));
           h.setAttribute('data-wisp-copyfile-button', \(appearance.copyFileButtonEnabled ? "'1'" : "'0'"));
+          h.setAttribute('data-wisp-msginfo-popover', \(appearance.messageInfoPopoverEnabled ? "'1'" : "'0'"));
           \(appearance.sidebarWidth != nil ? "h.setAttribute('data-wisp-sidebar','1');" : "h.removeAttribute('data-wisp-sidebar');")
         })();
         """

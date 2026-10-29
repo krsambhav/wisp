@@ -420,6 +420,159 @@
     }, 350);
   }
 
+  // ---------------------------------------------------- message info popover
+  // Clicking a receipt opens WhatsApp's "Message info" drawer (a third of the
+  // window, closed by hand). The script notes where the receipt was clicked,
+  // tags <html> with data-wisp-msginfo so base.css floats the drawer as a
+  // small card, and anchors the card beside the message. A click anywhere
+  // outside, Escape, scrolling the chat, or the card's own Close button closes
+  // it (through WhatsApp's Close control, so WhatsApp's state stays correct).
+  const MSGINFO_WIDTH = 280;
+  const MSGINFO_GAP = 8;
+  let msgInfoAnchor = null;        // DOMRect of the receipt last clicked
+  let msgInfoPendingUntil = 0;     // a drawer appearing before this is the message info
+  let msgInfoDrawer = null;
+  let msgInfoResize = null;
+  let msgInfoListening = false;
+  const msgInfoEnabled = () => document.documentElement.getAttribute('data-wisp-msginfo-popover') !== '0';
+  // WhatsApp keeps an empty, zero-width drawer slot in the DOM; the open one has a header.
+  const msgInfoDrawerNow = () => { for (const d of document.querySelectorAll('[data-testid="drawer-right"]')) { if (d.querySelector('header')) { return d; } } return null; };
+  let msgInfoOpenedAt = 0;
+  const isMessageInfo = (drawer) => !!drawer.querySelector('[data-testid="msg-info-title"], [data-testid="kept-by-info"], [data-testid="msg-info"]');
+
+  function onReceiptClick(ev) {
+    if (!msgInfoEnabled()) { return; }
+    const meta = ev.target && ev.target.closest && ev.target.closest('#main [data-testid="msg-meta"][role="button"]');
+    if (!meta) { return; }
+    cancelMsgInfoClose();   // another receipt while fading out: WhatsApp swaps the content, the card stays
+    msgInfoAnchor = (meta.querySelector('[aria-label]') || meta).getBoundingClientRect();
+    msgInfoPendingUntil = performance.now() + 2500;
+    document.documentElement.setAttribute('data-wisp-msginfo', 'pending');
+    if (msgInfoDrawer) { positionMsgInfo(); }
+    scheduleMsgInfoCheck();
+  }
+
+  function positionMsgInfo() {
+    const drawer = msgInfoDrawer;
+    if (!drawer) { return; }
+    const root = document.documentElement;
+    const vw = root.clientWidth, vh = root.clientHeight;
+    const a = msgInfoAnchor || { left: vw - 16, right: vw - 16, top: 72, bottom: 72 };
+    const dr = drawer.getBoundingClientRect();
+    const w = dr.width || MSGINFO_WIDTH;
+    const h = dr.height || 120;
+    // WhatsApp's zoom setting scales #app with CSS zoom, so viewport
+    // coordinates map to the drawer's own px space through that factor.
+    const scale = drawer.offsetWidth ? dr.width / drawer.offsetWidth : 1;
+    let left = Math.round(a.right - w);
+    left = Math.max(8, Math.min(left, vw - w - 8));
+    let top = Math.round(a.bottom + MSGINFO_GAP);
+    if (top + h > vh - 8) { top = Math.round(a.top - MSGINFO_GAP - h); }
+    if (top < 8) { top = Math.max(8, Math.min(Math.round(a.bottom + MSGINFO_GAP), vh - 8 - h)); }
+    root.style.setProperty('--wisp-msginfo-left', (left / scale).toFixed(1) + 'px');
+    root.style.setProperty('--wisp-msginfo-top', (top / scale).toFixed(1) + 'px');
+  }
+
+  // The card fades out first (base.css animates html[data-wisp-msginfo="closing"]),
+  // then WhatsApp's own Close control removes the drawer.
+  const MSGINFO_OUT_MS = 140;
+  let msgInfoCloseTimer = 0;
+  function closeMsgInfo() {
+    if (msgInfoCloseTimer) { return; }
+    const drawer = msgInfoDrawer || msgInfoDrawerNow();
+    const finish = () => {
+      msgInfoCloseTimer = 0;
+      const live = drawer && drawer.isConnected ? drawer : msgInfoDrawerNow();
+      const btn = live && live.querySelector('header button[aria-label], header [role="button"][aria-label]');
+      if (btn) { btn.click(); }
+      else if (live) { document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, bubbles: true, cancelable: true })); }
+      detachMsgInfo();
+    };
+    if (msgInfoDrawer && document.documentElement.getAttribute('data-wisp-msginfo') === '1') {
+      document.documentElement.setAttribute('data-wisp-msginfo', 'closing');
+      msgInfoCloseTimer = setTimeout(finish, MSGINFO_OUT_MS);
+    } else { finish(); }
+  }
+  function cancelMsgInfoClose() {
+    if (!msgInfoCloseTimer) { return; }
+    clearTimeout(msgInfoCloseTimer); msgInfoCloseTimer = 0;
+  }
+
+  function onMsgInfoPointerDown(ev) {
+    if (!msgInfoDrawer) { return; }
+    const t = ev.target;
+    if (msgInfoDrawer.contains(t)) { return; }
+    // Another receipt: WhatsApp swaps the drawer's content; only the anchor moves.
+    if (t && t.closest && t.closest('#main [data-testid="msg-meta"][role="button"]')) { return; }
+    closeMsgInfo();
+  }
+  function onMsgInfoKey(ev) { if (ev.key === 'Escape' && msgInfoDrawer) { closeMsgInfo(); } }
+  // Scrolling the chat moves the message away from the card, so the card goes.
+  // Trackpad momentum keeps delivering wheel events after the click that opened
+  // it, so the first moments after opening are ignored.
+  function onMsgInfoScroll(ev) {
+    if (!msgInfoDrawer || performance.now() - msgInfoOpenedAt < 1200) { return; }
+    const t = ev.target;
+    if (!t || (t.nodeType === 1 && (msgInfoDrawer.contains(t) || !t.closest('#main')))) { return; }
+    closeMsgInfo();
+  }
+
+  function attachMsgInfo(drawer) {
+    msgInfoDrawer = drawer;
+    msgInfoOpenedAt = performance.now();
+    document.documentElement.setAttribute('data-wisp-msginfo', '1');
+    positionMsgInfo();
+    if (!msgInfoListening) {
+      msgInfoListening = true;
+      document.addEventListener('pointerdown', onMsgInfoPointerDown, true);
+      document.addEventListener('keydown', onMsgInfoKey, true);
+      document.addEventListener('scroll', onMsgInfoScroll, { capture: true, passive: true });
+      window.addEventListener('resize', positionMsgInfo);
+    }
+    if (typeof ResizeObserver === 'function') {
+      msgInfoResize = new ResizeObserver(() => positionMsgInfo());
+      msgInfoResize.observe(drawer);
+    }
+  }
+  function detachMsgInfo() {
+    cancelMsgInfoClose();
+    msgInfoDrawer = null;
+    msgInfoPendingUntil = 0;
+    if (msgInfoResize) { msgInfoResize.disconnect(); msgInfoResize = null; }
+    if (msgInfoListening) {
+      msgInfoListening = false;
+      document.removeEventListener('pointerdown', onMsgInfoPointerDown, true);
+      document.removeEventListener('keydown', onMsgInfoKey, true);
+      document.removeEventListener('scroll', onMsgInfoScroll, { capture: true });
+      window.removeEventListener('resize', positionMsgInfo);
+    }
+    document.documentElement.removeAttribute('data-wisp-msginfo');
+  }
+
+  // Runs after DOM changes: adopts a message-info drawer, drops a stale tag.
+  let msgInfoFrame = 0;
+  let msgInfoTimer = 0;
+  function checkMsgInfo() {
+    if (msgInfoFrame) { cancelAnimationFrame(msgInfoFrame); msgInfoFrame = 0; }
+    if (msgInfoTimer) { clearTimeout(msgInfoTimer); msgInfoTimer = 0; }
+    const drawer = msgInfoDrawerNow();
+    if (!drawer || !msgInfoEnabled()) { if (msgInfoDrawer || document.documentElement.hasAttribute('data-wisp-msginfo')) { detachMsgInfo(); } return; }
+    if (msgInfoDrawer === drawer) { if (!isMessageInfo(drawer) && performance.now() > msgInfoPendingUntil) { detachMsgInfo(); } return; }
+    if (msgInfoDrawer) { detachMsgInfo(); }   // the drawer was swapped for another one
+    if (isMessageInfo(drawer) || performance.now() < msgInfoPendingUntil) { attachMsgInfo(drawer); }
+    else if (document.documentElement.hasAttribute('data-wisp-msginfo')) { document.documentElement.removeAttribute('data-wisp-msginfo'); }
+  }
+  function scheduleMsgInfoCheck() {
+    if (msgInfoFrame) { return; }
+    msgInfoFrame = requestAnimationFrame(checkMsgInfo);
+    // Frames pause while the page is hidden (occluded window); the timer keeps
+    // the tag and position current there too.
+    msgInfoTimer = setTimeout(checkMsgInfo, 100);
+    // The pending tag must not outlive a click that opened nothing.
+    setTimeout(() => { if (!msgInfoDrawer && document.documentElement.getAttribute('data-wisp-msginfo') === 'pending' && performance.now() >= msgInfoPendingUntil) { document.documentElement.removeAttribute('data-wisp-msginfo'); } }, 2600);
+  }
+  document.addEventListener('click', onReceiptClick, true);
+
   // Bubble tagging walks every message leaf in #main and reads layout for the
   // untagged ones, so it runs at most once per frame (requestAnimationFrame
   // callbacks precede paint, so new bubbles never flash untagged).
@@ -459,7 +612,7 @@
         }
         if (added) { break; }
       }
-      if (structural) { scheduleState(); }
+      if (structural) { scheduleState(); if (msgInfoDrawer || msgInfoPendingUntil || added) { scheduleMsgInfoCheck(); } }
       if (added && lastState === 'chats') { tagBubblesBeforePaint(); }
     });
     mo.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });

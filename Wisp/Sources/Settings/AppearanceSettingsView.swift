@@ -71,6 +71,10 @@ struct AppearanceSettingsView: View {
                 WRow(title: "Copy file button on hover", description: "Copies the photo, video, document or sticker itself to the clipboard, ready to paste into Finder, Mail or another chat.") {
                     WToggle(isOn: $settings.appearance.copyFileButtonEnabled)
                 }
+                WDivider()
+                WRow(title: "Message info as a popover", description: "Clicking a receipt shows who read the message in a small card beside it instead of WhatsApp's side panel. Click anywhere else to dismiss it.") {
+                    WToggle(isOn: $settings.appearance.messageInfoPopoverEnabled)
+                }
             }
 
             WGroupLabel("Typography & layout")

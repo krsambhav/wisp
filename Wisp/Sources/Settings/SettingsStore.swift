@@ -107,6 +107,11 @@ nonisolated struct AppearanceSettings: Codable, Equatable, Sendable {
         get { copyFileButton ?? true }
         set { copyFileButton = newValue }
     }
+    var messageInfoPopover: Bool? = nil
+    var messageInfoPopoverEnabled: Bool {
+        get { messageInfoPopover ?? true }
+        set { messageInfoPopover = newValue }
+    }
 }
 
 nonisolated struct NotificationSettings: Codable, Equatable, Sendable {

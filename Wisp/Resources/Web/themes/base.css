@@ -114,6 +114,58 @@ html[data-wisp-copyfile-button="0"] #main [data-wisp-item="copyfile"] { display:
 #main [data-wisp-bubble="out"] > div:has(> [data-wisp-item]) { left: auto !important; right: 100% !important; }
 #main [data-wisp-bubble="in"] > div:has(> [data-wisp-item]) { right: auto !important; left: 100% !important; }
 
+/* ---- 9c. Message info popover (core script anchors and dismisses it) ---- */
+/* Clicking a receipt opens WhatsApp's "Message info" drawer: a third of the
+   window, closed by hand. With the popover on, the core script tags <html>
+   with data-wisp-msginfo and positions the drawer as a small card beside the
+   message; a click anywhere outside, Escape, or its Close button dismisses
+   it. Every ancestor of the drawer header is absolutely positioned and
+   full-height in WhatsApp's markup, so the chain is flattened to let the card
+   size to its rows. */
+@keyframes wisp-msginfo-in { from { opacity: 0; transform: translateY(-4px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes wisp-msginfo-out { to { opacity: 0; transform: translateY(-3px) scale(.98); } }
+html[data-wisp-msginfo] [data-testid="drawer-right"] {
+  position: absolute !important; z-index: 1000 !important;
+  left: var(--wisp-msginfo-left, auto) !important; top: var(--wisp-msginfo-top, 72px) !important;
+  right: auto !important; bottom: auto !important;
+  width: 280px !important; min-width: 0 !important; max-width: 280px !important; flex: none !important;
+  height: auto !important; min-height: 0 !important; max-height: 420px !important;
+  overflow: hidden !important; border: 0 !important; border-radius: 14px !important;
+  background: var(--wisp-surface, var(--panel-background, #fff)) !important;
+  box-shadow: 0 0 0 0.5px var(--wisp-line, rgba(0, 0, 0, .12)), 0 16px 48px -12px rgba(0, 0, 0, .35) !important;
+  font-size: 14px !important;
+  transform-origin: top right;
+  animation: wisp-msginfo-in 160ms cubic-bezier(.2, .7, .2, 1) backwards;
+}
+html[data-wisp-msginfo="closing"] [data-testid="drawer-right"] { animation: wisp-msginfo-out 140ms ease-in forwards; pointer-events: none !important; }
+html[data-wisp-msginfo] [data-testid="drawer-right"] :is(div, span):has(header) {
+  position: relative !important; inset: auto !important; width: auto !important; height: auto !important;
+  min-height: 0 !important; max-height: none !important; display: block !important;
+}
+/* Compact title bar: small label on the left, WhatsApp's own Close on the right. */
+html[data-wisp-msginfo] [data-testid="drawer-right"] header {
+  display: flex !important; align-items: center !important; height: 40px !important; min-height: 0 !important;
+  padding: 0 6px 0 16px !important; background: transparent !important; border: 0 !important; box-shadow: none !important;
+}
+html[data-wisp-msginfo] [data-testid="drawer-right"] header > div { flex-direction: row-reverse !important; align-items: center !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+html[data-wisp-msginfo] [data-testid="drawer-right"] header :is(div, span):has(> button), html[data-wisp-msginfo] [data-testid="drawer-right"] header button { width: 32px !important; height: 32px !important; min-width: 0 !important; }
+html[data-wisp-msginfo] [data-testid="drawer-right"] header button { display: inline-flex !important; align-items: center !important; justify-content: center !important; border-radius: 999px !important; }
+html[data-wisp-msginfo] [data-testid="drawer-right"] header button svg { width: 18px !important; height: 18px !important; }
+html[data-wisp-msginfo] [data-testid="drawer-right"] header [data-testid="drawer-title-body"] { padding: 0 !important; }
+html[data-wisp-msginfo] [data-testid="drawer-right"] header [data-testid="drawer-title-body"] :is(h2, span) { font-size: 13px !important; line-height: 18px !important; font-weight: 600 !important; }
+/* The quoted copy of the message adds nothing the card needs. */
+html[data-wisp-msginfo] [data-testid="drawer-right"] div:has(> div > [data-testid^="conversation-background"]) { display: none !important; }
+/* The receipt rows: scroll inside the card when a group has many readers. */
+html[data-wisp-msginfo] [data-testid="drawer-right"] header ~ div {
+  position: relative !important; height: auto !important; max-height: 380px !important; flex: none !important;
+  overflow-y: auto !important; padding: 0 !important;
+}
+html[data-wisp-msginfo] [data-testid="drawer-right"] header ~ div > div { margin: 0 !important; padding: 0 !important; }
+html[data-wisp-msginfo] [data-testid="drawer-right"] header ~ div > div > div { margin: 0 !important; padding: 0 8px 6px !important; background: transparent !important; }
+html[data-wisp-msginfo] [data-testid="drawer-right"] [data-testid="kept-by-info"] { background: transparent !important; }
+html[data-wisp-msginfo] [data-testid="drawer-right"] [data-testid="kept-by-info"], html[data-wisp-msginfo] [data-testid="drawer-right"] [data-testid="kept-by-info"] > div { height: auto !important; min-height: 0 !important; }
+html[data-wisp-msginfo] [data-testid="drawer-right"] [data-testid="kept-by-info"] > div { padding-top: 8px !important; padding-bottom: 8px !important; }
+
 /* ---- 10. Motion -------------------------------------------------------- */
 /* (Focus rings are left to WhatsApp; a custom outline doubled up on the search and composer fields.) */
 /* Chat switch: WhatsApp remounts #main for every conversation, so a mount

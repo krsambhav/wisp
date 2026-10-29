@@ -57,6 +57,13 @@ final class SettingsCompatibilityTests: XCTestCase {
         XCTAssertTrue(decoded.downloadButtonEnabled)
         XCTAssertFalse(String(decoding: data, as: UTF8.self).contains("copyFileButton"))
         XCTAssertTrue(decoded.copyFileButtonEnabled)
+        XCTAssertFalse(String(decoding: data, as: UTF8.self).contains("messageInfoPopover"))
+        XCTAssertTrue(decoded.messageInfoPopoverEnabled)
+    }
+    func testMessageInfoPopoverAttribute() {
+        XCTAssertTrue(CSSGenerator.attributesJS(appearance: AppearanceSettings()).contains("'data-wisp-msginfo-popover', '1'"))
+        var off = AppearanceSettings(); off.messageInfoPopoverEnabled = false
+        XCTAssertTrue(CSSGenerator.attributesJS(appearance: off).contains("'data-wisp-msginfo-popover', '0'"))
     }
     func testCopyButtonAttribute() {
         XCTAssertTrue(CSSGenerator.attributesJS(appearance: AppearanceSettings()).contains("'data-wisp-copy-button', '1'"))
