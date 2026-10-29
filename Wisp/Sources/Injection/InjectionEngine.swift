@@ -57,6 +57,7 @@ final class InjectionEngine {
         controller.add(router, contentWorld: .page, name: BridgeMessage.notify.rawValue)
         controller.add(router, contentWorld: ContentWorlds.core, name: BridgeMessage.state.rawValue)
         controller.add(router, contentWorld: ContentWorlds.core, name: BridgeMessage.diag.rawValue)
+        controller.add(router, contentWorld: ContentWorlds.core, name: BridgeMessage.clipboard.rawValue)
         controller.add(router, contentWorld: ContentWorlds.core, name: BridgeMessage.log.rawValue)
         controller.add(router, contentWorld: ContentWorlds.user, name: BridgeMessage.log.rawValue)
         controller.add(router, contentWorld: .page, name: BridgeMessage.log.rawValue)

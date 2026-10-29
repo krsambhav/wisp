@@ -131,6 +131,7 @@ html, html[data-wisp-scheme="dark"] { --WDS-systems-bubble-surface-outgoing: var
    "always white" glyph. Matched by test id, by aria-label, and by the hashed
    class pair that defines that look, so a localized label still catches. */
 #main [data-testid="reaction-entry-point"],
+#main div[role="button"][data-wisp-copy],
 #main div[role="button"][aria-label*="Forward" i],
 #main div[role="button"].x1280gxy.x17t9dm2 {
   background: var(--wisp-surface-emphasized) !important;
@@ -138,12 +139,14 @@ html, html[data-wisp-scheme="dark"] { --WDS-systems-bubble-surface-outgoing: var
   box-shadow: 0 0 0 1px var(--wisp-line), 0 1px 3px rgba(0, 0, 0, 0.10) !important;
 }
 #main [data-testid="reaction-entry-point"]:hover,
+#main div[role="button"][data-wisp-copy]:hover,
 #main div[role="button"][aria-label*="Forward" i]:hover,
 #main div[role="button"].x1280gxy.x17t9dm2:hover {
   background: color-mix(in srgb, var(--wisp-text-primary) 10%, var(--wisp-surface)) !important;
   color: var(--wisp-text-primary) !important;
 }
 #main [data-testid="reaction-entry-point"] *,
+#main div[role="button"][data-wisp-copy] *,
 #main div[role="button"][aria-label*="Forward" i] *,
 #main div[role="button"].x1280gxy.x17t9dm2 * { color: inherit !important; -webkit-text-fill-color: currentColor !important; fill: currentColor; }
 /* Jump-to-message flash. WhatsApp pulses the row to the accent at 35%, which
@@ -185,10 +188,10 @@ html, html[data-wisp-scheme="dark"] { --WDS-systems-bubble-surface-outgoing: var
 }
 html[data-wisp-scheme="dark"] #main [data-wisp-bubble="out"] { --icon-ack: #2563EB; --link-rgb: 37, 99, 235; }
 /* Anything WhatsApp colors directly (document cards, captions, link previews) becomes legible on the inverted surface. */
-#main [data-wisp-bubble="out"]:not([data-wisp-plain]) *:not(svg):not(path):not(img):not(video):not(canvas):not([data-icon]):not([aria-label=" Read " i]):not([data-testid="reaction-entry-point"]):not([data-testid="reaction-entry-point"] *):not(.x1280gxy.x17t9dm2):not(.x1280gxy.x17t9dm2 *):not([aria-label*="Forward" i]):not([aria-label*="Forward" i] *),
-#main div:has(> span[data-icon="tail-out"]):not([data-wisp-plain]) *:not(svg):not(path):not(img):not(video):not(canvas):not([data-icon]):not([aria-label=" Read " i]):not([data-testid="reaction-entry-point"]):not([data-testid="reaction-entry-point"] *):not(.x1280gxy.x17t9dm2):not(.x1280gxy.x17t9dm2 *):not([aria-label*="Forward" i]):not([aria-label*="Forward" i] *) { color: var(--wisp-bubble-out-fg) !important; -webkit-text-fill-color: var(--wisp-bubble-out-fg) !important; opacity: 1; }
+#main [data-wisp-bubble="out"]:not([data-wisp-plain]) *:not(svg):not(path):not(img):not(video):not(canvas):not([data-icon]):not([aria-label=" Read " i]):not([data-testid="reaction-entry-point"]):not([data-testid="reaction-entry-point"] *):not([data-wisp-copy]):not([data-wisp-copy] *):not(.x1280gxy.x17t9dm2):not(.x1280gxy.x17t9dm2 *):not([aria-label*="Forward" i]):not([aria-label*="Forward" i] *),
+#main div:has(> span[data-icon="tail-out"]):not([data-wisp-plain]) *:not(svg):not(path):not(img):not(video):not(canvas):not([data-icon]):not([aria-label=" Read " i]):not([data-testid="reaction-entry-point"]):not([data-testid="reaction-entry-point"] *):not([data-wisp-copy]):not([data-wisp-copy] *):not(.x1280gxy.x17t9dm2):not(.x1280gxy.x17t9dm2 *):not([aria-label*="Forward" i]):not([aria-label*="Forward" i] *) { color: var(--wisp-bubble-out-fg) !important; -webkit-text-fill-color: var(--wisp-bubble-out-fg) !important; opacity: 1; }
 #main [data-wisp-bubble="out"]:not([data-wisp-plain]) [data-icon] { color: color-mix(in srgb, var(--wisp-bubble-out-fg) 80%, transparent) !important; }
-#main [data-wisp-bubble="out"] svg:not([data-icon*="check"]):not([aria-label=" Read " i] > svg):not([data-testid="reaction-entry-point"] svg):not(div[role="button"][aria-label*="Forward" i] svg):not(.x1280gxy.x17t9dm2 svg) { color: var(--wisp-bubble-out-fg) !important; }
+#main [data-wisp-bubble="out"] svg:not([data-icon*="check"]):not([aria-label=" Read " i] > svg):not([data-testid="reaction-entry-point"] svg):not([data-wisp-copy] svg):not(div[role="button"][aria-label*="Forward" i] svg):not(.x1280gxy.x17t9dm2 svg) { color: var(--wisp-bubble-out-fg) !important; }
 /* Read receipt stays red (base.css); delivered/sent ticks take the bubble foreground like the rest of the meta row. */
 /* Inverted bubble: swatches that WhatsApp hard-codes as light surfaces. */
 #main [data-wisp-bubble="out"] [style*="background-color: rgb(255, 255, 255)"],

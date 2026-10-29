@@ -205,6 +205,7 @@ nonisolated enum CSSGenerator {
         (function(){ var h=document.documentElement; if(!h) return;
           h.setAttribute('data-wisp-density', \(appearance.density.rawValue.jsStringLiteral));
           h.setAttribute('data-wisp-bubbles', \((appearance.roundedBubbles ? "rounded" : "default").jsStringLiteral));
+          h.setAttribute('data-wisp-copy-button', \(appearance.copyButtonEnabled ? "'1'" : "'0'"));
           \(appearance.sidebarWidth != nil ? "h.setAttribute('data-wisp-sidebar','1');" : "h.removeAttribute('data-wisp-sidebar');")
         })();
         """

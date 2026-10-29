@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import WebKit
 
@@ -47,6 +48,14 @@ final class ScriptMessageRouter: NSObject, WKScriptMessageHandler {
             let missing = (body["missing"] as? [String] ?? []).map { String($0.prefix(120)) }
             let total = (body["total"] as? NSNumber)?.intValue ?? 0
             session.handleSelectorHealth(total: total, missing: missing)
+        case .clipboard:
+            // The in-page Copy button. Written natively so it never depends on
+            // WebKit's transient user-activation rules for the clipboard API.
+            guard message.world == ContentWorlds.core, let text = body["text"] as? String, !text.isEmpty else { return }
+            let pb = NSPasteboard.general
+            pb.clearContents()
+            pb.setString(String(text.prefix(200_000)), forType: .string)
+            Log.debug("Copied message text (\(text.count) chars)", .web)
         case .log:
             let level: LogLevel = switch body["level"] as? String ?? "info" {
                 case "debug": .debug

@@ -157,6 +157,133 @@
   }
   const bubbleSelector = '(leaf-climb)';
 
+  // ------------------------------------------------------------ copy button
+  // WhatsApp mounts a hover tray (an absolutely positioned flex row inside the
+  // message container) holding the React button. A "Copy message" disc is
+  // cloned from that button's tray item, so it inherits WhatsApp's look and
+  // every theme's hover-button rules, and sits on the outer side of the tray.
+  // Clicks never reach WhatsApp: the clone has no React fiber and stops
+  // propagation. Text is read from the message's own .copyable-text block.
+  const COPY_SVG = '<svg viewBox="0 0 24 24" height="16" preserveAspectRatio="xMidYMid meet" fill="currentColor"><title>wisp-copy</title><path fill="currentColor" d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"/></svg>';
+  const DONE_SVG = '<svg viewBox="0 0 24 24" height="16" preserveAspectRatio="xMidYMid meet" fill="currentColor"><title>wisp-copied</title><path fill="currentColor" d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
+  const COPY_LABEL = 'Copy message';
+
+  function copyButtonEnabled() { return document.documentElement.getAttribute('data-wisp-copy-button') !== '0'; }
+
+  // Plain text of one message: text nodes plus emoji <img alt>, <br> as a
+  // newline. Controls inside the text ("Read more") and the meta row are skipped.
+  function messageText(container) {
+    const parts = [];
+    for (const block of container.querySelectorAll('.copyable-text[data-pre-plain-text]')) {
+      let roots = [...block.querySelectorAll('.selectable-text')].filter((s) => !(s.parentElement && s.parentElement.closest('.selectable-text')));
+      if (roots.length === 0) { roots = [block]; }
+      for (const root of roots) {
+        let s = '';
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+          acceptNode(n) {
+            if (n.nodeType === 3) { return NodeFilter.FILTER_ACCEPT; }
+            if (n.matches('[role="button"], [data-testid="msg-meta"], [aria-hidden="true"]:not(img)')) { return NodeFilter.FILTER_REJECT; }
+            return NodeFilter.FILTER_ACCEPT;
+          }
+        });
+        let n;
+        while ((n = walker.nextNode())) {
+          if (n.nodeType === 3) { s += n.data; }
+          else if (n.tagName === 'IMG') { s += n.getAttribute('alt') || ''; }
+          else if (n.tagName === 'BR') { s += '\n'; }
+        }
+        if (s.trim()) { parts.push(s); }
+      }
+    }
+    return parts.join('\n').replace(/ /g, ' ').replace(/[ \t]+\n/g, '\n').trim();
+  }
+
+  function writeClipboard(text) {
+    const h = globalThis.webkit && globalThis.webkit.messageHandlers && globalThis.webkit.messageHandlers.wispClipboard;
+    if (h) { try { h.postMessage({ text: text.slice(0, 200000) }); return true; } catch (_) {} }
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).catch(() => {}); return true; }
+    return false;
+  }
+
+  function swallow(ev) { ev.stopPropagation(); }
+  function onCopyActivate(ev) {
+    if (ev.type === 'keydown' && ev.key !== 'Enter' && ev.key !== ' ') { return; }
+    ev.preventDefault(); ev.stopPropagation();
+    const btn = ev.currentTarget;
+    const container = btn.closest('[data-testid="msg-container"], [data-wisp-bubble]');
+    const text = container ? messageText(container) : '';
+    if (!text || !writeClipboard(text)) { return; }
+    const svg = btn.querySelector('svg');
+    if (svg) { svg.outerHTML = DONE_SVG; }
+    btn.setAttribute('aria-label', 'Copied');
+    btn.setAttribute('data-wisp-copied', '1');
+    setTimeout(() => {
+      if (!btn.isConnected) { return; }
+      const done = btn.querySelector('svg');
+      if (done) { done.outerHTML = COPY_SVG; }
+      btn.setAttribute('aria-label', COPY_LABEL);
+      btn.removeAttribute('data-wisp-copied');
+    }, 1200);
+  }
+
+  function addCopyButtons() {
+    if (!copyButtonEnabled()) { return; }
+    for (const react of document.querySelectorAll('#main [data-testid="reaction-entry-point"]')) {
+      // react → unstyled wrapper → tray item (spacing) → tray (absolute flex row) → message container
+      const item = react.parentElement && react.parentElement.parentElement;
+      const tray = item && item.parentElement;
+      const container = tray && tray.parentElement;
+      if (!container || tray.querySelector('[data-wisp-copy]')) { continue; }
+      if (!container.querySelector('.copyable-text[data-pre-plain-text]')) { continue; }
+      if (getComputedStyle(tray).position !== 'absolute') { continue; } // structure drifted; do nothing
+      const clone = item.cloneNode(true);
+      const btn = clone.querySelector('[data-testid="reaction-entry-point"]');
+      if (!btn) { continue; }
+      btn.setAttribute('data-testid', 'wisp-copy-button');
+      btn.setAttribute('data-wisp-copy', '1');
+      btn.setAttribute('aria-label', COPY_LABEL);
+      btn.setAttribute('title', COPY_LABEL);
+      const svg = btn.querySelector('svg');
+      if (svg) { svg.outerHTML = COPY_SVG; } else { btn.innerHTML = '<span aria-hidden="true">' + COPY_SVG + '</span>'; }
+      clone.setAttribute('data-wisp-copy-item', '1');
+      btn.addEventListener('click', onCopyActivate);
+      btn.addEventListener('keydown', onCopyActivate);
+      for (const t of ['mousedown', 'mouseup', 'pointerdown', 'pointerup', 'dblclick', 'contextmenu']) { btn.addEventListener(t, swallow); }
+      btn.addEventListener('mousedown', (ev) => ev.preventDefault()); // keep focus in the composer
+      // Copy sits between React and the bubble, so React appearing or leaving
+      // never shifts it: outgoing trays pack to the right, incoming to the left.
+      const dir = container.getAttribute('data-wisp-bubble') || (getComputedStyle(tray).justifyContent === 'flex-end' ? 'out' : 'in');
+      if (dir === 'out') { tray.appendChild(clone); } else { tray.insertBefore(clone, tray.firstChild); }
+      watchTray(tray);
+    }
+  }
+
+  // WhatsApp keeps a tray mounted after the pointer leaves and hides or removes
+  // its React item. The clone follows: it mirrors React's classes and inline
+  // style, and goes away when React does. One observer per tray; trays only
+  // exist for hovered messages, so this is a handful at most.
+  const trayWatchers = new WeakMap();
+  function syncTray(tray) {
+    const ours = tray.querySelector(':scope > [data-wisp-copy-item]');
+    if (!ours) { return; }
+    const react = tray.querySelector('[data-testid="reaction-entry-point"]');
+    const theirs = react && react.parentElement && react.parentElement.parentElement;
+    if (!theirs || theirs.parentElement !== tray) { ours.remove(); return; }
+    if (ours.className !== theirs.className) { ours.className = theirs.className; }
+    if (ours.style.cssText !== theirs.style.cssText) { ours.style.cssText = theirs.style.cssText; }
+    const ourBtn = ours.querySelector('[data-wisp-copy]');
+    if (ourBtn && ourBtn.className !== react.className) { ourBtn.className = react.className; }
+  }
+  function watchTray(tray) {
+    if (trayWatchers.has(tray)) { return; }
+    const mo = new MutationObserver(() => {
+      if (!tray.isConnected) { mo.disconnect(); trayWatchers.delete(tray); return; }
+      syncTray(tray);
+    });
+    mo.observe(tray, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
+    trayWatchers.set(tray, mo);
+  }
+
   let stateTimer = 0;
   function scheduleState() {
     if (stateTimer) { return; }
@@ -186,7 +313,7 @@
   function runBubblePass() {
     if (bubbleFrame) { cancelAnimationFrame(bubbleFrame); bubbleFrame = 0; }
     if (bubbleTimer) { clearTimeout(bubbleTimer); bubbleTimer = 0; }
-    if (lastState === 'chats') { markBubbles(); }
+    if (lastState === 'chats') { markBubbles(); addCopyButtons(); }
   }
   function tagBubblesBeforePaint() {
     if (bubbleFrame) { return; }
@@ -274,6 +401,7 @@
     state: () => lastState || computeState(),
     setHealthSelectors, runHealthCheck,
     focusSearch,
+    messageText,
     bubbleInfo: () => ({ selector: bubbleSelector, marked: document.querySelectorAll('#main [data-wisp-bubble]').length, out: document.querySelectorAll('#main [data-wisp-bubble="out"]').length, tails: document.querySelectorAll('#main span[data-icon^="tail-"]').length, scheme: lastScheme }),
     log: (...a) => log('info', a), warn: (...a) => log('warning', a), error: (...a) => log('error', a)
   });

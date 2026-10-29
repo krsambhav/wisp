@@ -23,5 +23,6 @@ nonisolated enum BridgeMessage: String, CaseIterable {
     case notify = "wispNotify"   // page world only
     case state = "wispState"     // core world
     case diag = "wispDiag"       // core world
+    case clipboard = "wispClipboard"  // core world: copy-message button
     case log = "wispLog"         // core, user, page
 }

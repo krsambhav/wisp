@@ -91,6 +91,12 @@ nonisolated struct AppearanceSettings: Codable, Equatable, Sendable {
     var customCSSEnabled = true
     var livePreview = true
     var tintOutgoingBubbles = true
+    /// Optional so settings files written before the key existed still decode.
+    var copyButton: Bool? = nil
+    var copyButtonEnabled: Bool {
+        get { copyButton ?? true }
+        set { copyButton = newValue }
+    }
 }
 
 nonisolated struct NotificationSettings: Codable, Equatable, Sendable {

@@ -98,6 +98,10 @@ html { --wisp-read: #EF4444; --WDS-content-read: var(--wisp-read) !important; }
 #main span[aria-label=" Read " i],
 #main span[aria-label=" Read " i] > svg { color: var(--wisp-read) !important; fill: var(--wisp-read) !important; }
 
+/* ---- 9b. Copy button (core script clones WhatsApp's React disc) ------- */
+html[data-wisp-copy-button="0"] #main [data-wisp-copy-item] { display: none !important; }
+#main [data-wisp-copy][data-wisp-copied] { color: var(--wisp-accent) !important; }
+
 /* ---- 10. Motion -------------------------------------------------------- */
 /* (Focus rings are left to WhatsApp; a custom outline doubled up on the search and composer fields.) */
 /* Chat switch: WhatsApp remounts #main for every conversation, so a mount

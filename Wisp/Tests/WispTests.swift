@@ -44,6 +44,23 @@ final class HexColorTests: XCTestCase {
     }
 }
 
+final class SettingsCompatibilityTests: XCTestCase {
+    /// Keys added after 1.0 must be optional: a settings file without them has to decode.
+    func testAppearanceDecodesWithoutCopyButtonKey() throws {
+        let data = try JSONEncoder().encode(AppearanceSettings())   // nil optionals are omitted
+        XCTAssertFalse(String(decoding: data, as: UTF8.self).contains("copyButton"))
+        let decoded = try JSONDecoder().decode(AppearanceSettings.self, from: data)
+        XCTAssertTrue(decoded.copyButtonEnabled)
+        var off = AppearanceSettings(); off.copyButtonEnabled = false
+        XCTAssertFalse(try JSONDecoder().decode(AppearanceSettings.self, from: JSONEncoder().encode(off)).copyButtonEnabled)
+    }
+    func testCopyButtonAttribute() {
+        XCTAssertTrue(CSSGenerator.attributesJS(appearance: AppearanceSettings()).contains("'data-wisp-copy-button', '1'"))
+        var off = AppearanceSettings(); off.copyButtonEnabled = false
+        XCTAssertTrue(CSSGenerator.attributesJS(appearance: off).contains("'data-wisp-copy-button', '0'"))
+    }
+}
+
 final class CSSGeneratorTests: XCTestCase {
     func testTokensContainOverrides() {
         let css = CSSGenerator.tokensCSS(theme: ThemeCatalog.minimal, appearance: AppearanceSettings())
