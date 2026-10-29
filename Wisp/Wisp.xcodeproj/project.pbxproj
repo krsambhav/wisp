@@ -80,6 +80,7 @@
 		F0E2A1F800E0F29F3A72F419 /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CE05AE99167D752B68AA088 /* SettingsStore.swift */; };
 		F110B606D9D4BEB27BA4C96A /* Account.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF6EFAEFEA2D25D8CD19EA44 /* Account.swift */; };
 		F7200635AA79740940658E25 /* DownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E7F5C62299F9A61E73144EE /* DownloadManager.swift */; };
+		F8C23C7C9B49BB5895B37573 /* outline.request in Resources */ = {isa = PBXBuildFile; fileRef = E62784AC213A33A2DFAE49F1 /* outline.request */; };
 		F8EACE76B768DC77F517A5BE /* ResourceMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 109736972868F48AD1CFD5EC /* ResourceMonitor.swift */; };
 		F980BC0DFF81D229421F2649 /* ToastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C66D73E77D0EAD042C9AC3C5 /* ToastView.swift */; };
 		FEA9A43BC73AC3394C641115 /* InjectionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BD7EF67167B8AE131853F0 /* InjectionEngine.swift */; };
@@ -185,6 +186,7 @@
 		CFDF9361EACB342CC167C56A /* WebViewContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebViewContainer.swift; sourceTree = "<group>"; };
 		D0CBF1D115C3B3EDFC2A3F08 /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		DA597BB303A924BAE39F5BC2 /* CustomCSSStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomCSSStore.swift; sourceTree = "<group>"; };
+		E62784AC213A33A2DFAE49F1 /* outline.request */ = {isa = PBXFileReference; path = outline.request; sourceTree = "<group>"; };
 		E76CE818DEA932D8803ECDE2 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
 		E9EDEBAEEBEA79AB2E64BFB4 /* HotKeyRecorderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotKeyRecorderView.swift; sourceTree = "<group>"; };
 		EF21546B130CDE107DA8D35A /* whatsapp-mock.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = "whatsapp-mock.html"; sourceTree = "<group>"; };
@@ -235,6 +237,7 @@
 				C48C1A0B0B5F5FF1899CFEF3 /* default.css */,
 				F72BB8F40B8DFD16D494EC01 /* midnight.css */,
 				55094F4F0250E5A71568F1A5 /* minimal.css */,
+				E62784AC213A33A2DFAE49F1 /* outline.request */,
 			);
 			path = themes;
 			sourceTree = "<group>";
@@ -560,6 +563,7 @@
 				E5FC32D0E1D9ECC5488B7CC5 /* default.css in Resources */,
 				75D92D9410FB2E8E64B0D9FC /* midnight.css in Resources */,
 				6F32D29C5A1EF4E18C4E4231 /* minimal.css in Resources */,
+				F8C23C7C9B49BB5895B37573 /* outline.request in Resources */,
 				C41BF7AA33F304880583BDAF /* whatsapp-mock.html in Resources */,
 				E2F43E44DF9045D82DE91921 /* wisp-core.js in Resources */,
 				6BC487395397EC1266A0296D /* wisp-page.js in Resources */,
