@@ -51,7 +51,9 @@ final class ScriptMessageRouter: NSObject, WKScriptMessageHandler {
         case .clipboard:
             // The in-page Copy button. Written natively so it never depends on
             // WebKit's transient user-activation rules for the clipboard API.
-            guard message.world == ContentWorlds.core, let text = body["text"] as? String, !text.isEmpty else { return }
+            guard message.world == ContentWorlds.core else { return }
+            if let armed = body["captureDownload"] as? Bool { session.captureNextDownloadToClipboard(armed); return }
+            guard let text = body["text"] as? String, !text.isEmpty else { return }
             let pb = NSPasteboard.general
             pb.clearContents()
             pb.setString(String(text.prefix(200_000)), forType: .string)

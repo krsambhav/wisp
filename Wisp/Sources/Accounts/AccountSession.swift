@@ -362,6 +362,9 @@ final class AccountSession {
         env.window.refreshChrome()
     }
 
+    /// In-page "Copy file": the next download this session triggers goes to the clipboard.
+    func captureNextDownloadToClipboard(_ armed: Bool) { env.downloads.captureNextToClipboard(armed) }
+
     func handleSelectorHealth(total: Int, missing: [String]) {
         selectorHealth = SelectorHealth(total: total, missing: missing, checkedAt: Date())
         if missing.isEmpty {

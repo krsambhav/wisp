@@ -53,11 +53,24 @@ final class SettingsCompatibilityTests: XCTestCase {
         XCTAssertTrue(decoded.copyButtonEnabled)
         var off = AppearanceSettings(); off.copyButtonEnabled = false
         XCTAssertFalse(try JSONDecoder().decode(AppearanceSettings.self, from: JSONEncoder().encode(off)).copyButtonEnabled)
+        XCTAssertFalse(String(decoding: data, as: UTF8.self).contains("downloadButton"))
+        XCTAssertTrue(decoded.downloadButtonEnabled)
+        XCTAssertFalse(String(decoding: data, as: UTF8.self).contains("copyFileButton"))
+        XCTAssertTrue(decoded.copyFileButtonEnabled)
     }
     func testCopyButtonAttribute() {
         XCTAssertTrue(CSSGenerator.attributesJS(appearance: AppearanceSettings()).contains("'data-wisp-copy-button', '1'"))
         var off = AppearanceSettings(); off.copyButtonEnabled = false
         XCTAssertTrue(CSSGenerator.attributesJS(appearance: off).contains("'data-wisp-copy-button', '0'"))
+    }
+    func testDownloadButtonAttribute() {
+        XCTAssertTrue(CSSGenerator.attributesJS(appearance: AppearanceSettings()).contains("'data-wisp-download-button', '1'"))
+        var off = AppearanceSettings(); off.downloadButtonEnabled = false
+        XCTAssertTrue(CSSGenerator.attributesJS(appearance: off).contains("'data-wisp-download-button', '0'"))
+    }
+    func testCopyFileButtonAttribute() {
+        var off = AppearanceSettings(); off.copyFileButtonEnabled = false
+        XCTAssertTrue(CSSGenerator.attributesJS(appearance: off).contains("'data-wisp-copyfile-button', '0'"))
     }
 }
 

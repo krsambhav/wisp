@@ -97,6 +97,16 @@ nonisolated struct AppearanceSettings: Codable, Equatable, Sendable {
         get { copyButton ?? true }
         set { copyButton = newValue }
     }
+    var downloadButton: Bool? = nil
+    var downloadButtonEnabled: Bool {
+        get { downloadButton ?? true }
+        set { downloadButton = newValue }
+    }
+    var copyFileButton: Bool? = nil
+    var copyFileButtonEnabled: Bool {
+        get { copyFileButton ?? true }
+        set { copyFileButton = newValue }
+    }
 }
 
 nonisolated struct NotificationSettings: Codable, Equatable, Sendable {

@@ -157,18 +157,54 @@
   }
   const bubbleSelector = '(leaf-climb)';
 
-  // ------------------------------------------------------------ copy button
+  // ---------------------------------------------------- hover tray buttons
   // WhatsApp mounts a hover tray (an absolutely positioned flex row inside the
-  // message container) holding the React button. A "Copy message" disc is
-  // cloned from that button's tray item, so it inherits WhatsApp's look and
-  // every theme's hover-button rules, and sits on the outer side of the tray.
-  // Clicks never reach WhatsApp: the clone has no React fiber and stops
-  // propagation. Text is read from the message's own .copyable-text block.
+  // message container) holding the React button. Wisp clones that button's
+  // tray item for its own discs, so they inherit WhatsApp's look and every
+  // theme's hover-button rules. They sit between React and the bubble, so
+  // React appearing or leaving never shifts them. Clicks never reach WhatsApp:
+  // a clone has no React fiber and stops propagation.
+  //   Copy      text messages: reads the message's own .copyable-text block.
+  //   Download  anything with media except voice notes: drives WhatsApp's own
+  //             "Download" menu entry, so decryption and naming stay theirs.
   const COPY_SVG = '<svg viewBox="0 0 24 24" height="16" preserveAspectRatio="xMidYMid meet" fill="currentColor"><title>wisp-copy</title><path fill="currentColor" d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"/></svg>';
-  const DONE_SVG = '<svg viewBox="0 0 24 24" height="16" preserveAspectRatio="xMidYMid meet" fill="currentColor"><title>wisp-copied</title><path fill="currentColor" d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
-  const COPY_LABEL = 'Copy message';
+  const DOWNLOAD_SVG = '<svg viewBox="0 0 24 24" height="16" preserveAspectRatio="xMidYMid meet" fill="currentColor"><title>wisp-download</title><path fill="currentColor" d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"/></svg>';
+  const COPY_FILE_SVG = '<svg viewBox="0 0 24 24" height="16" preserveAspectRatio="xMidYMid meet" fill="currentColor"><title>wisp-copy-file</title><path fill="currentColor" d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm-1 4 6 6v10c0 1.1-.9 2-2 2H7.99C6.89 23 6 22.1 6 21l.01-14c0-1.1.89-2 1.99-2H15zm-1 7h5.5L14 6.5V12z"/></svg>';
+  const DONE_SVG = '<svg viewBox="0 0 24 24" height="16" preserveAspectRatio="xMidYMid meet" fill="currentColor"><title>wisp-done</title><path fill="currentColor" d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
+  const MEDIA_SELECTOR = 'img[src^="blob:"], video, [data-testid="image-thumb"], [data-testid="document-thumb"], [data-testid="media-state-download"], [data-testid="sticker"], [data-testid="sticker-container"], [data-testid^="document-"], [data-icon^="document-"], [data-testid="gif"]';
+  const VOICE_SELECTOR = 'audio, [data-testid*="audio" i], [data-icon*="audio" i], [data-testid*="ptt" i], [data-icon*="ptt" i], [data-testid*="voice" i]';
 
-  function copyButtonEnabled() { return document.documentElement.getAttribute('data-wisp-copy-button') !== '0'; }
+  const ACTIONS = {
+    copy: {
+      label: 'Copy message', done: 'Copied', svg: COPY_SVG,
+      enabled: () => document.documentElement.getAttribute('data-wisp-copy-button') !== '0',
+      applies: (c) => !!c.querySelector('.copyable-text[data-pre-plain-text]'),
+      run: (c) => { const t = messageText(c); return !!t && writeClipboard(t); }
+    },
+    download: {
+      label: 'Download', done: 'Downloading', svg: DOWNLOAD_SVG,
+      enabled: () => document.documentElement.getAttribute('data-wisp-download-button') !== '0',
+      applies: (c) => !!c.querySelector(MEDIA_SELECTOR) && !c.querySelector(VOICE_SELECTOR),
+      run: (c) => downloadMedia(c)
+    },
+    copyfile: {
+      label: (c) => c.querySelector('video') ? 'Copy video' : c.querySelector('[data-testid="image-thumb"], [data-testid="sticker-container"]') ? 'Copy image' : 'Copy file',
+      done: 'Copied', svg: COPY_FILE_SVG,
+      enabled: () => document.documentElement.getAttribute('data-wisp-copyfile-button') !== '0',
+      applies: (c) => !!c.querySelector(MEDIA_SELECTOR) && !c.querySelector(VOICE_SELECTOR),
+      // The app catches the download WhatsApp starts and puts the file on the
+      // clipboard instead of saving it; disarmed again if no download starts.
+      run: (c) => {
+        if (!armClipboardCapture(true)) { return false; }
+        if (downloadMedia(c, () => armClipboardCapture(false))) { return true; }
+        armClipboardCapture(false);
+        return false;
+      }
+    }
+  };
+  // Outermost first; the last entry sits next to the bubble.
+  const ACTION_ORDER = ['download', 'copyfile', 'copy'];
+  const actionLabel = (action, container) => typeof action.label === 'function' ? action.label(container) : action.label;
 
   // Plain text of one message: text nodes plus emoji <img alt>, <br> as a
   // newline. Controls inside the text ("Read more") and the meta row are skipped.
@@ -195,7 +231,7 @@
         if (s.trim()) { parts.push(s); }
       }
     }
-    return parts.join('\n').replace(/ /g, ' ').replace(/[ \t]+\n/g, '\n').trim();
+    return parts.join('\n').replace(/ /g, ' ').replace(/[ \t]+\n/g, '\n').trim();
   }
 
   function writeClipboard(text) {
@@ -205,74 +241,153 @@
     return false;
   }
 
+  function armClipboardCapture(armed) {
+    const h = globalThis.webkit && globalThis.webkit.messageHandlers && globalThis.webkit.messageHandlers.wispClipboard;
+    if (!h) { return false; }
+    try { h.postMessage({ captureDownload: !!armed }); return true; } catch (_) { return false; }
+  }
+
+  function fireMouse(el, types, extra) {
+    const r = el.getBoundingClientRect();
+    const init = Object.assign({ bubbles: true, cancelable: true, composed: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2, button: 0 }, extra || {});
+    for (const t of types) { el.dispatchEvent(new (t.startsWith('pointer') ? PointerEvent : MouseEvent)(t, init)); }
+  }
+  function clickLike(el) {
+    fireMouse(el, ['pointerdown', 'mousedown'], { buttons: 1 });
+    fireMouse(el, ['pointerup', 'mouseup', 'click']);
+  }
+
+  // Opens the message's own options menu, picks "Download" and closes it. The
+  // menu is portalled to the body; it is hidden before its first paint (the
+  // observer fires as a microtask) so nothing flashes. If no Download entry
+  // shows up within a second the menu is closed again and false is reported
+  // through the button state.
+  const DOWNLOAD_ITEM = '[data-testid="mi-msg-download"], [data-testid*="download" i], [aria-label="Download" i]';
+  function findDownloadItem(root) {
+    if (root.matches(DOWNLOAD_ITEM)) { return root; }
+    const direct = root.querySelector(DOWNLOAD_ITEM);
+    if (direct) { return direct; }
+    for (const el of root.querySelectorAll('li, [role="button"], [role="menuitem"]')) {
+      if (/^download$/i.test(el.textContent.trim())) { return el; }
+    }
+    return null;
+  }
+  function downloadMedia(container, onFail) {
+    const chevron = container.querySelector('[data-testid="icon-down-context"], [aria-label="Open message options" i], [data-icon="down-context"]');
+    if (!chevron) { return false; }
+    const hidden = [];
+    const hide = (node) => { if (node.nodeType === 1 && !node.closest('#main, #side')) { node.style.setProperty('visibility', 'hidden', 'important'); hidden.push(node); } };
+    let settled = false;
+    const finish = (ok) => {
+      if (settled) { return; }
+      settled = true; mo.disconnect(); clearTimeout(timer);
+      if (!ok) {
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, bubbles: true }));
+        if (onFail) { onFail(); }
+      }
+      // Let the menu close before anything becomes visible again.
+      setTimeout(() => { for (const n of hidden) { n.style.removeProperty('visibility'); } }, 400);
+    };
+    const mo = new MutationObserver((records) => {
+      for (const rec of records) {
+        for (const node of rec.addedNodes) {
+          if (node.nodeType !== 1 || node.closest('#main, #side')) { continue; }
+          const item = findDownloadItem(node);
+          if (!item) { continue; }
+          hide(node);
+          clickLike(item);
+          finish(true);
+          return;
+        }
+      }
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
+    const timer = setTimeout(() => finish(false), 1200);
+    // The chevron is only laid out while the message is hovered; it is, since
+    // the user just clicked a button inside the same container.
+    fireMouse(container, ['pointerover', 'mouseover', 'pointermove', 'mousemove']);
+    clickLike(chevron);
+    return true;
+  }
+
   function swallow(ev) { ev.stopPropagation(); }
-  function onCopyActivate(ev) {
+  function onActionActivate(ev) {
     if (ev.type === 'keydown' && ev.key !== 'Enter' && ev.key !== ' ') { return; }
     ev.preventDefault(); ev.stopPropagation();
     const btn = ev.currentTarget;
+    const action = ACTIONS[btn.getAttribute('data-wisp-action')];
     const container = btn.closest('[data-testid="msg-container"], [data-wisp-bubble]');
-    const text = container ? messageText(container) : '';
-    if (!text || !writeClipboard(text)) { return; }
+    if (!action || !container || !action.run(container)) { return; }
     const svg = btn.querySelector('svg');
     if (svg) { svg.outerHTML = DONE_SVG; }
-    btn.setAttribute('aria-label', 'Copied');
-    btn.setAttribute('data-wisp-copied', '1');
+    btn.setAttribute('aria-label', action.done);
+    btn.setAttribute('data-wisp-done', '1');
     setTimeout(() => {
       if (!btn.isConnected) { return; }
       const done = btn.querySelector('svg');
-      if (done) { done.outerHTML = COPY_SVG; }
-      btn.setAttribute('aria-label', COPY_LABEL);
-      btn.removeAttribute('data-wisp-copied');
+      if (done) { done.outerHTML = action.svg; }
+      btn.setAttribute('aria-label', actionLabel(action, container));
+      btn.removeAttribute('data-wisp-done');
     }, 1200);
   }
 
-  function addCopyButtons() {
-    if (!copyButtonEnabled()) { return; }
+  function addTrayButtons() {
     for (const react of document.querySelectorAll('#main [data-testid="reaction-entry-point"]')) {
       // react → unstyled wrapper → tray item (spacing) → tray (absolute flex row) → message container
       const item = react.parentElement && react.parentElement.parentElement;
       const tray = item && item.parentElement;
       const container = tray && tray.parentElement;
-      if (!container || tray.querySelector('[data-wisp-copy]')) { continue; }
-      if (!container.querySelector('.copyable-text[data-pre-plain-text]')) { continue; }
+      if (!container) { continue; }
       if (getComputedStyle(tray).position !== 'absolute') { continue; } // structure drifted; do nothing
-      const clone = item.cloneNode(true);
-      const btn = clone.querySelector('[data-testid="reaction-entry-point"]');
-      if (!btn) { continue; }
-      btn.setAttribute('data-testid', 'wisp-copy-button');
-      btn.setAttribute('data-wisp-copy', '1');
-      btn.setAttribute('aria-label', COPY_LABEL);
-      btn.setAttribute('title', COPY_LABEL);
-      const svg = btn.querySelector('svg');
-      if (svg) { svg.outerHTML = COPY_SVG; } else { btn.innerHTML = '<span aria-hidden="true">' + COPY_SVG + '</span>'; }
-      clone.setAttribute('data-wisp-copy-item', '1');
-      btn.addEventListener('click', onCopyActivate);
-      btn.addEventListener('keydown', onCopyActivate);
-      for (const t of ['mousedown', 'mouseup', 'pointerdown', 'pointerup', 'dblclick', 'contextmenu']) { btn.addEventListener(t, swallow); }
-      btn.addEventListener('mousedown', (ev) => ev.preventDefault()); // keep focus in the composer
-      // Copy sits between React and the bubble, so React appearing or leaving
-      // never shifts it: outgoing trays pack to the right, incoming to the left.
       const dir = container.getAttribute('data-wisp-bubble') || (getComputedStyle(tray).justifyContent === 'flex-end' ? 'out' : 'in');
-      if (dir === 'out') { tray.appendChild(clone); } else { tray.insertBefore(clone, tray.firstChild); }
+      // Re-checked on every pass: a sticker or photo may finish loading after
+      // its tray first appeared, and a setting may have been switched on.
+      ACTION_ORDER.forEach((key, index) => {
+        const action = ACTIONS[key];
+        if (tray.querySelector(':scope > [data-wisp-item="' + key + '"]')) { return; }
+        if (!action.enabled() || !action.applies(container)) { return; }
+        const clone = item.cloneNode(true);
+        const btn = clone.querySelector('[data-testid="reaction-entry-point"]');
+        if (!btn) { return; }
+        btn.setAttribute('data-testid', 'wisp-' + key + '-button');
+        btn.setAttribute('data-wisp-action', key);
+        const label = actionLabel(action, container);
+        btn.setAttribute('aria-label', label);
+        btn.setAttribute('title', label);
+        const svg = btn.querySelector('svg');
+        if (svg) { svg.outerHTML = action.svg; } else { btn.innerHTML = '<span aria-hidden="true">' + action.svg + '</span>'; }
+        clone.setAttribute('data-wisp-item', key);
+        btn.addEventListener('click', onActionActivate);
+        btn.addEventListener('keydown', onActionActivate);
+        for (const t of ['mousedown', 'mouseup', 'pointerdown', 'pointerup', 'dblclick', 'contextmenu']) { btn.addEventListener(t, swallow); }
+        btn.addEventListener('mousedown', (ev) => ev.preventDefault()); // keep focus in the composer
+        // Outgoing trays pack to the right, incoming to the left. Later entries
+        // of ACTION_ORDER sit nearer the bubble; earlier ones go outside them.
+        const inner = [...tray.querySelectorAll(':scope > [data-wisp-item]')].filter((el) => ACTION_ORDER.indexOf(el.getAttribute('data-wisp-item')) > index);
+        if (dir === 'out') { if (inner.length) { tray.insertBefore(clone, inner[0]); } else { tray.appendChild(clone); } }
+        else if (inner.length) { inner[inner.length - 1].after(clone); } else { tray.insertBefore(clone, tray.firstChild); }
+      });
       watchTray(tray);
     }
   }
 
   // WhatsApp keeps a tray mounted after the pointer leaves and hides or removes
-  // its React item. The clone follows: it mirrors React's classes and inline
-  // style, and goes away when React does. One observer per tray; trays only
+  // its React item. The clones follow: they mirror React's classes and inline
+  // style, and go away when React does. One observer per tray; trays only
   // exist for hovered messages, so this is a handful at most.
   const trayWatchers = new WeakMap();
   function syncTray(tray) {
-    const ours = tray.querySelector(':scope > [data-wisp-copy-item]');
-    if (!ours) { return; }
+    const ours = tray.querySelectorAll(':scope > [data-wisp-item]');
+    if (ours.length === 0) { return; }
     const react = tray.querySelector('[data-testid="reaction-entry-point"]');
     const theirs = react && react.parentElement && react.parentElement.parentElement;
-    if (!theirs || theirs.parentElement !== tray) { ours.remove(); return; }
-    if (ours.className !== theirs.className) { ours.className = theirs.className; }
-    if (ours.style.cssText !== theirs.style.cssText) { ours.style.cssText = theirs.style.cssText; }
-    const ourBtn = ours.querySelector('[data-wisp-copy]');
-    if (ourBtn && ourBtn.className !== react.className) { ourBtn.className = react.className; }
+    if (!theirs || theirs.parentElement !== tray) { for (const o of ours) { o.remove(); } return; }
+    for (const o of ours) {
+      if (o.className !== theirs.className) { o.className = theirs.className; }
+      if (o.style.cssText !== theirs.style.cssText) { o.style.cssText = theirs.style.cssText; }
+      const ourBtn = o.querySelector('[data-wisp-action]');
+      if (ourBtn && ourBtn.className !== react.className) { ourBtn.className = react.className; }
+    }
   }
   function watchTray(tray) {
     if (trayWatchers.has(tray)) { return; }
@@ -313,7 +428,7 @@
   function runBubblePass() {
     if (bubbleFrame) { cancelAnimationFrame(bubbleFrame); bubbleFrame = 0; }
     if (bubbleTimer) { clearTimeout(bubbleTimer); bubbleTimer = 0; }
-    if (lastState === 'chats') { markBubbles(); addCopyButtons(); }
+    if (lastState === 'chats') { markBubbles(); addTrayButtons(); }
   }
   function tagBubblesBeforePaint() {
     if (bubbleFrame) { return; }

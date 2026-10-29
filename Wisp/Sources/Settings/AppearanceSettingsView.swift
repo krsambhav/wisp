@@ -63,6 +63,14 @@ struct AppearanceSettingsView: View {
                 WRow(title: "Copy button on hover", description: "A Copy button next to React when you hover a message. Copies the text, emoji included.") {
                     WToggle(isOn: $settings.appearance.copyButtonEnabled)
                 }
+                WDivider()
+                WRow(title: "Download button on hover", description: "A Download button on photos, videos, documents and stickers. Saves through WhatsApp's own download, so files land where they always do.") {
+                    WToggle(isOn: $settings.appearance.downloadButtonEnabled)
+                }
+                WDivider()
+                WRow(title: "Copy file button on hover", description: "Copies the photo, video, document or sticker itself to the clipboard, ready to paste into Finder, Mail or another chat.") {
+                    WToggle(isOn: $settings.appearance.copyFileButtonEnabled)
+                }
             }
 
             WGroupLabel("Typography & layout")

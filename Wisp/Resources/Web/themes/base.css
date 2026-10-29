@@ -103,9 +103,16 @@ html { --wisp-read: #EF4444; --WDS-content-read: var(--wisp-read) !important; }
 #main span[aria-label=" Read " i],
 #main span[aria-label=" Read " i] > svg { color: var(--wisp-read) !important; fill: var(--wisp-read) !important; }
 
-/* ---- 9b. Copy button (core script clones WhatsApp's React disc) ------- */
-html[data-wisp-copy-button="0"] #main [data-wisp-copy-item] { display: none !important; }
-#main [data-wisp-copy][data-wisp-copied] { color: var(--wisp-accent) !important; }
+/* ---- 9b. Copy / Download buttons (core script clones WhatsApp's React disc) */
+html[data-wisp-copy-button="0"] #main [data-wisp-item="copy"] { display: none !important; }
+html[data-wisp-download-button="0"] #main [data-wisp-item="download"] { display: none !important; }
+html[data-wisp-copyfile-button="0"] #main [data-wisp-item="copyfile"] { display: none !important; }
+#main [data-wisp-action][data-wisp-done] { color: var(--wisp-accent) !important; }
+/* WhatsApp sizes the hover tray for its own two discs. Once Wisp adds to it,
+   the tray grows to fit and stays anchored to the bubble's edge. */
+#main [data-testid="msg-container"] > div:has(> [data-wisp-item]) { width: auto !important; }
+#main [data-wisp-bubble="out"] > div:has(> [data-wisp-item]) { left: auto !important; right: 100% !important; }
+#main [data-wisp-bubble="in"] > div:has(> [data-wisp-item]) { right: auto !important; left: 100% !important; }
 
 /* ---- 10. Motion -------------------------------------------------------- */
 /* (Focus rings are left to WhatsApp; a custom outline doubled up on the search and composer fields.) */
