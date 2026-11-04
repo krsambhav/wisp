@@ -102,6 +102,14 @@ section[data-testid="intro-panel"] [data-testid="intro_panel_v2_title_card"] { b
 #pane-side [role="row"] > div[aria-selected="true"],
 #pane-side [role="row"] > div:has([aria-selected="true"]) { background: color-mix(in srgb, var(--wisp-text-primary) 5%, var(--wisp-surface)) !important; box-shadow: none !important; }
 #pane-side [role="row"] > div, #pane-side [role="row"] > div > div { outline: none !important; border-color: transparent !important; box-shadow: none !important; }
+/* Keyboard focus: WhatsApp rings its inset surface in the accent (near-black here), a second
+   rect offset inside the row. No ring at any depth; focus reads as a stronger tone on the one
+   row surface instead. The ring's classes appear only under real focus, so this isn't per-class. */
+#pane-side { --focus-ring-shadow-default: none; --focus-ring-shadow-inset: none; }
+#pane-side [role="row"], #pane-side [role="row"] *, #pane-side [role="row"] *::before, #pane-side [role="row"] *::after { outline: none !important; }
+#pane-side [role="row"]:focus-within *, #pane-side [role="row"]:focus-within *::before, #pane-side [role="row"]:focus-within *::after { box-shadow: none !important; }
+#pane-side [role="row"]:focus-within div { border-color: transparent !important; }
+#pane-side [role="row"]:has(:focus-visible) > div { background: color-mix(in srgb, var(--wisp-text-primary) 8%, var(--wisp-surface)) !important; }
 /* Row typography (structure: name = span[title][dir], preview = span[title]:not([dir])). */
 #pane-side [role="row"] span[title][dir] { font-size: 15px !important; font-weight: 600 !important; line-height: 20px !important; color: var(--wisp-text-primary) !important; }
 #pane-side [role="row"] span[title]:not([dir]), #pane-side [role="row"] span[title]:not([dir]) * { font-size: 13.5px !important; font-weight: 400 !important; line-height: 19px !important; }
