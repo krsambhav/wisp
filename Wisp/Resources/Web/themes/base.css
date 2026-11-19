@@ -25,6 +25,13 @@ html, body, #app {
   text-rendering: optimizeLegibility;
 }
 #app { font-family: var(--wisp-font-family); }
+/* Keep selection visible on both light surfaces and dark message bubbles. */
+#app ::selection {
+  background-color: #0054C7;
+  color: #FFFFFF;
+  -webkit-text-fill-color: #FFFFFF;
+}
+
 /* Message text size (opt-in via --wisp-message-font-scale; 1 = WhatsApp default) */
 #main .copyable-text .selectable-text,
 #main .selectable-text.copyable-text {

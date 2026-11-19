@@ -236,5 +236,4 @@ html[data-wisp-scheme="dark"] #main [data-wisp-bubble="out"] { --icon-ack: #2563
 [data-animate-modal-body] #side > div:first-child + div { order: 1; }
 
 /* ---- Misc ---------------------------------------------------------------- */
-#app ::selection { background: color-mix(in srgb, var(--wisp-accent) 18%, transparent); }
 #app a { text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); }
