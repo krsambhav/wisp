@@ -164,7 +164,7 @@
   // theme's hover-button rules. They sit between React and the bubble, so
   // React appearing or leaving never shifts them. Clicks never reach WhatsApp:
   // a clone has no React fiber and stops propagation.
-  //   Copy      text messages: reads the message's own .copyable-text block.
+  //   Copy      text messages: copies a single email address or the message text.
   //   Download  anything with media except voice notes: drives WhatsApp's own
   //             "Download" menu entry, so decryption and naming stay theirs.
   const COPY_SVG = '<svg viewBox="0 0 24 24" height="16" preserveAspectRatio="xMidYMid meet" fill="currentColor"><title>wisp-copy</title><path fill="currentColor" d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"/></svg>';
@@ -176,10 +176,14 @@
 
   const ACTIONS = {
     copy: {
-      label: 'Copy message', done: 'Copied', svg: COPY_SVG,
+      label: (c) => singleMessageEmail(messageText(c)) ? 'Copy email address' : 'Copy message',
+      done: 'Copied', svg: COPY_SVG,
       enabled: () => document.documentElement.getAttribute('data-wisp-copy-button') !== '0',
       applies: (c) => !!c.querySelector('.copyable-text[data-pre-plain-text]'),
-      run: (c) => { const t = messageText(c); return !!t && writeClipboard(t); }
+      run: (c) => {
+        const text = messageText(c);
+        return !!text && writeClipboard(singleMessageEmail(text) || text);
+      }
     },
     download: {
       label: 'Download', done: 'Downloading', svg: DOWNLOAD_SVG,
@@ -232,6 +236,21 @@
       }
     }
     return parts.join('\n').replace(/ /g, ' ').replace(/[ \t]+\n/g, '\n').trim();
+  }
+
+  function singleMessageEmail(text) {
+    // Skip web URLs, which can contain an address in their path or query.
+    const matches = text.matchAll(/https?:\/\/\S+|(?<![\w.!#$%&'*+/=?^`{|}~@-])([\w!#$%&'*+/=?^`{|}~-]+(?:\.[\w!#$%&'*+/=?^`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[a-z]{2,}|xn--[a-z0-9-]+))(?![\w@-]|\.[a-z0-9])/gi);
+    let email;
+    for (const match of matches) {
+      let address = match[1];
+      if (!address) { continue; }
+      const first = address[0];
+      if ((first === "'" || first === '`') && text[match.index + address.length] === first) { address = address.slice(1); }
+      if (email && email !== address) { return; }
+      email = address;
+    }
+    return email;
   }
 
   function writeClipboard(text) {
@@ -399,6 +418,56 @@
     trayWatchers.set(tray, mo);
   }
 
+  // Keep the shortcut alongside WhatsApp's chevron and let its menu archive the chat.
+  const CHAT_MENU_TRIGGER = 'button[data-testid="context-btn"]';
+  const CHAT_MENU = '[data-menu-content] [role="menu"]';
+  let cancelArchiveMenu = () => {};
+
+  function archiveChat(trigger) {
+    cancelArchiveMenu();
+    const previousMenus = new Set(document.querySelectorAll(CHAT_MENU));
+    const controller = new AbortController();
+    const stop = () => {
+      observer.disconnect();
+      clearTimeout(timer);
+      controller.abort();
+    };
+    const observer = new MutationObserver(() => {
+      const menu = [...document.querySelectorAll(CHAT_MENU)].find((el) => !previousMenus.has(el));
+      if (!menu) { return; }
+      const item = [...menu.querySelectorAll('button[role="menuitem"]')].find((el) =>
+        el.getAttribute('aria-label') === 'Archive chat' || el.querySelector('svg title')?.textContent === 'ic-archive');
+      if (!item) { return; }
+      stop();
+      if (item.getAttribute('aria-disabled') !== 'true') { item.click(); }
+    });
+    const timer = setTimeout(stop, 400);
+    cancelArchiveMenu = stop;
+    observer.observe(document.body, { childList: true, subtree: true });
+    document.addEventListener('pointerdown', stop, { capture: true, signal: controller.signal });
+    trigger.click();
+  }
+
+  function addChatArchiveButtons() {
+    for (const trigger of document.querySelectorAll('#pane-side [role="row"] [data-testid="cell-frame-secondary"] ' + CHAT_MENU_TRIGGER)) {
+      if (trigger.closest('[data-testid="archived-drawer"]') || trigger.previousElementSibling?.hasAttribute('data-wisp-archive')) { continue; }
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.setAttribute('data-wisp-archive', '');
+      button.setAttribute('aria-label', 'Archive chat');
+      button.title = 'Archive chat';
+      button.innerHTML = '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9m-7 3v5m-2-2 2 2 2-2"/></svg>';
+      for (const type of ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'keydown']) { button.addEventListener(type, swallow); }
+      button.addEventListener('mousedown', (ev) => ev.preventDefault());
+      button.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const menuTrigger = button.nextElementSibling;
+        if (menuTrigger?.matches(CHAT_MENU_TRIGGER)) { archiveChat(menuTrigger); }
+      });
+      trigger.before(button);
+    }
+  }
+
   let stateTimer = 0;
   function scheduleState() {
     if (stateTimer) { return; }
@@ -408,7 +477,7 @@
       detectScheme();
       if (s !== lastState) {
         lastState = s;
-        if (s === 'chats') { markBubbles(); }
+        if (s === 'chats') { tagBubblesBeforePaint(); }
         post('wispState', { state: s, scheme: lastScheme });
       }
       // Chat-panel hooks (#main, bubbles) only exist once a chat is open; run the
@@ -581,7 +650,7 @@
   function runBubblePass() {
     if (bubbleFrame) { cancelAnimationFrame(bubbleFrame); bubbleFrame = 0; }
     if (bubbleTimer) { clearTimeout(bubbleTimer); bubbleTimer = 0; }
-    if (lastState === 'chats') { markBubbles(); addTrayButtons(); }
+    if (lastState === 'chats') { markBubbles(); addTrayButtons(); addChatArchiveButtons(); }
   }
   function tagBubblesBeforePaint() {
     if (bubbleFrame) { return; }

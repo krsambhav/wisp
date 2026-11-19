@@ -97,6 +97,24 @@ html[data-wisp-density="compact"] #side header { min-height: 52px !important; }
 #pane-side [role="row"] [role="gridcell"] > div:last-child { flex-shrink: 0 !important; white-space: nowrap !important; }
 #pane-side [role="row"] [role="gridcell"] > div:last-child span { white-space: nowrap !important; }
 
+#pane-side [data-wisp-archive] {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 20px;
+  margin-inline-end: 3px;
+  vertical-align: top;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--wisp-text-secondary);
+  cursor: pointer;
+}
+#pane-side [role="row"]:hover [data-wisp-archive]:has(+ button[data-testid="context-btn"]) { display: inline-flex; }
+#pane-side [data-wisp-archive]:hover { background: var(--wisp-surface-emphasized); color: var(--wisp-text-primary); }
+
 /* WhatsApp's "Get WhatsApp for Mac" promo floats over the bottom of the chat
    list (an absolutely positioned card under a data-tab button). Wisp is the
    Mac app; hide the promo so the last rows stay reachable. */

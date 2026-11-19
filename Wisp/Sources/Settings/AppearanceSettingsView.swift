@@ -60,7 +60,7 @@ struct AppearanceSettingsView: View {
 
             WGroupLabel("Messages")
             WCard {
-                WRow(title: "Copy button on hover", description: "A Copy button next to React when you hover a message. Copies the text, emoji included.") {
+                WRow(title: "Copy button on hover", description: "Copies a single email address if present. Otherwise copies the message text, including emoji.") {
                     WToggle(isOn: $settings.appearance.copyButtonEnabled)
                 }
                 WDivider()
