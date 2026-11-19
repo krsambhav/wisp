@@ -50,8 +50,8 @@ targets:
       properties:
         CFBundleName: Wisp
         CFBundleDisplayName: Wisp
-        CFBundleShortVersionString: "1.2.0"
-        CFBundleVersion: "6"
+        CFBundleShortVersionString: "1.2.1"
+        CFBundleVersion: "7"
         CFBundleIdentifier: app.wisp.desktop
         LSMinimumSystemVersion: "14.0"
         LSApplicationCategoryType: public.app-category.social-networking
@@ -100,8 +100,8 @@ targets:
       path: Helper/Info.plist
       properties:
         CFBundleName: WispUpdateHelper
-        CFBundleShortVersionString: "1.2.0"
-        CFBundleVersion: "6"
+        CFBundleShortVersionString: "1.2.1"
+        CFBundleVersion: "7"
         XPCService:
           ServiceType: Application
     settings:
