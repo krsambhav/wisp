@@ -8,7 +8,7 @@
  *
  * Security notes:
  *  - The only native handler reachable from here is `wispNotify`.
- *  - Nothing else about the page (cookies, storage, message content) is read.
+ *  - Chat mute shortcuts use the clicked row’s WhatsApp chat model.
  *  - Icons are converted to small data URLs so the native side never needs
  *    access to blob: URLs. Payload size is capped.
  */
@@ -28,6 +28,30 @@
       if (h) { h.postMessage(payload); }
     } catch (_) { /* bridge unavailable; never throw into the page */ }
   };
+
+  // A row can be recycled. Resolve the live chat component from its native
+  // chevron on each activation so duplicate display names are unambiguous.
+  document.addEventListener('click', async (event) => {
+    if (!event.isTrusted) { return; }
+    const button = event.target.closest?.('#pane-side [data-wisp-chat-action]');
+    const duration = button?.dataset.wispChatAction;
+    if (duration !== 'hour' && duration !== 'always') { return; }
+    const trigger = button.parentElement?.nextElementSibling;
+    if (!trigger?.matches('button[data-testid="context-btn"]')) { return; }
+
+    try {
+      const fiberKey = Object.keys(trigger).find((key) => key.startsWith('__reactFiber$'));
+      for (let fiber = trigger[fiberKey]; fiber; fiber = fiber.return) {
+        const chat = fiber.stateNode?.props?.chat;
+        if (typeof chat?.mute?.mute !== 'function') { continue; }
+        const hours = duration === 'hour' ? 1 : Infinity;
+        const expiration = window.require('WAWebMuteExpirations').calculateMuteExpiration(hours);
+        await chat.mute.mute({ expiration, sendDevice: true, showToast: true });
+        return;
+      }
+    } catch (_) { /* The native model can reject the update. */ }
+    window.alert('Could not mute this chat. Please try again.');
+  }, true);
 
   async function resolveIcon(url) {
     if (!url || typeof url !== 'string') { return ''; }

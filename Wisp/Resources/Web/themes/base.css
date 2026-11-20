@@ -97,8 +97,10 @@ html[data-wisp-density="compact"] #side header { min-height: 52px !important; }
 #pane-side [role="row"] [role="gridcell"] > div:last-child { flex-shrink: 0 !important; white-space: nowrap !important; }
 #pane-side [role="row"] [role="gridcell"] > div:last-child span { white-space: nowrap !important; }
 
-#pane-side [data-wisp-archive] {
-  display: none;
+#pane-side [data-wisp-chat-shortcuts] { display: none; }
+#pane-side [role="row"]:is(:hover, :focus-within) [data-wisp-chat-shortcuts]:has(+ button[data-testid="context-btn"]) { display: inline-flex; }
+#pane-side [data-wisp-chat-action] {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 24px;
@@ -112,8 +114,7 @@ html[data-wisp-density="compact"] #side header { min-height: 52px !important; }
   color: var(--wisp-text-secondary);
   cursor: pointer;
 }
-#pane-side [role="row"]:hover [data-wisp-archive]:has(+ button[data-testid="context-btn"]) { display: inline-flex; }
-#pane-side [data-wisp-archive]:hover { background: var(--wisp-surface-emphasized); color: var(--wisp-text-primary); }
+#pane-side [data-wisp-chat-action]:hover { background: var(--wisp-surface-emphasized); color: var(--wisp-text-primary); }
 
 /* WhatsApp's "Get WhatsApp for Mac" promo floats over the bottom of the chat
    list (an absolutely positioned card under a data-tab button). Wisp is the
