@@ -448,23 +448,34 @@
     trigger.click();
   }
 
-  function addChatArchiveButtons() {
+  const chatShortcuts = [
+    ['hour', 'Mute for 1 hour', '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'],
+    ['always', 'Mute always', '<path d="m3 3 18 18M6 6.5A6 6 0 0 0 6 9v5l-2 3h13m1-4V9a6 6 0 0 0-8-5.6M10 20a2 2 0 0 0 4 0"/>'],
+    ['archive', 'Archive chat', '<rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9m-7 3v5m-2-2 2 2 2-2"/>'],
+  ];
+
+  function addChatShortcuts() {
     for (const trigger of document.querySelectorAll('#pane-side [role="row"] [data-testid="cell-frame-secondary"] ' + CHAT_MENU_TRIGGER)) {
-      if (trigger.closest('[data-testid="archived-drawer"]') || trigger.previousElementSibling?.hasAttribute('data-wisp-archive')) { continue; }
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.setAttribute('data-wisp-archive', '');
-      button.setAttribute('aria-label', 'Archive chat');
-      button.title = 'Archive chat';
-      button.innerHTML = '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9m-7 3v5m-2-2 2 2 2-2"/></svg>';
-      for (const type of ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'keydown']) { button.addEventListener(type, swallow); }
-      button.addEventListener('mousedown', (ev) => ev.preventDefault());
-      button.addEventListener('click', (ev) => {
-        ev.stopPropagation();
-        const menuTrigger = button.nextElementSibling;
-        if (menuTrigger?.matches(CHAT_MENU_TRIGGER)) { archiveChat(menuTrigger); }
-      });
-      trigger.before(button);
+      if (trigger.closest('[data-testid="archived-drawer"]') || trigger.previousElementSibling?.hasAttribute('data-wisp-chat-shortcuts')) { continue; }
+      const group = document.createElement('span');
+      group.setAttribute('data-wisp-chat-shortcuts', '');
+      for (const [action, label, icon] of chatShortcuts) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.dataset.wispChatAction = action;
+        button.setAttribute('aria-label', label);
+        button.title = label;
+        button.innerHTML = '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + icon + '</svg>';
+        for (const type of ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'keydown']) { button.addEventListener(type, swallow); }
+        button.addEventListener('mousedown', (ev) => ev.preventDefault());
+        button.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          const menuTrigger = group.nextElementSibling;
+          if (action === 'archive' && menuTrigger?.matches(CHAT_MENU_TRIGGER)) { archiveChat(menuTrigger); }
+        });
+        group.appendChild(button);
+      }
+      trigger.before(group);
     }
   }
 
@@ -650,7 +661,7 @@
   function runBubblePass() {
     if (bubbleFrame) { cancelAnimationFrame(bubbleFrame); bubbleFrame = 0; }
     if (bubbleTimer) { clearTimeout(bubbleTimer); bubbleTimer = 0; }
-    if (lastState === 'chats') { markBubbles(); addTrayButtons(); addChatArchiveButtons(); }
+    if (lastState === 'chats') { markBubbles(); addTrayButtons(); addChatShortcuts(); }
   }
   function tagBubblesBeforePaint() {
     if (bubbleFrame) { return; }
