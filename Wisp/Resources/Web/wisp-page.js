@@ -31,26 +31,61 @@
 
   // A row can be recycled. Resolve the live chat component from its native
   // chevron on each activation so duplicate display names are unambiguous.
-  document.addEventListener('click', async (event) => {
-    if (!event.isTrusted) { return; }
-    const button = event.target.closest?.('#pane-side [data-wisp-chat-action]');
-    const duration = button?.dataset.wispChatAction;
-    if (duration !== 'hour' && duration !== 'always') { return; }
+  function rowMuteModel(button) {
     const trigger = button.parentElement?.nextElementSibling;
     if (!trigger?.matches('button[data-testid="context-btn"]')) { return; }
+    const fiberKey = Object.keys(trigger).find((key) => key.startsWith('__reactFiber$'));
+    for (let fiber = trigger[fiberKey]; fiber; fiber = fiber.return) {
+      const model = fiber.stateNode?.props?.chat?.mute;
+      if (typeof model?.mute === 'function') { return model; }
+    }
+  }
 
+  const muteSelector = '#pane-side :is([data-wisp-chat-action="hour"], [data-wisp-chat-action="always"])';
+  function updateMuteLabels(button) {
+    const model = rowMuteModel(button);
+    if (!model) { return; }
+    const muted = window.require('WAWebMuteGetters').getIsMuted(model);
+    for (const shortcut of button.parentElement.querySelectorAll(muteSelector)) {
+      const label = muted ? 'Unmute notifications' : shortcut.dataset.wispChatAction === 'hour' ? 'Mute for 1 hour' : 'Mute always';
+      shortcut.title = label;
+      shortcut.setAttribute('aria-label', label);
+    }
+  }
+
+  for (const type of ['pointerover', 'focusin']) {
+    document.addEventListener(type, (event) => {
+      const button = event.target.closest?.(muteSelector);
+      if (button) { updateMuteLabels(button); }
+    }, true);
+  }
+
+  const pendingMutes = new WeakSet();
+  document.addEventListener('click', async (event) => {
+    if (!event.isTrusted) { return; }
+    const button = event.target.closest?.(muteSelector);
+    if (!button) { return; }
+    const model = rowMuteModel(button);
+    if (!model) {
+      window.alert('Could not find this chat. Please try again.');
+      return;
+    }
+    if (pendingMutes.has(model)) { return; }
     try {
-      const fiberKey = Object.keys(trigger).find((key) => key.startsWith('__reactFiber$'));
-      for (let fiber = trigger[fiberKey]; fiber; fiber = fiber.return) {
-        const chat = fiber.stateNode?.props?.chat;
-        if (typeof chat?.mute?.mute !== 'function') { continue; }
-        const hours = duration === 'hour' ? 1 : Infinity;
+      pendingMutes.add(model);
+      if (window.require('WAWebMuteGetters').getIsMuted(model)) {
+        await model.unmute({ sendDevice: true, showToast: true });
+      } else {
+        const hours = button.dataset.wispChatAction === 'hour' ? 1 : Infinity;
         const expiration = window.require('WAWebMuteExpirations').calculateMuteExpiration(hours);
-        await chat.mute.mute({ expiration, sendDevice: true, showToast: true });
-        return;
+        await model.mute({ expiration, sendDevice: true, showToast: true });
       }
-    } catch (_) { /* The native model can reject the update. */ }
-    window.alert('Could not mute this chat. Please try again.');
+      if (button.isConnected) { updateMuteLabels(button); }
+    } catch (_) {
+      window.alert('Could not change notifications for this chat. Please try again.');
+    } finally {
+      pendingMutes.delete(model);
+    }
   }, true);
 
   async function resolveIcon(url) {
