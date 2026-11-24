@@ -12,3 +12,5 @@ xcuserdata/
 # Local
 /tmp/
 dist/
+
+node_modules/

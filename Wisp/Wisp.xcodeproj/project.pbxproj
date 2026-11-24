@@ -59,6 +59,7 @@
 		B251F790B5D6FCB67C0C6E61 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29DB8DC4A87CE9F34C6023A6 /* DesignTokens.swift */; };
 		B71E010F927C8D9DCB5FF538 /* UpdateHelperProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3059F1C7092479B59AEE2023 /* UpdateHelperProtocol.swift */; };
 		BB5F9C474C74B8837AFA7606 /* Paths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B9B7B0C6496966AC951001B /* Paths.swift */; };
+		BB6CA6D152005499B1134A99 /* wisp-seen.js in Resources */ = {isa = PBXBuildFile; fileRef = 9A26FCACB4E89B9560C7F337 /* wisp-seen.js */; };
 		BCCFC9F85F3527D04FBABE0B /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 991F2463D2820E2C966E21F2 /* SessionManager.swift */; };
 		C41BF7AA33F304880583BDAF /* whatsapp-mock.html in Resources */ = {isa = PBXBuildFile; fileRef = EF21546B130CDE107DA8D35A /* whatsapp-mock.html */; };
 		CA0B37309BC8E81D41B4D679 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76CE818DEA932D8803ECDE2 /* AppEnvironment.swift */; };
@@ -163,6 +164,7 @@
 		902A6C9420E28BFF89D9F036 /* WispTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WispTests.swift; sourceTree = "<group>"; };
 		9419236D77396D53BBCDB867 /* Wisp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Wisp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		991F2463D2820E2C966E21F2 /* SessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManager.swift; sourceTree = "<group>"; };
+		9A26FCACB4E89B9560C7F337 /* wisp-seen.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "wisp-seen.js"; sourceTree = "<group>"; };
 		A73319D3FC765EA6727D6382 /* AvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarView.swift; sourceTree = "<group>"; };
 		A81AC6D1098F0F519B3A60EE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A9FCF9795526624BBB551802 /* Commands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Commands.swift; sourceTree = "<group>"; };
@@ -223,6 +225,7 @@
 			children = (
 				4BC15C06B2ACC0E05A56B49C /* wisp-core.js */,
 				1F84F2A5A36D915F822C5B3F /* wisp-page.js */,
+				9A26FCACB4E89B9560C7F337 /* wisp-seen.js */,
 				F342A861CC0E8DB141D6CC57 /* wisp-user-runtime.js */,
 				B2BE48F430FFBBA75C46967B /* mock */,
 				258A9B04CE10D15D9AB464CE /* themes */,
@@ -567,6 +570,7 @@
 				C41BF7AA33F304880583BDAF /* whatsapp-mock.html in Resources */,
 				E2F43E44DF9045D82DE91921 /* wisp-core.js in Resources */,
 				6BC487395397EC1266A0296D /* wisp-page.js in Resources */,
+				BB6CA6D152005499B1134A99 /* wisp-seen.js in Resources */,
 				86D86DD70FA4F9FB672A5A53 /* wisp-user-runtime.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

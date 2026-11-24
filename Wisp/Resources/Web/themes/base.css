@@ -205,3 +205,20 @@ html[data-wisp-msginfo] [data-testid="drawer-right"] [data-testid="kept-by-info"
 @media (prefers-reduced-motion: reduce) {
   #app *, #app *::before, #app *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
+/* Locally cached readers, below the latest outgoing message. */
+#main [data-wisp-seen-owner] { position: relative !important; padding-bottom: 30px !important; }
+#main [data-wisp-seen] {
+  position: absolute; inset-inline-end: 0; bottom: 2px;
+  display: flex; align-items: center; justify-content: flex-end; direction: ltr;
+  height: 24px; isolation: isolate; color: var(--wisp-text-secondary);
+}
+#main [data-wisp-seen] .wisp-seen-avatar {
+  display: inline-flex; flex: 0 0 24px; align-items: center; justify-content: center;
+  box-sizing: border-box; width: 24px; height: 24px; border-radius: 50%;
+  border: 2px solid var(--wisp-chat-background, #fff);
+  background: var(--wisp-surface-emphasized, #e9edef); color: var(--wisp-text-secondary, #667781);
+  font: 600 8px/1 system-ui, sans-serif; overflow: hidden;
+}
+#main [data-wisp-seen] .wisp-seen-avatar + .wisp-seen-avatar { margin-left: -10px; }
+#main [data-wisp-seen] img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+#main [data-wisp-seen] .wisp-seen-overflow { margin-right: 6px; font: 500 10px/1 system-ui, sans-serif; }

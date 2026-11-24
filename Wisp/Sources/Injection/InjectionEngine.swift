@@ -17,6 +17,7 @@ final class InjectionEngine {
     private let customCSS: CustomCSSStore
 
     private let pageBridgeSource: String
+    private let seenSource: String
     private let coreSource: String
     private let userRuntimeSource: String
 
@@ -25,6 +26,7 @@ final class InjectionEngine {
         self.scripts = scripts
         self.customCSS = customCSS
         pageBridgeSource = Self.loadResource("wisp-page")
+        seenSource = Self.loadResource("wisp-seen")
         coreSource = Self.loadResource("wisp-core")
         userRuntimeSource = Self.loadResource("wisp-user-runtime")
     }
@@ -74,6 +76,7 @@ final class InjectionEngine {
     private func buildUserScripts() -> [WKUserScript] {
         var out: [WKUserScript] = []
         out.append(WKUserScript(source: pageBridgeSource, injectionTime: .atDocumentStart, forMainFrameOnly: true, in: .page))
+        out.append(WKUserScript(source: seenSource, injectionTime: .atDocumentEnd, forMainFrameOnly: true, in: .page))
         out.append(WKUserScript(source: coreSource, injectionTime: .atDocumentStart, forMainFrameOnly: true, in: ContentWorlds.core))
         out.append(WKUserScript(source: styleBootstrapJS(), injectionTime: .atDocumentStart, forMainFrameOnly: true, in: ContentWorlds.core))
 

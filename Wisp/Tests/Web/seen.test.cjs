@@ -1,0 +1,131 @@
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { JSDOM } = require('jsdom');
+const { IDBFactory, IDBKeyRange } = require('fake-indexeddb');
+const source = fs.readFileSync(path.join(__dirname, '../../Resources/Web/wisp-seen.js'), 'utf8');
+const css = fs.readFileSync(path.join(__dirname, '../../Resources/Web/themes/base.css'), 'utf8');
+const wait = (ms = 320) => new Promise((resolve) => setTimeout(resolve, ms));
+function collection(items = []) {
+  const listeners = new Map();
+  return { items, listeners, get: id => items.find(x => String(x.id) === String(id)), getModelsArray: () => items,
+    on(events, cb) { events.split(' ').forEach(e => listeners.set(e, cb)); },
+    off(events) { events.split(' ').forEach(e => listeners.delete(e)); },
+    emit(event) { listeners.get(event)?.(); },
+    find() { throw Error('Forbidden query'); }, update() { throw Error('Forbidden update'); } };
+}
+async function fixture({ readers = [], compound = false, missingDB = false } = {}) {
+  let requests = 0, reads = 0;
+  const dom = new JSDOM('<!doctype html><style>' + css + '</style><div id="main"></div>', {
+    url: 'https://web.whatsapp.com/', runScripts: 'outside-only', pretendToBeVisual: true, resources: { dispatcher: { dispatch() { requests++; throw Error('Remote resource'); } } } });
+  const win = dom.window;
+  let focused = true;
+  win.document.hasFocus = () => focused;
+  win.fetch = win.XMLHttpRequest = win.WebSocket = function () { requests++; throw Error('Network request'); };
+  win.navigator.sendBeacon = () => { requests++; throw Error('Beacon'); };
+  const id = { fromMe: true, remote: 'chat@g.us', toString: () => 'true_chat@g.us_latest' }, msg = { id, t: 20 };
+  const stores = { Msg: collection([msg]), Chat: collection([{ id: 'chat@g.us', msgs: collection([msg]) }]), MsgInfo: collection(),
+    Contact: collection(Array.from({ length: 10 }, (_, i) => ({ id: `${i}@lid`, name: `Reader ${i}` }))),
+    ProfilePicThumb: collection([{ id: '1@lid', raw: 'aGVsbG8=' }, { id: '2@lid', eurl: 'https://example.com/never-fetch.jpg' }]) };
+  stores.ProfilePicThumb.get = () => { throw Error('Picture lookup may mark stale'); };
+  win.require = name => {
+    if (name === 'WAWebCollections') return stores;
+    if (name === 'WAWebUserPrefsMeUser') return { getMaybeMePnUser: () => 'me@c.us', getMaybeMeLidUser: () => 'me@lid' };
+    throw Error('Unexpected module ' + name);
+  };
+  const factory = new IDBFactory();
+  if (!missingDB) await new Promise((resolve, reject) => {
+    const open = factory.open('model-storage', 1);
+    open.onupgradeneeded = () => open.result.createObjectStore('message-info', { keyPath: ['msgKey', 'receiverUserJid'] })
+      .createIndex('msgKey', compound ? ['msgKey'] : 'msgKey');
+    open.onerror = () => reject(open.error);
+    open.onsuccess = () => {
+      const db = open.result, tx = db.transaction('message-info', 'readwrite');
+      readers.forEach(row => tx.objectStore('message-info').put({ msgKey: String(id), ...row }));
+      tx.oncomplete = () => { db.close(); resolve(); };
+    };
+  });
+  win.indexedDB = { databases: () => factory.databases(), open(...args) {
+    const req = factory.open(...args);
+    req.addEventListener('success', () => {
+      const db = req.result, transaction = db.transaction.bind(db);
+      db.transaction = (name, mode) => { assert.equal(mode, 'readonly'); reads++; return transaction(name, mode); };
+    });
+    return req;
+  } };
+  win.IDBKeyRange = IDBKeyRange;
+  const main = win.document.querySelector('#main'), message = win.document.createElement('div');
+  message.dataset.id = String(id); message.innerHTML = '<div>Latest sent message</div>'; main.append(message);
+  win.eval(source); await wait();
+  return { win, stores, main, message, msg, factory, counts: () => ({ requests, reads }), focus: value => { focused = value; win.dispatchEvent(new win.Event(value ? 'focus' : 'blur')); }, close: () => win.close() };
+}
+test('readers only; no self; cached images only; rightmost fully visible; no unfocused polling', async () => {
+  const f = await fixture({ readers: [{ receiverUserJid: '0@lid', delivery: 10 }, { receiverUserJid: '1@lid', read: 12 },
+    { receiverUserJid: '2@lid', played: 13 }, { receiverUserJid: 'me@lid', read: 14 }] });
+  try {
+    const row = f.message.querySelector('[data-wisp-seen]'); assert.ok(row);
+    assert.equal(row.querySelectorAll('.wisp-seen-avatar').length, 2); assert.equal(row.querySelectorAll('img').length, 1);
+    assert.ok(row.querySelector('img').src.startsWith('data:')); assert.equal(row.title, 'Seen by Reader 1, Reader 2');
+    const avatars = row.querySelectorAll('.wisp-seen-avatar'); assert.equal(avatars[1].style.zIndex, '2');
+    assert.equal(f.win.getComputedStyle(avatars[1]).marginLeft, '-10px'); assert.equal(f.counts().requests, 0);
+    f.focus(false); const reads = f.counts().reads; await wait(600); assert.equal(f.counts().reads, reads, 'no recurring read loop');
+  } finally { f.close(); }
+});
+test('overflow and compound message index', async () => {
+  const f = await fixture({ compound: true, readers: Array.from({ length: 8 }, (_, i) => ({ receiverUserJid: `${i}@lid`, read: 10 })) });
+  try { assert.equal(f.message.querySelectorAll('.wisp-seen-avatar').length, 5);
+    assert.equal(f.message.querySelector('.wisp-seen-overflow').textContent, '+3'); assert.equal(f.counts().requests, 0);
+  } finally { f.close(); }
+});
+test('new sent message removes old row; an offscreen latest never marks an older message', async () => {
+  const f = await fixture({ readers: [{ receiverUserJid: '1@lid', read: 10 }] });
+  try {
+    assert.ok(f.message.querySelector('[data-wisp-seen]'));
+    const next = { id: { fromMe: true, remote: 'chat@g.us', toString: () => 'true_chat@g.us_next' }, t: 30 };
+    f.stores.Msg.items.push(next); f.stores.Chat.items[0].msgs.items.push(next); f.stores.Msg.emit('add'); await wait();
+    assert.equal(f.main.querySelector('[data-wisp-seen]'), null); assert.equal(f.message.hasAttribute('data-wisp-seen-owner'), false);
+  } finally { f.close(); }
+});
+test('normal receipt event refreshes local data; switching chat clears row', async () => {
+  const f = await fixture();
+  try {
+    assert.equal(f.main.querySelector('[data-wisp-seen]'), null);
+    await new Promise(resolve => {
+      const open = f.factory.open('model-storage'); open.onsuccess = () => {
+        const db = open.result, tx = db.transaction('message-info', 'readwrite');
+        tx.objectStore('message-info').put({ msgKey: String(f.msg.id), receiverUserJid: '1@lid', read: 5 });
+        tx.oncomplete = () => { db.close(); resolve(); };
+      };
+    });
+    f.stores.Msg.emit('change:ack'); await wait(); assert.ok(f.main.querySelector('[data-wisp-seen]'));
+    f.main.replaceChildren(); await wait(); assert.equal(f.message.querySelector('[data-wisp-seen]'), null);
+    assert.equal(f.counts().requests, 0);
+  } finally { f.close(); }
+});
+test('missing DB is never created; missing modules leave chat intact', async () => {
+  const f = await fixture({ missingDB: true });
+  try {
+    assert.deepEqual(await f.factory.databases(), []); assert.equal(f.main.querySelector('[data-wisp-seen]'), null);
+    assert.equal(f.counts().reads, 0); f.win.require = () => { throw Error('Unavailable'); };
+    f.win.dispatchEvent(new f.win.Event('focus')); await wait(); assert.equal(f.message.textContent, 'Latest sent message');
+    assert.equal(f.counts().requests, 0);
+  } finally { f.close(); }
+});
+
+test('focused local refresh catches partial receipts without an ack event, then stops on blur', async () => {
+  const f = await fixture();
+  try {
+    await new Promise(resolve => {
+      const open = f.factory.open('model-storage'); open.onsuccess = () => {
+        const db = open.result, tx = db.transaction('message-info', 'readwrite');
+        tx.objectStore('message-info').put({ msgKey: String(f.msg.id), receiverUserJid: '3@lid', read: 12 });
+        tx.oncomplete = () => { db.close(); resolve(); };
+      };
+    });
+    await wait(5300);
+    assert.equal(f.main.querySelector('[data-wisp-seen]').title, 'Seen by Reader 3');
+    f.focus(false); const reads = f.counts().reads; await wait(5300);
+    assert.equal(f.counts().reads, reads); assert.equal(f.counts().requests, 0);
+  } finally { f.close(); }
+});
