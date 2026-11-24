@@ -11,6 +11,7 @@
   let timer = 0, localTimer = 0, revision = 0, currentRow = null, collections = null;
   let subscribed = null;
   let shiftedReaction = null;
+  let layoutObserver = null, layoutOwner = null, layoutBubble = null;
   const subscriptions = [];
 
   function schedule() {
@@ -138,6 +139,8 @@
   }
 
   function clear() {
+    layoutObserver?.disconnect();
+    layoutOwner = layoutBubble = null;
     resetReaction();
     if (currentRow) {
       currentRow.removeAttribute('data-wisp-seen-owner');
@@ -186,10 +189,26 @@
       shiftedReaction = reaction;
     }
   }
+  function reposition() {
+    const row = currentRow?.querySelector('[data-wisp-seen]');
+    if (row && currentRow.isConnected) { align(row, currentRow); }
+  }
+  function watchLayout(owner) {
+    const bubble = owner.querySelector('[data-wisp-bubble="out"]');
+    if (layoutOwner === owner && layoutBubble === bubble) { return; }
+    layoutObserver?.disconnect();
+    layoutOwner = owner; layoutBubble = bubble;
+    if (typeof ResizeObserver !== 'function') { return; }
+    // Resize callbacks run before paint. Follow media and message layout
+    // changes immediately without waiting for another receipt/database read.
+    layoutObserver ||= new ResizeObserver(reposition);
+    [owner, bubble, owner.closest('#main')].filter(Boolean).forEach((el) => layoutObserver.observe(el));
+  }
   function render(target, people) {
     if (currentRow !== target.element) { clear(); }
     if (!people.length) { clear(); return; }
     currentRow = target.element;
+    watchLayout(currentRow);
     const signature = JSON.stringify(people.map(({ id, name, image, loaded }) =>
       [id, name, image, loaded && (loaded.currentSrc || loaded.src)]));
     let row = currentRow.querySelector('[data-wisp-seen]');
@@ -289,9 +308,9 @@
   }
   document.addEventListener('visibilitychange', schedule);
   window.addEventListener('focus', schedule);
-  window.addEventListener('resize', schedule);
+  window.addEventListener('resize', reposition);
   window.addEventListener('blur', schedule);
-  document.addEventListener('load', (event) => { if (event.target?.tagName === 'IMG' && !event.target.closest('[data-wisp-seen]')) { schedule(); } }, true);
+  document.addEventListener('load', (event) => { if (event.target?.tagName === 'IMG' && !event.target.closest('[data-wisp-seen]')) { reposition(); schedule(); } }, true);
   window.addEventListener('pagehide', () => {
     revision++;
     clearTimeout(timer); timer = 0;

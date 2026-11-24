@@ -20,6 +20,12 @@ async function fixture({ readers = [], compound = false, missingDB = false, bare
   const dom = new JSDOM('<!doctype html><style>' + css + '</style><div id="main"></div>', {
     url: 'https://web.whatsapp.com/', runScripts: 'outside-only', pretendToBeVisual: true, resources: { dispatcher: { dispatch() { requests++; throw Error('Remote resource'); } } } });
   const win = dom.window;
+  const resizeObservers = [];
+  win.ResizeObserver = class {
+    constructor(callback) { this.callback = callback; this.targets = new Set(); resizeObservers.push(this); }
+    observe(target) { this.targets.add(target); }
+    disconnect() { this.targets.clear(); }
+  };
   let focused = true;
   win.document.hasFocus = () => focused;
   win.fetch = win.XMLHttpRequest = win.WebSocket = function () { requests++; throw Error('Network request'); };
@@ -95,7 +101,7 @@ async function fixture({ readers = [], compound = false, missingDB = false, bare
     win.HTMLCanvasElement.prototype.toDataURL = () => { exports++; throw new Error('Tainted canvas'); };
   }
   win.eval(source); await wait();
-  return { win, stores, main, message, msg, factory, reaction, counts: () => ({ requests, reads, draws, exports }), focus: value => { focused = value; win.dispatchEvent(new win.Event(value ? 'focus' : 'blur')); }, close: () => win.close() };
+  return { win, stores, main, message, msg, factory, reaction, resizeObservers, counts: () => ({ requests, reads, draws, exports }), focus: value => { focused = value; win.dispatchEvent(new win.Event(value ? 'focus' : 'blur')); }, close: () => win.close() };
 }
 test('readers only; no self; cached images only; rightmost fully visible; no unfocused polling', async () => {
   const f = await fixture({ readers: [{ receiverUserJid: '0@lid', delivery: 10 }, { receiverUserJid: '1@lid', read: 12 },
@@ -226,6 +232,28 @@ test('readers alone overlap the bubble edge and reserve room for the next messag
   try {
     assert.equal(f.message.querySelector('[data-wisp-seen]').style.top, '48px');
     assert.equal(f.win.getComputedStyle(f.message).paddingBottom, '18px');
+    assert.equal(f.counts().requests, 0);
+  } finally { f.close(); }
+});
+
+test('media layout changes reposition readers before paint without another receipt read', async () => {
+  const f = await fixture({ geometry: true, readers: [{ receiverUserJid: '1@lid', read: 12 }] });
+  try {
+    const row = f.message.querySelector('[data-wisp-seen]');
+    const bubble = f.message.firstElementChild;
+    const observer = f.resizeObservers.find(o => o.targets.has(bubble));
+    assert.ok(observer);
+    const reads = f.counts().reads;
+    bubble.getBoundingClientRect = () => ({ left: 320, right: 500, top: 100, bottom: 200, width: 180, height: 100 });
+    observer.callback([{ target: bubble }]);
+    assert.equal(row.getBoundingClientRect().right, 500);
+    assert.equal(row.style.top, '88px');
+    assert.equal(f.counts().reads, reads);
+    observer.callback([{ target: bubble }]);
+    assert.equal(row.getBoundingClientRect().right, 500);
+    f.stores.Msg.items.length = 0;
+    f.stores.Msg.emit('remove'); await wait();
+    assert.equal(observer.targets.size, 0);
     assert.equal(f.counts().requests, 0);
   } finally { f.close(); }
 });
