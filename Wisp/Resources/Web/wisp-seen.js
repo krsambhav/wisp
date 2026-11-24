@@ -149,6 +149,7 @@
     if (!shiftedReaction) { return; }
     shiftedReaction.removeAttribute('data-wisp-seen-reaction');
     shiftedReaction.style.removeProperty('--wisp-seen-reaction-x');
+    shiftedReaction.style.removeProperty('--wisp-seen-reaction-y');
     shiftedReaction = null;
   }
   function align(row, owner) {
@@ -163,20 +164,26 @@
     // is the absolute-position containing block's right edge.
     const inset = parseFloat(row.style.insetInlineEnd) || 0;
     row.style.insetInlineEnd = inset + (before.right - bubbleRect.right) / scale + 'px';
+    const rowHeight = row.getBoundingClientRect().height;
+    // Center the circles on the message edge, independent of the lower
+    // native reaction pill, so the pictures visibly overlap the bubble.
+    row.style.top = (bubbleRect.bottom - rect.top - rowHeight / 2) / scale + 'px';
     const rowRect = row.getBoundingClientRect();
     const reaction = owner.querySelector('[data-testid="reaction-bubble"]');
     if (shiftedReaction && shiftedReaction !== reaction) { resetReaction(); }
     if (reaction) {
+      reaction.setAttribute('data-wisp-seen-reaction', '');
       const reactionRect = reaction.getBoundingClientRect();
       const previousShift = parseFloat(reaction.style.getPropertyValue('--wisp-seen-reaction-x')) || 0;
+      const previousY = parseFloat(reaction.style.getPropertyValue('--wisp-seen-reaction-y')) || 0;
       const originalRight = reactionRect.right - previousShift * scale;
-      const shift = Math.min(0, (rowRect.left - 6 * scale - originalRight) / scale);
-      reaction.setAttribute('data-wisp-seen-reaction', '');
+      const originalTop = reactionRect.top - previousY * scale;
+      // The reaction container reserves 20px after its icons; placing its
+      // edge 10px into the reader row leaves a 10px visible gap.
+      const shift = Math.min(0, (rowRect.left + 10 * scale - originalRight) / scale);
       reaction.style.setProperty('--wisp-seen-reaction-x', shift + 'px');
+      reaction.style.setProperty('--wisp-seen-reaction-y', (rowRect.top - originalTop) / scale + 'px');
       shiftedReaction = reaction;
-      row.style.top = (reactionRect.top - rect.top + (reactionRect.height - rowRect.height) / 2) / scale + 'px';
-    } else {
-      row.style.top = (bubbleRect.bottom - rect.top) / scale - 6 + 'px';
     }
   }
   function render(target, people) {

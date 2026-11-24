@@ -207,16 +207,44 @@ html[data-wisp-msginfo] [data-testid="drawer-right"] [data-testid="kept-by-info"
 }
 /* Readers share the outgoing bubble's lower edge with native reactions. */
 #main [data-wisp-seen-owner] { position: relative !important; }
-#main [data-wisp-seen-owner]:not(:has([data-testid="reaction-bubble"])) { padding-bottom: 24px !important; }
+#main [data-wisp-seen-owner]:not(:has([data-testid="reaction-bubble"])) { padding-bottom: 18px !important; }
 #main [data-wisp-seen] {
-  position: absolute; inset-inline-end: 0; top: 0; z-index: 2;
+  position: absolute; inset-inline-end: 0; top: 0; z-index: 300 !important;
+  translate: 0 6px;
   display: flex; align-items: center; justify-content: flex-end; direction: ltr;
   height: 24px; isolation: isolate; color: var(--wisp-text-secondary);
 }
-#main [data-wisp-seen-reaction] { translate: var(--wisp-seen-reaction-x, 0px) 0 !important; }
+#main [data-wisp-seen-reaction] {
+  translate: var(--wisp-seen-reaction-x, 0px) var(--wisp-seen-reaction-y, 0px) !important;
+  position: relative; z-index: 299; height: 24px !important;
+  width: max-content !important; min-width: 0 !important;
+  padding: 0 !important; border: 0 !important;
+  background: transparent !important; box-shadow: none !important;
+}
+#main [data-wisp-seen-reaction] > div {
+  display: flex !important; align-items: center !important;
+  height: 24px !important; min-width: 0 !important; gap: 0 !important;
+  margin: 0 !important; padding: 0 !important; padding-inline-end: 20px !important; border: 0 !important;
+  background: transparent !important; box-shadow: none !important;
+}
+#main [data-wisp-seen-reaction] > div::before,
+#main [data-wisp-seen-reaction] > div::after,
+#main [data-wisp-seen-reaction] > div > :not([data-testid="reaction-bubble-item"]) { display: none !important; }
+#main [data-wisp-seen-reaction] [data-testid="reaction-bubble-item"] {
+  position: relative; display: flex !important; flex: 0 0 24px !important;
+  align-items: center; justify-content: center; box-sizing: border-box;
+  width: 24px !important; height: 24px !important; margin: 0 !important;
+  padding: 0 !important; overflow: visible !important;
+  border-radius: 50%; border: 2px solid var(--wisp-chat-background, #fff);
+  background: var(--wisp-surface-emphasized, #e9edef) !important;
+  font-size: 18px; line-height: 20px;
+}
+#main [data-wisp-seen-reaction] [data-testid="reaction-bubble-item"] + [data-testid="reaction-bubble-item"] { margin-left: -6px !important; }
+/* Keep the 20px emoji sprite viewport intact, then scale the whole image. */
+#main [data-wisp-seen-reaction] [data-testid="reaction-bubble-item"] :is(img, svg) { width: 20px !important; height: 20px !important; max-width: none !important; flex: 0 0 20px !important; object-fit: contain; transform: scale(0.9); transform-origin: center; }
 #main [data-wisp-seen] .wisp-seen-avatar {
-  display: inline-flex; flex: 0 0 24px; align-items: center; justify-content: center;
-  box-sizing: border-box; width: 24px; height: 24px; border-radius: 50%;
+  display: inline-flex; flex: 0 0 22px; align-items: center; justify-content: center;
+  box-sizing: border-box; width: 22px; height: 22px; border-radius: 50%;
   border: 2px solid var(--wisp-chat-background, #fff);
   background: var(--wisp-surface-emphasized, #e9edef); color: var(--wisp-text-secondary, #667781);
   font: 600 8px/1 system-ui, sans-serif; overflow: hidden;

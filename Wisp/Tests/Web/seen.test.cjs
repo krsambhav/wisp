@@ -68,15 +68,17 @@ async function fixture({ readers = [], compound = false, missingDB = false, bare
       if (!this.hasAttribute('data-wisp-seen')) return originalRect.call(this);
       // The rendered containing edge is 20px inside the owner's border box.
       const right = 480 - (parseFloat(this.style.insetInlineEnd) || 0);
-      return { left: right - 38, right, width: 38, height: 24 };
+      const top = 100 + (parseFloat(this.style.top) || 0) + 6;
+      return { left: right - 38, right, top, bottom: top + 24, width: 38, height: 24 };
     };
   }
   if (withReaction) {
     reaction = win.document.createElement('button'); reaction.dataset.testid = 'reaction-bubble';
-    reaction.textContent = '❤️ 2'; message.append(reaction);
+    reaction.innerHTML = '<div><span data-testid="reaction-bubble-item">❤️</span><span data-testid="reaction-bubble-item">😂</span><span data-testid="test-reaction-count">2</span></div>'; message.append(reaction);
     reaction.getBoundingClientRect = () => {
       const shift = parseFloat(reaction.style.getPropertyValue('--wisp-seen-reaction-x')) || 0;
-      return { left: 420 + shift, right: 490 + shift, top: 150, bottom: 174, width: 70, height: 24 };
+      const y = parseFloat(reaction.style.getPropertyValue('--wisp-seen-reaction-y')) || 0;
+      return { left: 452 + shift, right: 490 + shift, top: 150 + y, bottom: 174 + y, width: 38, height: 24 };
     };
   }
   if (loadedPhoto) {
@@ -201,16 +203,20 @@ test('readers share the reaction line, shift reactions left without drift, and r
   const f = await fixture({ geometry: true, withReaction: true, readers: [{ receiverUserJid: '1@lid', read: 12 }, { receiverUserJid: '2@lid', read: 13 }] });
   try {
     const row = f.message.querySelector('[data-wisp-seen]');
-    assert.equal(row.style.top, '50px');
+    assert.equal(row.style.top, '48px');
     assert.equal(row.getBoundingClientRect().right, 480);
-    assert.equal(f.reaction.style.getPropertyValue('--wisp-seen-reaction-x'), '-54px');
+    assert.equal(f.reaction.style.getPropertyValue('--wisp-seen-reaction-x'), '-38px');
+    assert.equal(f.reaction.style.getPropertyValue('--wisp-seen-reaction-y'), '4px');
+    assert.equal(f.win.getComputedStyle(f.reaction.querySelector('[data-testid=test-reaction-count]')).display, 'none');
+    assert.equal(f.win.getComputedStyle(f.reaction.querySelector('[data-testid=reaction-bubble-item]')).width, '24px');
     let clicked = 0; f.reaction.onclick = () => clicked++; f.reaction.click(); assert.equal(clicked, 1);
     f.stores.Msg.emit('change:ack'); await wait();
-    assert.equal(f.reaction.style.getPropertyValue('--wisp-seen-reaction-x'), '-54px');
+    assert.equal(f.reaction.style.getPropertyValue('--wisp-seen-reaction-x'), '-38px');
     f.reaction.remove(); await wait();
-    assert.equal(row.style.top, '54px');
+    assert.equal(row.style.top, '48px');
     assert.equal(f.reaction.hasAttribute('data-wisp-seen-reaction'), false);
     assert.equal(f.reaction.style.getPropertyValue('--wisp-seen-reaction-x'), '');
+    assert.equal(f.reaction.style.getPropertyValue('--wisp-seen-reaction-y'), '');
     assert.equal(f.counts().requests, 0);
   } finally { f.close(); }
 });
@@ -218,8 +224,8 @@ test('readers share the reaction line, shift reactions left without drift, and r
 test('readers alone overlap the bubble edge and reserve room for the next message', async () => {
   const f = await fixture({ geometry: true, readers: [{ receiverUserJid: '1@lid', read: 12 }] });
   try {
-    assert.equal(f.message.querySelector('[data-wisp-seen]').style.top, '54px');
-    assert.equal(f.win.getComputedStyle(f.message).paddingBottom, '24px');
+    assert.equal(f.message.querySelector('[data-wisp-seen]').style.top, '48px');
+    assert.equal(f.win.getComputedStyle(f.message).paddingBottom, '18px');
     assert.equal(f.counts().requests, 0);
   } finally { f.close(); }
 });
