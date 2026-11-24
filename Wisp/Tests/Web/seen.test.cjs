@@ -15,7 +15,7 @@ function collection(items = []) {
     emit(event) { listeners.get(event)?.(); },
     find() { throw Error('Forbidden query'); }, update() { throw Error('Forbidden update'); } };
 }
-async function fixture({ readers = [], compound = false, missingDB = false, bareIDs = false, loadedPhoto = false } = {}) {
+async function fixture({ readers = [], compound = false, missingDB = false, bareIDs = false, loadedPhoto = false, geometry = false, withReaction = false } = {}) {
   let requests = 0, reads = 0, draws = 0, exports = 0;
   const dom = new JSDOM('<!doctype html><style>' + css + '</style><div id="main"></div>', {
     url: 'https://web.whatsapp.com/', runScripts: 'outside-only', pretendToBeVisual: true, resources: { dispatcher: { dispatch() { requests++; throw Error('Remote resource'); } } } });
@@ -57,7 +57,28 @@ async function fixture({ readers = [], compound = false, missingDB = false, bare
   } };
   win.IDBKeyRange = IDBKeyRange;
   const main = win.document.querySelector('#main'), message = win.document.createElement('div');
-  message.dataset.id = bareIDs ? id.id : String(id); message.innerHTML = '<div>Latest sent message</div>'; main.append(message);
+  message.dataset.id = bareIDs ? id.id : String(id); message.innerHTML = '<div data-wisp-bubble="out">Latest sent message</div>'; main.append(message);
+  let reaction = null;
+  if (geometry) {
+    message.getBoundingClientRect = () => ({ left: 100, right: 500, top: 100, bottom: 180, width: 400, height: 80 });
+    Object.defineProperty(message, 'offsetWidth', { value: 400 });
+    message.firstElementChild.getBoundingClientRect = () => ({ left: 300, right: 480, top: 100, bottom: 160, width: 180, height: 60 });
+    const originalRect = win.HTMLElement.prototype.getBoundingClientRect;
+    win.HTMLElement.prototype.getBoundingClientRect = function () {
+      if (!this.hasAttribute('data-wisp-seen')) return originalRect.call(this);
+      // The rendered containing edge is 20px inside the owner's border box.
+      const right = 480 - (parseFloat(this.style.insetInlineEnd) || 0);
+      return { left: right - 38, right, width: 38, height: 24 };
+    };
+  }
+  if (withReaction) {
+    reaction = win.document.createElement('button'); reaction.dataset.testid = 'reaction-bubble';
+    reaction.textContent = '❤️ 2'; message.append(reaction);
+    reaction.getBoundingClientRect = () => {
+      const shift = parseFloat(reaction.style.getPropertyValue('--wisp-seen-reaction-x')) || 0;
+      return { left: 420 + shift, right: 490 + shift, top: 150, bottom: 174, width: 70, height: 24 };
+    };
+  }
   if (loadedPhoto) {
     const img = win.document.createElement('img');
     // Model an already loaded, non-CORS photo without issuing a test request.
@@ -72,7 +93,7 @@ async function fixture({ readers = [], compound = false, missingDB = false, bare
     win.HTMLCanvasElement.prototype.toDataURL = () => { exports++; throw new Error('Tainted canvas'); };
   }
   win.eval(source); await wait();
-  return { win, stores, main, message, msg, factory, counts: () => ({ requests, reads, draws, exports }), focus: value => { focused = value; win.dispatchEvent(new win.Event(value ? 'focus' : 'blur')); }, close: () => win.close() };
+  return { win, stores, main, message, msg, factory, reaction, counts: () => ({ requests, reads, draws, exports }), focus: value => { focused = value; win.dispatchEvent(new win.Event(value ? 'focus' : 'blur')); }, close: () => win.close() };
 }
 test('readers only; no self; cached images only; rightmost fully visible; no unfocused polling', async () => {
   const f = await fixture({ readers: [{ receiverUserJid: '0@lid', delivery: 10 }, { receiverUserJid: '1@lid', read: 12 },
@@ -172,6 +193,33 @@ test('already loaded cross-origin DP is drawn directly without export or another
     assert.equal(f.message.querySelector('[data-wisp-seen] img'), null);
     assert.equal(f.counts().draws, 1);
     assert.equal(f.counts().exports, 0);
+    assert.equal(f.counts().requests, 0);
+  } finally { f.close(); }
+});
+
+test('readers share the reaction line, shift reactions left without drift, and restore on removal', async () => {
+  const f = await fixture({ geometry: true, withReaction: true, readers: [{ receiverUserJid: '1@lid', read: 12 }, { receiverUserJid: '2@lid', read: 13 }] });
+  try {
+    const row = f.message.querySelector('[data-wisp-seen]');
+    assert.equal(row.style.top, '50px');
+    assert.equal(row.getBoundingClientRect().right, 480);
+    assert.equal(f.reaction.style.getPropertyValue('--wisp-seen-reaction-x'), '-54px');
+    let clicked = 0; f.reaction.onclick = () => clicked++; f.reaction.click(); assert.equal(clicked, 1);
+    f.stores.Msg.emit('change:ack'); await wait();
+    assert.equal(f.reaction.style.getPropertyValue('--wisp-seen-reaction-x'), '-54px');
+    f.reaction.remove(); await wait();
+    assert.equal(row.style.top, '54px');
+    assert.equal(f.reaction.hasAttribute('data-wisp-seen-reaction'), false);
+    assert.equal(f.reaction.style.getPropertyValue('--wisp-seen-reaction-x'), '');
+    assert.equal(f.counts().requests, 0);
+  } finally { f.close(); }
+});
+
+test('readers alone overlap the bubble edge and reserve room for the next message', async () => {
+  const f = await fixture({ geometry: true, readers: [{ receiverUserJid: '1@lid', read: 12 }] });
+  try {
+    assert.equal(f.message.querySelector('[data-wisp-seen]').style.top, '54px');
+    assert.equal(f.win.getComputedStyle(f.message).paddingBottom, '24px');
     assert.equal(f.counts().requests, 0);
   } finally { f.close(); }
 });

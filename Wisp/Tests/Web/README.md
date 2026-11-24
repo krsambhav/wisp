@@ -8,6 +8,8 @@ changes, missing storage, readonly transactions, and no polling while unfocused.
 Focused chats check local storage every five seconds. Regression cases cover
 bare stanza IDs in the live DOM and drawing already-loaded cross-origin photos
 directly into a canvas, without exporting pixels or fetching the image again.
+Layout checks cover the shared reaction row, spacing, repeated alignment, and
+restoring reaction placement when the reader indicator is removed.
 Network and remote-resource entry points throw if the feature tries to use them.
 
 `wisp-seen.js` reads the existing `model-storage` database's `message-info` store

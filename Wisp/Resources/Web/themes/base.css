@@ -205,13 +205,15 @@ html[data-wisp-msginfo] [data-testid="drawer-right"] [data-testid="kept-by-info"
 @media (prefers-reduced-motion: reduce) {
   #app *, #app *::before, #app *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
-/* Locally cached readers, below the latest outgoing message. */
-#main [data-wisp-seen-owner] { position: relative !important; padding-bottom: 30px !important; }
+/* Readers share the outgoing bubble's lower edge with native reactions. */
+#main [data-wisp-seen-owner] { position: relative !important; }
+#main [data-wisp-seen-owner]:not(:has([data-testid="reaction-bubble"])) { padding-bottom: 24px !important; }
 #main [data-wisp-seen] {
-  position: absolute; inset-inline-end: 0; bottom: 2px;
+  position: absolute; inset-inline-end: 0; top: 0; z-index: 2;
   display: flex; align-items: center; justify-content: flex-end; direction: ltr;
   height: 24px; isolation: isolate; color: var(--wisp-text-secondary);
 }
+#main [data-wisp-seen-reaction] { translate: var(--wisp-seen-reaction-x, 0px) 0 !important; }
 #main [data-wisp-seen] .wisp-seen-avatar {
   display: inline-flex; flex: 0 0 24px; align-items: center; justify-content: center;
   box-sizing: border-box; width: 24px; height: 24px; border-radius: 50%;

@@ -42,7 +42,7 @@ The first launch is blocked by Gatekeeper because the build is signed with a dev
 - Light / dark / system mode, accent presets or any custom color, font family, interface scale, message text size, comfortable / compact density, rounded bubbles with adjustable radius, optional fixed sidebar width.
 - Custom CSS editor with syntax highlighting, brace validation and live preview. Preset import / export as JSON.
 - All changes apply live. No reload.
-- Overlapping reader avatars under your latest sent message. Reads only locally stored receipts and cached photo bytes; no receipt/photo requests or server polling. Uncached photos use initials. Refreshes on chat activity and checks the local database every five seconds while the chat is visible and focused.
+- Overlapping reader avatars on the lower edge of your latest sent message, with reactions shifted left when both are present. Reads only locally stored receipts and cached photo bytes; no receipt/photo requests or server polling. Uncached photos use initials. Refreshes on chat activity and checks the local database every five seconds while the chat is visible and focused.
 
 **Scripts**
 - Userscript-style manager: multiple scripts, enable / disable, document-start or document-end, isolated or page-context world.

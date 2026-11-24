@@ -10,6 +10,7 @@
   const LIMIT = 5;
   let timer = 0, localTimer = 0, revision = 0, currentRow = null, collections = null;
   let subscribed = null;
+  let shiftedReaction = null;
   const subscriptions = [];
 
   function schedule() {
@@ -137,18 +138,46 @@
   }
 
   function clear() {
+    resetReaction();
     if (currentRow) {
       currentRow.removeAttribute('data-wisp-seen-owner');
       currentRow.querySelector('[data-wisp-seen]')?.remove();
       currentRow = null;
     }
   }
+  function resetReaction() {
+    if (!shiftedReaction) { return; }
+    shiftedReaction.removeAttribute('data-wisp-seen-reaction');
+    shiftedReaction.style.removeProperty('--wisp-seen-reaction-x');
+    shiftedReaction = null;
+  }
   function align(row, owner) {
     const bubble = owner.querySelector('[data-wisp-bubble="out"]');
     if (!bubble) { return; }
     const rect = owner.getBoundingClientRect();
-    const scale = owner.offsetWidth ? rect.width / owner.offsetWidth : 1;
-    row.style.insetInlineEnd = Math.max(0, (rect.right - bubble.getBoundingClientRect().right) / (scale || 1)) + 'px';
+    const scale = (owner.offsetWidth ? rect.width / owner.offsetWidth : 1) || 1;
+    const bubbleRect = bubble.getBoundingClientRect();
+    const before = row.getBoundingClientRect();
+    // Native message rows can offset their children with margins. Correct
+    // against the rendered edge rather than assuming the owner's border box
+    // is the absolute-position containing block's right edge.
+    const inset = parseFloat(row.style.insetInlineEnd) || 0;
+    row.style.insetInlineEnd = inset + (before.right - bubbleRect.right) / scale + 'px';
+    const rowRect = row.getBoundingClientRect();
+    const reaction = owner.querySelector('[data-testid="reaction-bubble"]');
+    if (shiftedReaction && shiftedReaction !== reaction) { resetReaction(); }
+    if (reaction) {
+      const reactionRect = reaction.getBoundingClientRect();
+      const previousShift = parseFloat(reaction.style.getPropertyValue('--wisp-seen-reaction-x')) || 0;
+      const originalRight = reactionRect.right - previousShift * scale;
+      const shift = Math.min(0, (rowRect.left - 6 * scale - originalRight) / scale);
+      reaction.setAttribute('data-wisp-seen-reaction', '');
+      reaction.style.setProperty('--wisp-seen-reaction-x', shift + 'px');
+      shiftedReaction = reaction;
+      row.style.top = (reactionRect.top - rect.top + (reactionRect.height - rowRect.height) / 2) / scale + 'px';
+    } else {
+      row.style.top = (bubbleRect.bottom - rect.top) / scale - 6 + 'px';
+    }
   }
   function render(target, people) {
     if (currentRow !== target.element) { clear(); }
