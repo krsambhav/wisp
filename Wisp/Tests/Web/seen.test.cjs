@@ -15,8 +15,8 @@ function collection(items = []) {
     emit(event) { listeners.get(event)?.(); },
     find() { throw Error('Forbidden query'); }, update() { throw Error('Forbidden update'); } };
 }
-async function fixture({ readers = [], compound = false, missingDB = false } = {}) {
-  let requests = 0, reads = 0;
+async function fixture({ readers = [], compound = false, missingDB = false, bareIDs = false, loadedPhoto = false } = {}) {
+  let requests = 0, reads = 0, draws = 0, exports = 0;
   const dom = new JSDOM('<!doctype html><style>' + css + '</style><div id="main"></div>', {
     url: 'https://web.whatsapp.com/', runScripts: 'outside-only', pretendToBeVisual: true, resources: { dispatcher: { dispatch() { requests++; throw Error('Remote resource'); } } } });
   const win = dom.window;
@@ -24,7 +24,7 @@ async function fixture({ readers = [], compound = false, missingDB = false } = {
   win.document.hasFocus = () => focused;
   win.fetch = win.XMLHttpRequest = win.WebSocket = function () { requests++; throw Error('Network request'); };
   win.navigator.sendBeacon = () => { requests++; throw Error('Beacon'); };
-  const id = { fromMe: true, remote: 'chat@g.us', toString: () => 'true_chat@g.us_latest' }, msg = { id, t: 20 };
+  const id = { id: 'latest', fromMe: true, remote: 'chat@g.us', toString: () => 'true_chat@g.us_latest' }, msg = { id, t: 20 };
   const stores = { Msg: collection([msg]), Chat: collection([{ id: 'chat@g.us', msgs: collection([msg]) }]), MsgInfo: collection(),
     Contact: collection(Array.from({ length: 10 }, (_, i) => ({ id: `${i}@lid`, name: `Reader ${i}` }))),
     ProfilePicThumb: collection([{ id: '1@lid', raw: 'aGVsbG8=' }, { id: '2@lid', eurl: 'https://example.com/never-fetch.jpg' }]) };
@@ -32,6 +32,7 @@ async function fixture({ readers = [], compound = false, missingDB = false } = {
   win.require = name => {
     if (name === 'WAWebCollections') return stores;
     if (name === 'WAWebUserPrefsMeUser') return { getMaybeMePnUser: () => 'me@c.us', getMaybeMeLidUser: () => 'me@lid' };
+    if (name === 'WAWebProfilePicThumbGetters') return { getMaybeImg: () => 'https://example.com/generated-thumbnail.jpg' };
     throw Error('Unexpected module ' + name);
   };
   const factory = new IDBFactory();
@@ -56,9 +57,22 @@ async function fixture({ readers = [], compound = false, missingDB = false } = {
   } };
   win.IDBKeyRange = IDBKeyRange;
   const main = win.document.querySelector('#main'), message = win.document.createElement('div');
-  message.dataset.id = String(id); message.innerHTML = '<div>Latest sent message</div>'; main.append(message);
+  message.dataset.id = bareIDs ? id.id : String(id); message.innerHTML = '<div>Latest sent message</div>'; main.append(message);
+  if (loadedPhoto) {
+    const img = win.document.createElement('img');
+    // Model an already loaded, non-CORS photo without issuing a test request.
+    Object.defineProperties(img, {
+      currentSrc: { value: 'https://example.com/generated-thumbnail.jpg' },
+      complete: { value: true }, naturalWidth: { value: 80 }, naturalHeight: { value: 120 },
+    });
+    win.document.body.append(img);
+    win.HTMLCanvasElement.prototype.getContext = () => ({ drawImage(source, ...rect) {
+      assert.equal(source, img); assert.deepEqual(rect, [0, 20, 80, 80, 0, 0, 48, 48]); draws++;
+    } });
+    win.HTMLCanvasElement.prototype.toDataURL = () => { exports++; throw new Error('Tainted canvas'); };
+  }
   win.eval(source); await wait();
-  return { win, stores, main, message, msg, factory, counts: () => ({ requests, reads }), focus: value => { focused = value; win.dispatchEvent(new win.Event(value ? 'focus' : 'blur')); }, close: () => win.close() };
+  return { win, stores, main, message, msg, factory, counts: () => ({ requests, reads, draws, exports }), focus: value => { focused = value; win.dispatchEvent(new win.Event(value ? 'focus' : 'blur')); }, close: () => win.close() };
 }
 test('readers only; no self; cached images only; rightmost fully visible; no unfocused polling', async () => {
   const f = await fixture({ readers: [{ receiverUserJid: '0@lid', delivery: 10 }, { receiverUserJid: '1@lid', read: 12 },
@@ -127,5 +141,37 @@ test('focused local refresh catches partial receipts without an ack event, then 
     assert.equal(f.main.querySelector('[data-wisp-seen]').title, 'Seen by Reader 3');
     f.focus(false); const reads = f.counts().reads; await wait(5300);
     assert.equal(f.counts().reads, reads); assert.equal(f.counts().requests, 0);
+  } finally { f.close(); }
+});
+
+test('current WhatsApp bare stanza DOM IDs resolve old read receipts', async () => {
+  const f = await fixture({ bareIDs: true, readers: [{ receiverUserJid: '1@lid', read: 12 }, { receiverUserJid: '2@lid', read: 13 }] });
+  try {
+    assert.equal(f.message.dataset.id, 'latest');
+    assert.equal(f.message.querySelectorAll('.wisp-seen-avatar').length, 2);
+    assert.equal(f.counts().requests, 0);
+  } finally { f.close(); }
+});
+
+test('ambiguous bare IDs across chats never borrow another chat’s receipts', async () => {
+  const f = await fixture({ bareIDs: true, readers: [{ receiverUserJid: '1@lid', read: 12 }] });
+  try {
+    f.stores.Msg.items.push({ id: { id: 'latest', fromMe: true, remote: 'other@g.us', toString: () => 'true_other@g.us_latest' }, t: 40 });
+    f.stores.Msg.emit('add'); await wait();
+    assert.equal(f.message.querySelector('[data-wisp-seen]'), null);
+    assert.equal(f.counts().requests, 0);
+  } finally { f.close(); }
+});
+
+test('already loaded cross-origin DP is drawn directly without export or another request', async () => {
+  const f = await fixture({ loadedPhoto: true, readers: [{ receiverUserJid: '2@lid', read: 12 }] });
+  try {
+    const canvas = f.message.querySelector('[data-wisp-seen] canvas');
+    assert.ok(canvas);
+    assert.equal(canvas.getAttribute('aria-label'), 'Reader 2');
+    assert.equal(f.message.querySelector('[data-wisp-seen] img'), null);
+    assert.equal(f.counts().draws, 1);
+    assert.equal(f.counts().exports, 0);
+    assert.equal(f.counts().requests, 0);
   } finally { f.close(); }
 });

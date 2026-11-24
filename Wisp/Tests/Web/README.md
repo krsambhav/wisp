@@ -4,7 +4,10 @@ Run `npm ci && npm test` in this directory (Node 24 or newer).
 
 The DOM/IndexedDB fixtures verify read versus delivered receipts, self exclusion,
 cached-photo-only rendering, rightmost avatar stacking, overflow, chat/message
-changes, missing storage, readonly transactions, and no polling while unfocused. Focused chats check local storage every five seconds.
+changes, missing storage, readonly transactions, and no polling while unfocused.
+Focused chats check local storage every five seconds. Regression cases cover
+bare stanza IDs in the live DOM and drawing already-loaded cross-origin photos
+directly into a canvas, without exporting pixels or fetching the image again.
 Network and remote-resource entry points throw if the feature tries to use them.
 
 `wisp-seen.js` reads the existing `model-storage` database's `message-info` store

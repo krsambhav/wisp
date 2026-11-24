@@ -48,10 +48,22 @@
     const main = document.querySelector('#main');
     const elements = main?.querySelectorAll('[data-id]');
     if (!elements?.length) { return null; }
+    // Current Web uses the bare stanza ID in data-id; older builds used the
+    // serialized key. Resolve both without querying/loading a missing model.
+    const byStanza = new Map();
+    for (const msg of models(store.Msg)) {
+      const stanza = msg.id?.id;
+      if (!stanza) { continue; }
+      if (!byStanza.has(stanza)) { byStanza.set(stanza, msg); }
+      else if (keyOf(byStanza.get(stanza)?.id) !== keyOf(msg.id)) {
+        byStanza.set(stanza, null); // ambiguous across chats: fail closed
+      }
+    }
     // Resolve the current chat from a rendered message, not its display name.
     let chat;
     for (let i = elements.length - 1; i >= 0 && !chat; i--) {
-      const msg = store.Msg.get(elements[i].getAttribute('data-id'));
+      const domID = elements[i].getAttribute('data-id');
+      const msg = store.Msg.get(domID) || byStanza.get(domID);
       if (msg?.id?.remote) { chat = store.Chat.get(msg.id.remote); }
     }
     if (!chat) { return null; }
@@ -59,7 +71,10 @@
     const msg = sent.reduce((last, item) => !last || item.t >= last.t ? item : last, null);
     if (!msg) { return null; }
     const key = keyOf(msg.id);
-    const element = Array.from(elements).find((el) => el.getAttribute('data-id') === key);
+    const element = Array.from(elements).find((el) => {
+      const domID = el.getAttribute('data-id');
+      return domID === key || (domID === msg.id.id && keyOf(byStanza.get(domID)?.id) === key);
+    });
     // Do not move the indicator to an older message when the latest is offscreen.
     if (!element) { return null; }
     return { element, msg, key };
@@ -103,24 +118,22 @@
     // ProfilePicThumb.get() itself can mark a picture stale. Read its existing
     // models instead. Use embedded bytes only, never eurl/previewEurl/http URLs.
     const picture = includeImage && models(collections.ProfilePicThumb).find((item) => keyOf(item.id) === id);
-    let image = null;
+    let image = null, loaded = null;
     if (typeof picture?.raw === 'string' && picture.raw.length < 300000 && /^[A-Za-z0-9+/=\s]+$/.test(picture.raw)) {
       image = 'data:image/jpeg;base64,' + picture.raw;
     } else if (picture) {
       // Copy pixels from an image WhatsApp has ALREADY loaded. Assigning its
       // remote src to another <img> could revalidate it, so we never do that.
       const urls = [picture.eurl, picture.previewEurl].filter(Boolean);
-      const loaded = Array.from(document.images).find((img) => img.complete && img.naturalWidth && urls.includes(img.currentSrc || img.src));
-      if (loaded) {
-        try {
-          const canvas = document.createElement('canvas');
-          canvas.width = canvas.height = 48;
-          canvas.getContext('2d').drawImage(loaded, 0, 0, 48, 48);
-          image = canvas.toDataURL('image/png');
-        } catch (_) { /* Cross-origin canvas: keep the initials. */ }
-      }
+      try {
+        // This getter only formats the in-memory thumbnail URL. It does not
+        // query a profile or fetch an image (unlike collection.find/update).
+        const url = window.require('WAWebProfilePicThumbGetters').getMaybeImg(picture);
+        if (url) { urls.push(url); }
+      } catch (_) {}
+      loaded = Array.from(document.images).find((img) => img.complete && img.naturalWidth && urls.includes(img.currentSrc || img.src)) || null;
     }
-    return { id, name: String(name), image };
+    return { id, name: String(name), image, loaded };
   }
 
   function clear() {
@@ -141,7 +154,8 @@
     if (currentRow !== target.element) { clear(); }
     if (!people.length) { clear(); return; }
     currentRow = target.element;
-    const signature = JSON.stringify(people);
+    const signature = JSON.stringify(people.map(({ id, name, image, loaded }) =>
+      [id, name, image, loaded && (loaded.currentSrc || loaded.src)]));
     let row = currentRow.querySelector('[data-wisp-seen]');
     if (row?.dataset.signature === signature) { align(row, currentRow); return; }
     row?.remove();
@@ -163,12 +177,29 @@
       avatar.className = 'wisp-seen-avatar';
       avatar.style.zIndex = String(i + 1); // rightmost circle stays fully visible
       avatar.title = p.name;
-      if (p.image) {
+      let hasPhoto = false;
+      if (p.loaded) {
+        try {
+          // A cross-origin image may taint a canvas: drawing is permitted,
+          // exporting with toDataURL/getImageData is not. Display it directly.
+          const canvas = document.createElement('canvas');
+          canvas.width = canvas.height = 48;
+          canvas.setAttribute('role', 'img');
+          canvas.setAttribute('aria-label', p.name);
+          const side = Math.min(p.loaded.naturalWidth, p.loaded.naturalHeight);
+          canvas.getContext('2d').drawImage(p.loaded,
+            (p.loaded.naturalWidth - side) / 2, (p.loaded.naturalHeight - side) / 2, side, side, 0, 0, 48, 48);
+          avatar.appendChild(canvas);
+          hasPhoto = true;
+        } catch (_) { /* Detached/unavailable image: keep the initials. */ }
+      } else if (p.image) {
         const img = document.createElement('img');
         img.alt = p.name;
         img.src = p.image; // data: bytes only; never makes a network request
         avatar.appendChild(img);
-      } else {
+        hasPhoto = true;
+      }
+      if (!hasPhoto) {
         avatar.textContent = p.name.trim().split(/\s+/).slice(0, 2).map((s) => Array.from(s)[0] || '').join('').toUpperCase();
         avatar.setAttribute('aria-label', p.name);
       }
